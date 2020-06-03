@@ -86,7 +86,7 @@
 <body>
 	<div class="overflowed">
 		<section class="install">
-		<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true" onclick="app.hideInstall();"></i>
+			<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
 			<div class="logo">
 				<img src="images/logo_bg.png">
 				<img src="images/logo_bt.png">
@@ -123,53 +123,53 @@
 				<label for="currency">Utiliser le dollar américain</label>
 			</div>
 		</section>
-		<section class="prices">
+		<section id="prices">
 			<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-			<article>				
+			<form>				
 				<label for="aprix">Prix de l'article</label>
 				<div class="setPrixFlex">
-					<input onkeydown="course.initPostRequest(event, '.prices', 1)" id="newPrice" type="double" name="aprix" required />
+					<input id="newPrice" type="double" name="aprix" required />
 					€
 				</div>
 				<input type="submit" name="submit" id="setPrice" value="Ajouter">
-			</article>
+			</form>
 			<ul></ul>
 		</section>
-		<section class="addarticle">
+		<section id="addarticle">
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-			<article>
+			<form>
 				<label for="titre">Titre de l'article</label>
-				<input onkeydown="course.switchEnter(event, '.addarticle', 1);" maxlength="50" id="titreA" type="text" name="titre" required />
+				<input maxlength="50" id="titreA" type="text" name="titre" required />
 				<label for="prix">Prix de l'article</label>
 				<div class="prixFlex">
-					<input onkeydown="course.initPostRequest(event, '.addarticle', 2)" id="prix" type="double" name="prix" required />
+					<input id="prix" type="double" name="prix" required />
 					€
 				</div>
 				<input type="submit" name="submit" id="submitArticle" value="Ajouter">
-			</article>
+			</form>
 		</section>
-		<section class="addpreview">
+		<section id="addpreview">
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-			<article>
+			<form>
 				<label for="titreP">Titre de l'article</label>
-				<input onkeydown="course.initPostRequest(event, '.addpreview', 1)" maxlength="50" id="titreP" type="text" name="titreP" required />
+				<input maxlength="50" id="titreP" type="text" name="titreP" required />
 				<input type="submit" name="submit" id="submitPreview" value="Ajouter">
-			</article>
+			</form>
 		</section>
-		<section class="addCourse">
+		<section id="addCourse">
 			<h1>Ajouter une course</h1>
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-			<article>
+			<form>
 				<label for="titreC">Titre de la course</label>
-				<input onkeydown="course.switchEnter(event, '.addCourse', 1)" maxlength="50" id="titreC" type="text" name="titreC" required />
+				<input maxlength="50" id="titreC" type="text" name="titreC" required />
 				<label for="maxPrice">Prix à ne pas dépasser</label>
 				<div class="prixFlex">
-					<input onkeydown="course.initPostRequest(event, '.addCourse', 2)" id="maxPrice" type="double" name="maxPrice" required />
+					<input id="maxPrice" type="double" name="maxPrice" required />
 					€
 				</div>
 				<input type="submit" name="submitCourse" id="submitCourse" value="Ajouter">
-			</article>
+			</form>
 		</section>
 		<div class="error">
 			<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
@@ -190,7 +190,7 @@
 		</section>
 		
 		<div class="add closed noselect"><i class="ms-Icon ms-Icon--ShoppingCart" aria-hidden="true"></i> Ajouter un article</div>
-		<div class="refresh" onclick="app.refresh();"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
+		<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
 		<section id="backTouchSurf"></section>
 		<section id="btTouchSurf"></section>
 		<section class="calcul">
@@ -209,11 +209,12 @@
 		</section>
 	</div>
 	<script type="text/javascript" src="../jquery-3.5.0.min.js"></script>
-	<script type="text/javascript" src="js/storage.js"></script>
+	<script type="module" src="./modules/index.js"></script>
+	<!-- <script type="text/javascript" src="js/storage.js"></script>
 	<script type="text/javascript" src="js/touch.js"></script>
 	<script type="text/javascript" src="js/ui.js"></script>
 	<script type="text/javascript" src="js/refresh.js"></script>
 	<script type="text/javascript" src="js/controls.js"></script>
-	<script type="text/javascript" src="js/onload.js"></script>
+	<script type="text/javascript" src="js/onload.js"></script> -->
 </body>
 </html>

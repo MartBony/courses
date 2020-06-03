@@ -14,13 +14,13 @@ function swipedetect(el, callback){
 	handleswipe = callback || function(swipedir){};
 
 	touchsurface.addEventListener('touchstart', function(e){
-		var touchobj = e.changedTouches[0],
-			swipedir = 'none',
-			distX = 0,
-			distY = 0,
-			startX = touchobj.pageX,
-			startY = touchobj.pageY,
-			startTime = new Date().getTime(); // record time when finger first makes contact with surface
+		var touchobj = e.changedTouches[0];
+		swipedir = 'none';
+		distX = 0;
+		distY = 0;
+		startX = touchobj.pageX;
+		startY = touchobj.pageY;
+		startTime = new Date().getTime();
 		e.preventDefault();
 	}, false);
 
@@ -28,8 +28,6 @@ function swipedetect(el, callback){
 		e.preventDefault(); // prevent scrolling when inside DIV
 		var touchobj = e.changedTouches[0]
 		distX = touchobj.pageX - startX;
-
-
 		
 		$('header h1').css({'transform':'translateX('+ distX/20 +'px)'});
 		$('.add').css({'transform':'translateX('+ distX/20 +'px)', 'transition':'none'});
@@ -71,7 +69,8 @@ function swipedetect(el, callback){
 
 function SwipeBtPanel(el, callback){
 
-	var touchsurface = el,
+	let touchsurface = el,
+	touchobj,
 	startY,
 	distY,
 	threshold = 150, //required min distance traveled to be considered swipe
@@ -114,7 +113,8 @@ function SwipeBtPanel(el, callback){
 
 function SwipeBackPanel(el, callback){
 
-	var touchsurface = el,
+	let touchsurface = el,
+	touchobj,
 	startY,
 	distY,
 	threshold = 150, //required min distance traveled to be considered swipe
@@ -154,3 +154,5 @@ function SwipeBackPanel(el, callback){
 		e.preventDefault();
 	}, false);
 }
+
+export { swipedetect, SwipeBackPanel, SwipeBtPanel };
