@@ -24,8 +24,8 @@ if(isset($_COOKIE['clefCourses'])){
 				$titre = htmlspecialchars((string) $_POST['titre']);
 				$prix = (float) $_POST['prix'];
 
-				$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur) VALUES (?,?,?,0,?)');
-				$insertArt->execute(array($titre, $prix, $usedCourse['id'], $user['id']));
+				$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur, groupe) VALUES (?,?,?,0,?,?)');
+				$insertArt->execute(array($titre, $prix, $usedCourse['id'], $user['id'], $user['groupe']));
 
 				$updCourse = $bdd->prepare('UPDATE courses SET depense=? WHERE id=?');
 				$updCourse->execute(array($usedCourse['depense'] + $prix, $usedCourse['id']));
@@ -38,8 +38,8 @@ if(isset($_COOKIE['clefCourses'])){
 			elseif (isset($_POST['submitPreview'])) {
 				$titre = htmlspecialchars((string) $_POST['titre']);
 
-				$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur) VALUES (?,0,?,1,?)');
-				$insertArt->execute(array($titre, $usedCourse['id'], $user['id']));
+				$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur, groupe) VALUES (?,0,?,1,?,?)');
+				$insertArt->execute(array($titre, $usedCourse['id'], $user['id'], $user['groupe']));
 
 				$reqIdInserted = $bdd->prepare('
 					SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');

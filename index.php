@@ -114,8 +114,14 @@
 		</section>
 		<section id="params">
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-			<label for="currency">Utiliser le dollar américain</label>
-			<input type="checkbox" name="currency">
+			<h2>Paramètres</h2>
+			<div>
+				<div class="switch">
+					<input type="checkbox" name="currency" id="currency">
+					<span class="slider"></span>
+				</div>
+				<label for="currency">Utiliser le dollar américain</label>
+			</div>
 		</section>
 		<section class="prices">
 			<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>

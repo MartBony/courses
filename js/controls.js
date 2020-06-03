@@ -229,9 +229,9 @@ $('#submitPreview').click(function(){
 
 			Storage.setItem('items', storage);
 		})
-		.catch(function(err){
+		.catch(function(){
 			$('.loader').removeClass('opened');
-			course.offlineMsg(err);
+			course.offlineMsg();
 		});
 	}
 	else
@@ -276,7 +276,6 @@ $('#submitCourse').click(function(){
 				.then(function(data){
 					history.replaceState({key:'createCourse'}, '','index.php');
 					$('.addCourse #titreC, .addCourse #maxPrice').val('');
-					console.log('tg');
 					$('.loader').removeClass('opened');
 
 					app.open();
