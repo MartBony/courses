@@ -150,6 +150,14 @@ export default class UI {
 			});
 		}, 510+(olds.length)*30);
 	}
+	static offlineMsg(err, msg = 'Le réseau est déconnecté ou insuffisant, la requette à été annulée'){
+		console.log(err);
+		$('.error').css({'display':'flex'});
+		$('.error p').html(msg);
+		setTimeout(function(){
+			$('.error').addClass('opened');
+		}, 10);
+	}
 }
 
 function mod(n, m) {

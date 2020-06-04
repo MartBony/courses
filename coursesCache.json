@@ -3,7 +3,7 @@
 	"/courses/index.php",
 	"/courses/offlineRes.json",
 	"/courses/manifest.json",
-	"/courses/style.css",
+	"/courses/styles/style.css",
 	"/courses/js/touch.js",
 	"/courses/js/refresh.js",
 	"/courses/js/ui.js",

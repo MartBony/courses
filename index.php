@@ -77,7 +77,7 @@
 <head>
 	<title>Faire ses courses</title>
 	<meta charset="utf-8">
-	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="styles/style.css">
 	<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
 	<?php include("cssfavicone.html"); ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -125,20 +125,6 @@
 			</article>
 			<article id="groupes">
 				<h3>Vos groupes</h3>
-				<button class="groupe opened">
-					<h4>Famille</h4>
-					<ul>
-						<li>Moi</li>
-						<li>Véro</li>
-					</ul>
-				</button>
-				<button class="groupe">
-					<h4>Famille</h4>
-					<ul>
-						<li>Moi</li>
-						<li>Véro</li>
-					</ul>
-				</button>
 				<button id="newgroupe"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i> Ajouter un groupe</button>
 			</article>
 		</section>

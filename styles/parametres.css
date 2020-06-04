@@ -85,6 +85,11 @@ article#groupes {
 
 button.groupe
 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 100%;
+
 	background: #f6f6f6;
 	border: none;
 	outline: none;

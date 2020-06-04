@@ -115,4 +115,31 @@ export default class Generate{
 		return button;
 		/* return `<button class="course ${id} ${classe}" onclick="app.open(${id},true);">${nom}</button>`; */
 	}
+	static groupe(app, id, nom, code, membres){
+		let button = document.createElement('button'),
+			h4 = document.createElement('h4'),
+			ul = document.createElement('ul'),
+			childrens = [h4, ul];;
+
+		button.className = "groupe";
+		h4.innerHTML = `${nom} (${code})`;
+		membres.forEach(membre => {
+			let li = document.createElement('li');
+			li.innerHTML = membre;
+			ul.appendChild(li);
+		});
+
+		childrens.forEach(child => {
+			button.appendChild(child);
+		});
+
+		return button;
+		/* return `<button class="groupe">
+				<h4>Famille (0359)</h4>
+				<ul>
+					<li>Moi</li>
+					<li>Véro</li>
+				</ul>
+			</button>`; */
+	}
 }

@@ -1,4 +1,5 @@
 import Storage from './storage.js';
+import UI from './UI.js';
 
 export function requestData(app, dest, refresh, hasCached = false, errMSG = `Vous êtes hors ligne, vous pouvez utiliser l'application consultation seulement`){
 	var networkUpdate = fetch(dest).then(function(res) {
@@ -8,12 +9,23 @@ export function requestData(app, dest, refresh, hasCached = false, errMSG = `Vou
 		app.updatePage(data, true, refresh, true);
 	}).catch(err => {
 		if (!hasCached) {
-			app.offlineMsg(err, errMSG);
+			UI.offlineMsg(err, errMSG);
 			$('.refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--NetworkTower');
 			setTimeout(function(){
 				$('.refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--NetworkTower');
 			},2000);
 		}
+	});
+}
+
+export function requestGroups(app){
+	var pullGroups = fetch('serveur/groupes.php').then(function(res) {
+		return res.json();
+	}).then(function(data) {
+		console.log('Network groups fetched:', data);
+		app.setGroups(data);
+	}).catch(err => {
+		console.error("Erreur: request.js :", err);
 	});
 }
 

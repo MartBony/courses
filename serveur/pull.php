@@ -1,5 +1,5 @@
 <?php
-require('dbConnect.php');
+require('../dbConnect.php');
 
 if(isset($_COOKIE['clefCourses'])){
 	$requser = $bdd->prepare('SELECT * FROM securite WHERE clef = ?');
@@ -18,13 +18,13 @@ if(isset($_COOKIE['clefCourses'])){
 		else
 		{
 			$reqUsedCourses = $bdd->prepare('SELECT * FROM courses WHERE groupe=? ORDER BY id DESC LIMIT 1');
-			$reqUsedCourses->execute(array($user['groupe']));
+			$reqUsedCourses->execute(array(substr($user['groupe'], 0, 1)));
 		}
 		$usedCourse = $reqUsedCourses->fetch();
 
 
 		$reqcourses = $bdd->prepare('SELECT * FROM courses WHERE groupe=? ORDER BY id DESC');
-		$reqcourses->execute(array($user['groupe']));
+		$reqcourses->execute(array(substr($user['groupe'], 0, 1)));
 
 		$maxId = -1;
 		$monthlyPaid = 0;

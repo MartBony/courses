@@ -1,9 +1,9 @@
-import UI from './uiAnims.js';
+import UI from './UI.js';
 import Course from './course.js';
 import Generate from './generate.js';
 import Storage from './storage.js';
 import $_GET from './get.js';
-import { requestData, requestStorage } from './requests.js';
+import { requestData, requestGroups, requestStorage } from './requests.js';
 
 
 var course,
@@ -12,10 +12,12 @@ var course,
 
 class App{
 	constructor(){
+		this.groupes;
 		this.liPrices = ['0.1','0.5','0.9','1','2','3','4','5','6','7','8','9','10','12','15','17','20'];
 		this.state = 0;
 		course = new Course();
 		this.setParameters();
+		requestGroups(this);
 		this.open($_GET('course') || -1, true);
 	}
 	setParameters(){
@@ -55,12 +57,8 @@ class App{
 		UI.closePreview();
 
 
-		if (idCourse > -1) { // £_GET js function defined in refresh.js (get the right articles from the cache when offline)
-			serveurURL = 'articles.php?course='+ idCourse;
-		}
-		else{
-			serveurURL = 'articles.php';
-		}
+		serveurURL = 'serveur/pull.php';
+		if (idCourse > -1) serveurURL += '?course='+ idCourse;
 
 		storageUPD = requestStorage(idCourse);
 		if(storageUPD) {
@@ -74,23 +72,12 @@ class App{
 			requestData(this, serveurURL, false, hasCachedData);
 		}
 	}
-	static offlineMsg(err, msg = 'Le réseau est déconnecté ou insuffisant, la requette à été annulée'){
-		$('.error').css({'display':'flex'});
-		$('.error p').html(msg);
-		setTimeout(function(){
-			$('.error').addClass('opened');
-		}, 10);
-	}
 	refresh(id = -1){
-		if (id > -1){
-			serveurURL = `articles.php?course=${id}`;
-		}
-		else if ($_GET('course') && $_GET('course') != '') { // £_GET js function defined in refresh.js (get the right articles from the cache when offline)
-			serveurURL = `articles.php?course=${$_GET('course')}`;
-		}
-		else{
-			serveurURL = 'articles.php';
-		}
+
+		serveurURL = 'serveur/pull.php';
+		if (id > -1) serveurURL += `?course=${id}`;
+		else if ($_GET('course') && $_GET('course') != '') serveurURL += `?course=${$_GET('course')}`;
+
 		requestData(this, serveurURL, true);
 	}
 	updatePage(data, hasCached = true, refresh = false, network = false){
@@ -190,6 +177,14 @@ class App{
 		}
 		else{
 			console.log('unknown:', data);
+		}
+	}
+	setGroups(data){
+		if (data.state === 200){
+			this.groupes = data.groupes;
+			this.groupes.forEach(grp => {
+				$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.code, grp.membres));
+			});
 		}
 	}
 	static showInstall(delay){
@@ -292,10 +287,9 @@ class App{
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
-			url: "serveur.php",
+			url: "../serveur/push.php",
 			data: { update: 'true', deleteArticle: 'true', id: index}
-			})
-		.then(data => {
+		}).then(data => {
 
 			var displayedIndex = $(e.target).parent().prevAll('li').length;
 			if (data[0] == 'done') {
@@ -315,8 +309,7 @@ class App{
 				Storage.setItem('items', storage);
 			}
 
-		})
-		.catch(err => {
+		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
 			App.offlineMsg(err);
@@ -327,10 +320,9 @@ class App{
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
-			url: "serveur.php",
+			url: "../serveur/push.php",
 			data: { update: 'true', deletePreview: 'true', id: index}
-			})
-		.then(data => {
+		}).then(data => {
 			var displayedIndex = $(e.target).parent().prevAll('li').length;
 			if (data[0] == 'done') {
 				$('.loader').removeClass('opened');
@@ -348,8 +340,7 @@ class App{
 
 				Storage.setItem('items', storage);
 			}
-		})
-		.catch(err => {
+		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
 			App.offlineMsg(err);
@@ -359,10 +350,9 @@ class App{
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
-			url: "serveur.php",
+			url: "../serveur/push.php",
 			data: { update: 'true', buyPreview: 'true', id: id, prix: prix}
-			})
-		.then(data => {
+		}).then(data => {
 			var timer = 600;
 			var displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
 	
