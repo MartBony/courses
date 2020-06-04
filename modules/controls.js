@@ -19,7 +19,7 @@ export default function initUiEvents(app, course){
 		} else {
 			Storage.setItem('currency',"$");
 		}
-		UI.setParameters();
+		app.setParameters();
 	});
 
 	$('#refresh').click(function(){

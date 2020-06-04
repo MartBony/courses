@@ -1,0 +1,130 @@
+:root{
+	--padding-param: 1rem;
+}
+
+#params
+{
+	opacity: 0;
+	transform: translateX(100px);
+	display: none;
+	z-index: 5;
+	background: white;
+	position: fixed;
+	top: 0;
+	left: 30px;
+	right: 0;
+	bottom: 0;
+	border-radius: 8px 0 0 8px;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: flex-start;
+	padding: 60px 0;
+	box-shadow: 2px 0px 10px rgba(0,0,0,0.3);
+	box-sizing: border-box;
+}
+
+#params.opened{
+	opacity: 1;
+	transform: translateX(0);
+	transition: all 250ms cubic-bezier(0.1, 0.9, 0, 1);
+}
+
+#params > i{
+	z-index: 2;
+	position: absolute;
+	padding: 10px;
+	top: 0;
+	left: 0;
+	font-size: 3rem;
+}
+
+#params article{
+	width: 100%;
+	padding: var(--padding-param);
+	padding-top: 40px;
+	margin: 20px 0;
+	position: relative;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+}
+
+#params h2{
+	z-index: 1;
+	position: absolute;
+	padding: 5px 10px;
+	margin: 0;
+	top: 0;
+	right: 0;
+	left: 0;
+	text-align: center;
+	font-size: 3rem;
+	font-weight: 700;
+}
+
+#params h3{
+	position: absolute;
+	top: 0;
+	left: var(--padding-param);
+	margin: 0;
+	z-index: 1;
+	font-size: 2.4rem;
+	font-weight: 600;
+}
+
+#params label{
+	font-size: 1.6rem;
+}
+
+article#groupes {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-gap: var(--padding-param);
+	padding-bottom: 50px;
+}
+
+button.groupe
+{
+	background: #f6f6f6;
+	border: none;
+	outline: none;
+	box-shadow: 0px 0.5px 0 1px rgba(0,0,0,0.06);
+	border-radius: 2px;
+}
+
+.groupe.opened
+{
+	background: #f3beb4;
+}
+
+.groupe h4{
+	margin: 5px;
+	text-align: left;
+	font-size: 1.3rem;
+}
+
+.groupe ul{
+	margin: 5px;
+	padding: 0;
+	text-align: left;
+	font-size: 1.3rem;
+}
+
+.groupe li{
+	list-style-type: none;
+}
+
+#newgroupe{
+	background: linear-gradient(45deg, #EF6950, #9C89E9);
+	color: white;
+	position: absolute;
+	font-size: 1.3rem;
+	bottom: 0;
+	left: 5%;
+	width: 90%;
+	padding: 5px;
+	border-radius: 2px;
+	border: 1px solid #EF6950;
+	outline: none;
+	vertical-align: middle;
+}

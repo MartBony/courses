@@ -115,13 +115,32 @@
 		<section id="params">
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 			<h2>Paramètres</h2>
-			<div>
+			<article>
+				<h3>Interface</h3>
 				<div class="switch">
 					<input type="checkbox" name="currency" id="currency">
 					<span class="slider"></span>
 				</div>
 				<label for="currency">Utiliser le dollar américain</label>
-			</div>
+			</article>
+			<article id="groupes">
+				<h3>Vos groupes</h3>
+				<button class="groupe opened">
+					<h4>Famille</h4>
+					<ul>
+						<li>Moi</li>
+						<li>Véro</li>
+					</ul>
+				</button>
+				<button class="groupe">
+					<h4>Famille</h4>
+					<ul>
+						<li>Moi</li>
+						<li>Véro</li>
+					</ul>
+				</button>
+				<button id="newgroupe"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i> Ajouter un groupe</button>
+			</article>
 		</section>
 		<section id="prices">
 			<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>

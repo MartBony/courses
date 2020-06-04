@@ -102,9 +102,9 @@ class App{
 		}
 		else if(data[0] == 'exception' || data[1] == 'noCourses'){
 			setTimeout(() => {
-				this.openMenu();
+				UI.openMenu();
 				setTimeout(() => {
-					this.addCourse();
+					UI.addCourse();
 					$('.add').css({'display':'none'});
 				}, 500);
 			}, 1000);
