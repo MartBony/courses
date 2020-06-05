@@ -1,4 +1,25 @@
+import mod from './math.js';
+
 export default class UI {
+	static showInstall(delay){
+		setTimeout(function(){
+			$('.install').css({'display':'flex'});
+			setTimeout(function(){
+				$('.install').addClass('opened');
+				$('.install img').each(function(i){
+					setTimeout(function(){
+						$('.install img').eq(i).addClass('opened');
+					}, i*50);
+				});
+			}, 10);
+		}, delay);
+	}
+	static hideInstall(){
+		$('.install img, .install').removeClass('opened');
+		setTimeout(function(){
+			$('.install').css({'display':'none'});
+		}, 200);
+	}
 	static addArticle(){
 		$('.add').removeClass('closed');
 		$('#addarticle').css({'display':'block', 'opacity':'1'});
@@ -158,8 +179,11 @@ export default class UI {
 			$('.error').addClass('opened');
 		}, 10);
 	}
-}
-
-function mod(n, m) {
-	return ((n % m) + m) % m;
+	static acc(app){
+		UI.closeCourse();
+		app.closePrice();
+		UI.closeMenu();
+		UI.closeArticle();
+		UI.closePreview();
+	}
 }

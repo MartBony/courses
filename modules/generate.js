@@ -104,12 +104,37 @@ export default class Generate{
 			<p>Je lance mes courses</p>
 		</button>`; */
 	}
-	static course(app, id, nom, classe = ''){
+	static noCourse(){
+		let button = document.createElement('button'),
+			i = document.createElement('i'),
+			h4 = document.createElement('h4'),
+			p = document.createElement('p'),
+			childrens = [i, h4, p];
+
+		button.className = "noCourse";
+		i.className = "ms-Icon ms-Icon--GlobalNavButton";
+		i.setAttribute("aria-hidden","true");
+		h4.innerHTML = "Aucune course";
+		p.innerHTML = "Ouvrir le menu en tapant ici";
+		
+		childrens.forEach(child => {
+			button.appendChild(child);
+		});
+
+		return button;
+
+		/* return `<button class="activate">
+			<i class="ms-Icon ms-Icon--Play" aria-hidden="true"></i>
+			Je suis dans le magasin<br>
+			<p>Je lance mes courses</p>
+		</button>`; */
+	}
+	static course(app, rank, nom, classe = ''){
 		let button = document.createElement('button');
-		button.className = `course ${id} ${classe}`;
+		button.className = `course ${classe}`;
 		button.innerHTML = nom;
 		$(button).on('click', e => {
-			app.open(id, true)
+			app.open(rank, true)
 		});
 
 		return button;
@@ -119,10 +144,13 @@ export default class Generate{
 		let button = document.createElement('button'),
 			h4 = document.createElement('h4'),
 			ul = document.createElement('ul'),
-			childrens = [h4, ul];;
+			remv = document.createElement('i'),
+			childrens = [h4, ul, remv];
 
-		button.className = "groupe";
+		button.className = "groupe g"+id;
 		h4.innerHTML = `${nom} (${code})`;
+		remv.className = "ms-Icon ms-Icon--Leave";
+		remv.setAttribute("aria-hidden","true");
 		membres.forEach(membre => {
 			let li = document.createElement('li');
 			li.innerHTML = membre;
@@ -134,12 +162,5 @@ export default class Generate{
 		});
 
 		return button;
-		/* return `<button class="groupe">
-				<h4>Famille (0359)</h4>
-				<ul>
-					<li>Moi</li>
-					<li>Véro</li>
-				</ul>
-			</button>`; */
 	}
 }

@@ -1,53 +1,91 @@
 <?php
 require('../dbConnect.php');
+require_once('checkers/login.php');
 
-if(isset($_COOKIE['clefCourses'])){
-	$requser = $bdd->prepare('SELECT * FROM securite WHERE clef = ?');
-	$requser->execute(array(hash('sha512', (string) $_COOKIE['clefCourses'])));
-	$userexist = $requser->rowCount();
+function groupes($user, PDO $bdd) {
+	$reqAllCourses = $bdd->prepare('SELECT * FROM courses WHERE groupe = ? ORDER BY id DESC');
+	$groupsInfo = array();
+	$reqAllUsers = $bdd->prepare('SELECT nom, groupe FROM securite');
 
-	if ($userexist == 1) {
-		$user = $requser->fetch();// Logged in
-		$groupsInfo = array();
+	foreach(str_split($user['groupe']) as $idGroupe){
 
-		$reqAllUsers = $bdd->prepare('SELECT nom, groupe FROM securite');
+		// Pulling group info
+		$reqGroupe = $bdd->prepare('SELECT * FROM groupes WHERE id = ?');
+		$reqGroupe->execute(array($idGroupe));
+		$groupe = $reqGroupe->fetch();
+		$reqGroupe->closeCursor();
 
-		foreach(str_split($user['groupe']) as $grpId){
-			$membres = array();
+		if($reqGroupe->rowCount() == 1){
+			$coursesList = array();
+			$membresGp = array();
+			$error = false;
 
-			// Pulling group info
-			$reqgp = $bdd->prepare('SELECT * FROM groupes WHERE id = ?');
-			$reqgp->execute(array($grpId));
-			$data = $reqgp->fetch();
-			$reqgp->closeCursor();
-
+			// Pulling membres for specified group
 			$reqAllUsers->execute();
-			// Pulling membres info
-			while($allUsers = $reqAllUsers->fetch()){
-				if (strpos($allUsers['groupe'], $grpId) !== false) {
-					array_push($membres, $allUsers['nom']);
+			while($scanedUser = $reqAllUsers->fetch()){
+				if (strpos($scanedUser['groupe'], $idGroupe) !== false) {
+					array_push($membresGp, $scanedUser['nom']);
 				}
 			}
+			$reqAllUsers->closeCursor();
 
-			if($data != false){
-				$data['membres'] = $membres;
-				array_push($groupsInfo, $data);
+			// Pulling courses + Get additionnal data
+
+			$monthCost = 0;
+			$firstDate = time();
+			$coef = 0;
+
+			$reqAllCourses->execute(array($idGroupe));
+			while($resCoursesGp = $reqAllCourses->fetch()){
+				
+				if (time() - $resCoursesGp['dateStart'] < 31*24*60*60) {
+					$monthCost += $resCoursesGp['total'];
+				}
+				if ($resCoursesGp['dateStart'] != 0) {
+					$firstDate = min($resCoursesGp['dateStart'], $firstDate);
+				}
+
+				array_push($coursesList, array(
+					'id' => $resCoursesGp['id'],
+					'nom' => $resCoursesGp['nom']
+				));
 			}
-		}
+			$reqAllCourses->closeCursor();
 
-		echo json_encode(array(
-			'state' => 200,
-			'groupes' => $groupsInfo
-		));
+			if (!empty($coursesList)) {
+				if (time() - $firstDate > 31*24*60*60) {
+					$coef = max(1,sizeof($coursesList)*(31*24*60*60)/(time() - $firstDate));
+				} else {
+					$coef = 2.5;
+				}
+			} else {
+				$error = 204;
+			}
+
+			array_push($groupsInfo, array(
+				'id' => $groupe['id'],
+				'nom' => $groupe['nom'],
+				'code' => $groupe['code'],
+				'coursesList' => $coursesList,
+				'membres' => $membresGp,
+				'monthCost' => $monthCost,
+				'coef' => $coef,
+				'error' => $error
+			));
+		
+		} else {
+			echo json_encode(array('status' => 204));
+		}
 	}
-	else
-	{
-		echo json_encode(['error', 'login']);
-	}
+
+	echo json_encode(array(
+		'status' => 200,
+		'groupes' => $groupsInfo
+	));
 }
-else
-{
-	echo json_encode(['error', 'login']);
-}
+
+login($bdd, function($user, $bdd){
+	groupes($user, $bdd);
+});
 
 ?>

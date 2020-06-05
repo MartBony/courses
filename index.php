@@ -201,25 +201,19 @@
 		<section class="calcul">
 			<div class="grip"></div>
 			<h2 class="noselect">Calculer</h2>
-			<h3 class="maxim">Dépenses maximum autorisées :</h3>
+			<h3 class="maxim">Limite envisagée :</h3>
 			<p id="maxprice"></p>
 			<h3>Total :</h3>
 			<p id="totalDep"></p>
-			<h3>Dépenses lors du dernier mois:</h3>
+			<h3>Dépenses du dernier mois:</h3>
 			<p id="moiDep"></p>
-			<h3>Dépenses par mois prévues:</h3>
+			<h3>Dépenses par mois envisagées:</h3>
 			<p id="moiPrev"></p>
-			<h3>Dépenses par an prévues:</h3>
+			<h3>Dépenses par an envisagées:</h3>
 			<p id="anPrev"></p>
 		</section>
 	</div>
 	<script type="text/javascript" src="../jquery-3.5.0.min.js"></script>
 	<script type="module" src="./modules/index.js"></script>
-	<!-- <script type="text/javascript" src="js/storage.js"></script>
-	<script type="text/javascript" src="js/touch.js"></script>
-	<script type="text/javascript" src="js/ui.js"></script>
-	<script type="text/javascript" src="js/refresh.js"></script>
-	<script type="text/javascript" src="js/controls.js"></script>
-	<script type="text/javascript" src="js/onload.js"></script> -->
 </body>
 </html>

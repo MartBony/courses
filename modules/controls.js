@@ -79,6 +79,10 @@ export default function initEvents(app, course){
 		}
 	});
 
+	$(document).on('click', '.noCourse',() => {
+		UI.openMenu();
+	});
+
 	$('#params input').change(()=>{
 		if(Storage.getItem('currency')){
 			Storage.setItem('currency',"");
@@ -162,6 +166,12 @@ export default function initEvents(app, course){
 		$(this).removeClass('ready');
 	});
 
+	$(document).on('click', '.groupe',e => {
+		var index = Array.from(document.querySelectorAll('#groupes .groupe')).indexOf(e.currentTarget);
+		Storage.setItem('usedGroupe', index);
+		app.open(0);
+	});
+
 	$('header i').click(function(){
 		UI.openMenu();
 	});
@@ -192,8 +202,8 @@ export default function initEvents(app, course){
 		$('.activate').css({'opacity':'0.8'});
 		$.ajax({
 			method: "POST",
-			url: "serveur.php",
-			data: { update: 'true', activate: 'true', id: course.id}
+			url: "serveur/push.php",
+			data: { update: 'true', activate: 'true', id: course.id, groupe: app.getUsedGroup().id}
 			})
 		.then(function( data ) {
 			setTimeout(function(){
@@ -233,8 +243,8 @@ export default function initEvents(app, course){
 					$('.loader').addClass('opened');
 					$.ajax({
 						method: "POST",
-						url: "serveur.php",
-						data: { update: 'true', submitArticle: 'true', titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.')}
+						url: "serveur/push.php",
+						data: { update: 'true', submitArticle: 'true', titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.getUsedGroup().id}
 						})
 					.then(function( data ) {
 						$('.loader').removeClass('opened');
@@ -250,7 +260,7 @@ export default function initEvents(app, course){
 							$('html, body').animate({scrollTop: 0}, 30);
 							$('.list').prepend(Generate.article(data.idArticle, data.titre, data.prix, app));
 						}
-						course.totalPP(data.prix);
+						app.totalPP(data.prix);
 						$('#addarticle #titreA, #addarticle #prix').val('');
 
 						setTimeout(function(){
@@ -267,7 +277,8 @@ export default function initEvents(app, course){
 
 						Storage.setItem('items', storage);
 					})
-					.catch(function(err){
+					.catch(err => {
+						console.log(err);
 						$('.loader').removeClass('opened');
 						course.offlineMsg(err);
 					});
@@ -292,16 +303,11 @@ export default function initEvents(app, course){
 			$('.loader').addClass('opened');
 			$.ajax({
 				method: "POST",
-				url: "serveur.php",
-				data: { update: 'true', submitPreview: 'true', titre: $('#addpreview #titreP').val()}
-				})
-			.then(function( data ) {
+				url: "serveur/push.php",
+				data: { update: 'true', submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.getUsedGroup().id}
+			}).then(data => {
 				$('.loader').removeClass('opened');
-				UI.closeCourse();
-				UI.closeMenu();
-				UI.closeArticle();
-				UI.closePreview();
-				UI.closeParams();
+				UI.acc(app);
 				if (!course.started) {
 					$('.activate').eq(1).after(Generate.preview(data.idPreview, data.titre, data.color, app));
 				}
@@ -324,8 +330,8 @@ export default function initEvents(app, course){
 				course.displayed.previews.unshift({id: data.idPreview, titre: data.titre, color: data.color});
 
 				Storage.setItem('items', storage);
-			})
-			.catch(function(){
+			}).catch(err => {
+				console.log(err);
 				$('.loader').removeClass('opened');
 				course.offlineMsg();
 			});
@@ -358,15 +364,16 @@ export default function initEvents(app, course){
 		app.buy(course.priceCursor.index, app.liPrices[index]);
 	});
 
-	$('#addCourse form').on('submit',e => {
+	$('#addCourse form').on('submit', e => {
+		e.preventDefault();
 		if ($('#addCourse #titreC').val() && $('#addCourse #titreC').val() != '') {
 			if ($('#addCourse #maxPrice').val() && $('#addCourse #maxPrice').val() != '') {
 				if (!isNaN(parseFloat( $('#addCourse #maxPrice').val().replace(',','.')))) {
 					$('.loader').addClass('opened');
 					$.ajax({
 						method: "POST",
-						url: "serveur.php",
-						data: { update: 'true', submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.')}
+						url: "serveur/push.php",
+						data: { update: 'true', submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.getUsedGroup().id}
 						})
 					.then(function(data){
 						history.replaceState({key:'createCourse'}, '','index.php');

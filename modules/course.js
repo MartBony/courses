@@ -8,10 +8,10 @@ export default class Course{
 		this.maxPrice;
 		this.coef;
 		this.displayed = {
-			articles: new Array(),
-			previews: new Array()
+			articles: new Array,
+			previews: new Array
 		};
-		this.monthlyPaid;
+		this.monthCost;
 		this.started;
 		this.old;
 
@@ -20,46 +20,76 @@ export default class Course{
 			el: null
 		};
 	}
-	totalPP(constante, loadPage = false, appl = app){
-		if(loadPage == true){
-			$('#totalDep').html((this.total).toFixed(2) + appl.params.currency);
-			$('#moiDep').html((this.monthlyPaid).toFixed(2) + appl.params.currency);
-			$('#moiPrev').html((this.total * this.coef).toFixed(2) + appl.params.currency);
-			$('#anPrev').html((this.total * this.coef * 12).toFixed(2) + appl.params.currency);
-			if(this.maxPrice < this.total){
-				$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
+	update(app, data){
+		let items = data.items,
+			attribute = "";
+		
+		this.id = data.id;
+		this.total = data.total;
+		this.maxPrice = data.maxPrice;
+		$('#maxprice').html(this.maxPrice + app.params.currency);
+		this.monthCost = app.getUsedGroup().monthCost;
+		this.coef = app.getUsedGroup().coef;
+		this.old = data.id != app.getUsedGroup().coursesList[0].id;
+
+		app.totalPP(0, true);
+
+		if (this.old) {
+			attribute = "disabled";
+		}
+
+		items.articles.forEach((article, index) => {
+			if (this.displayed.articles[index]) {
+				if (article.id != this.displayed.articles[index].id){
+					$('.list .article').eq(index).after(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
+					$('.list .article').eq(index).remove();
+				}
 			}
 			else{
-				$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
+				$('.list').append(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
 			}
-		}
-		else{
-			constante = parseFloat(constante);
-			this.total += constante;
-			this.monthlyPaid += constante;
-			$('#totalDep').html((this.total).toFixed(2) + appl.params.currency);
-			$('#moiDep').html((this.monthlyPaid).toFixed(2) + appl.params.currency);
-			$('#moiPrev').html((this.total * this.coef).toFixed(2) + appl.params.currency);
-			$('#anPrev').html((this.total * this.coef * 12).toFixed(2) + appl.params.currency);
-			if(this.maxPrice < this.total){
-				$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
+		});
+		$('.list .article').slice(items.articles.length).remove();
+
+
+		items.previews.forEach((preview, index) => {
+			console.log(preview);
+			if (this.displayed.previews[index]) {
+				if (preview.id != this.displayed.previews[index].id){
+					$('.prevList .preview').eq(index).after(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
+					$('.prevList .preview').eq(index).remove();
+				}
 			}
 			else{
-				$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
+				$('.prevList').append(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
 			}
+		});
+		$('.prevList .preview').slice(items.previews.length).remove();
+
+
+		setTimeout(function(){
+			$('.article, .preview').removeClass('animateSlideTop');
+		},600);
+
+		this.displayed = {
+			articles: items.articles,
+			previews: items.previews
 		}
+
+		this.started = data.dateStart != 0;
+
 	}
-	setData(data, appl){
+	setData(app, data){
 
 		this.id = data.idCourse;
 		this.total = data.total;
 		this.maxPrice = data.max;
-		$('#maxprice').html(data.max + appl.params.currency);
-		this.monthlyPaid = data.monthly;
+		$('#maxprice').html(data.max + app.params.currency);
+		this.monthCost = data.monthly;
 		this.coef = data.coef;
 		this.old = data.oldCourse;
 
-		this.totalPP(0, true, appl);
+		app.totalPP(0, true);
 
 		var attribute = "";
 		if (this.old) {
@@ -71,12 +101,12 @@ export default class Course{
 			iter++;
 			if (this.displayed.articles[index]) {
 				if (article.id != this.displayed.articles[index].id){
-					$('.list .article').eq(index).after(Generate.article(article.id, article.titre, article.prix, appl, 'animateSlideTop', attribute));
+					$('.list .article').eq(index).after(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
 					$('.list .article').eq(index).remove();
 				}
 			}
 			else{
-				$('.list').append(Generate.article(article.id, article.titre, article.prix, appl, 'animateSlideTop', attribute));
+				$('.list').append(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
 			}
 		});
 
@@ -90,12 +120,12 @@ export default class Course{
 			iter++;
 			if (this.displayed.previews[index]) {
 				if (preview.id != this.displayed.previews[index].id){
-					$('.prevList .preview').eq(index).after(Generate.preview(preview.id, preview.titre, preview.color, appl, 'animateSlideTop', attribute));
+					$('.prevList .preview').eq(index).after(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
 					$('.prevList .preview').eq(index).remove();
 				}
 			}
 			else{
-				$('.prevList').append(Generate.preview(preview.id, preview.titre, preview.color, appl, 'animateSlideTop', attribute));
+				$('.prevList').append(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
 			}
 		});
 

@@ -1,124 +1,66 @@
 <?php
-require('../dbConnect.php');
+require_once('../dbConnect.php');
+require_once('checkers/login.php');
+require_once('checkers/checkCourse.php');
 
-if(isset($_COOKIE['clefCourses'])){
-	$requser = $bdd->prepare('SELECT * FROM securite WHERE clef = ?');
-	$requser->execute(array(hash('sha512', (string) $_COOKIE['clefCourses'])));
-	$userexist = $requser->rowCount();
+function pull($user, $usedCourse, $bdd){
+	$articles = array();
+	$previews = array();
 
-	if ($userexist == 1) {
-		$user = $requser->fetch();// Logged in
 
-		if (isset($_GET['course'])) {
+	$reqColor = $bdd->prepare('SELECT hexColor FROM securite WHERE id = ?');
 
-			$reqUsedCourses = $bdd->prepare('SELECT * FROM courses WHERE id = ? AND groupe=?');
-			$reqUsedCourses->execute(array((int) $_GET['course'], $user['groupe']));
+	$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ?');
+	$reqItems->execute(array($_POST['id']));
 
+	while($article = $reqItems->fetch()){
+		if($article['preview'] == 1){
+			$reqColor->execute(array($article['idAuteur']));
+			$color = $reqColor->fetch();
+			$reqColor->closecursor();
+
+			array_push($previews, array(
+				'id' => $article['id'],
+				'titre' => $article['titre'],
+				'color' => $color['hexColor'],
+				'course' => $article['course'],
+				'preview' => $article['preview'],
+				'idAuteur' => $article['idAuteur']
+			));
+		} else {
+			array_push($articles, array(
+				'id' => $article['id'],
+				'prix' => $article['prix'],
+				'titre' => $article['titre'],
+				'course' => $article['course'],
+				'preview' => $article['preview'],
+				'idAuteur' => $article['idAuteur']
+			));
 		}
-		else
-		{
-			$reqUsedCourses = $bdd->prepare('SELECT * FROM courses WHERE groupe=? ORDER BY id DESC LIMIT 1');
-			$reqUsedCourses->execute(array(substr($user['groupe'], 0, 1)));
-		}
-		$usedCourse = $reqUsedCourses->fetch();
+	}
 
-
-		$reqcourses = $bdd->prepare('SELECT * FROM courses WHERE groupe=? ORDER BY id DESC');
-		$reqcourses->execute(array(substr($user['groupe'], 0, 1)));
-
-		$maxId = -1;
-		$monthlyPaid = 0;
-		$allTimeNumCourses = 0;
-		$firstDate = time();
-		$coursesList = array();
-
-		while ($courses = $reqcourses->fetch()) { 
-			$maxId = max($maxId,$courses['id']);
-			if (time() - $courses['dateStart'] < 31*24*60*60 || $courses['id'] == $usedCourse['id']) {// Si la course à été faite lors du dernier mois
-				$monthlyPaid += $courses['depense'];
-			}
-			$allTimeNumCourses++;
-			if ($courses['dateStart'] != 0) {
-				$firstDate = min($courses['dateStart'], $firstDate);
-			}
-
-			array_push($coursesList, ['id' => $courses['id'], 'nom' => $courses['nom']]);
-		}
-
-		if ($maxId > 0) {
+	echo json_encode(array(
+		'status' => 200,
+		'course' => array(
+			'id' => $usedCourse['id'],
+			'nom' => $usedCourse['nom'],
+			'maxPrice' => $usedCourse['maxPrice'],
+			'total' => $usedCourse['total'],
+			'dateStart' => $usedCourse['dateStart'],
+			'groupe' => $usedCourse['groupe'],
+			'items' => array(
+				'articles' => $articles,
+				'previews' => $previews
+			)
+		)
+	));
 				
-			if (time() - $firstDate > 31*24*60*60) {
-				$nbrMoyCourses = max(1,$allTimeNumCourses*(31*24*60*60)/(time() - $firstDate));
-			}
-			else{
-				$nbrMoyCourses = 2.5;
-			}
-
-			
-			$hasStarted = false;
-
-			if ($usedCourse['id'] != $maxId) { // Si la course utilisée n' est pas la plus récente
-				$oldCourse = true;
-			}
-			else{
-				$oldCourse = false;
-
-				if ($usedCourse['dateStart'] != 0) {
-					$hasStarted = true;
-				}
-			}
-
-			$reqarticles = $bdd->prepare('SELECT id, prix, titre FROM articles WHERE course = ? AND preview = 0 ORDER BY id DESC');
-			$reqarticles->execute(array($usedCourse['id'])); // A faire -> faire une requête croisée avec Join
-			
-			$reqpreview = $bdd->prepare('
-				SELECT a.titre, a.id, s.hexColor
-				FROM articles a
-				INNER JOIN securite s
-				ON a.idAuteur = s.id
-				WHERE a.course = ? AND a.preview = 1
-				ORDER BY id DESC
-			');
-			$reqpreview->execute(array($usedCourse['id']));
-
-			$resArticles = array();
-			$resPreview = array();
-
-			while ($aData = $reqarticles->fetch()) {
-				array_push($resArticles, ['id' => $aData['id'], 'titre' => $aData['titre'], 'prix' => $aData['prix']]);
-			}
-
-			while ($pData = $reqpreview->fetch()) {
-				array_push($resPreview, ['id' => $pData['id'], 'titre' => $pData['titre'], 'color' => $pData['hexColor']]);
-			}
-
-			echo json_encode([
-				'0'=> 'done',
-				'startedState' => $hasStarted,
-				'coursesList' => $coursesList,
-				'oldCourse' => $oldCourse,
-				'idCourse' => (int) $usedCourse['id'],
-				'articles' => $resArticles,
-				'previews' => $resPreview,
-				'monthly' => $monthlyPaid,
-				'total' => (float) $usedCourse['depense'],
-				'coef' => $nbrMoyCourses,
-				'max' => (int) $usedCourse['maxprice']
-			]);
-	
-		}
-		else{
-			echo json_encode(['exception', 'noCourses']);
-		}
-	}
-	else
-	{
-		echo json_encode(['error', 'login']);
-	}
 }
-else
-{
-	echo json_encode(['error', 'login']);
-}
+
+login($bdd, function($user, $bdd){
+	checkCourse($user, $bdd, function($user ,$usedCourse , $bdd){
+		pull($user ,$usedCourse, $bdd);
+	});
+});
 
 ?>
