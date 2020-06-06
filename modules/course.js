@@ -25,11 +25,11 @@ export default class Course{
 			attribute = "";
 		
 		this.id = data.id;
-		this.total = data.total;
+		this.total = Number(data.total);
 		this.maxPrice = data.maxPrice;
 		$('#maxprice').html(this.maxPrice + app.params.currency);
 		this.monthCost = app.getUsedGroup().monthCost;
-		this.coef = app.getUsedGroup().coef;
+		this.coef = Number(app.getUsedGroup().coef);
 		this.old = data.id != app.getUsedGroup().coursesList[0].id;
 
 		app.totalPP(0, true);
@@ -38,111 +38,68 @@ export default class Course{
 			attribute = "disabled";
 		}
 
-		items.articles.forEach((article, index) => {
-			if (this.displayed.articles[index]) {
-				if (article.id != this.displayed.articles[index].id){
-					$('.list .article').eq(index).after(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
-					$('.list .article').eq(index).remove();
+		let iter = 0;
+		while(iter < items.articles.length){
+			let article = items.articles[iter];
+			if (this.displayed.articles[iter]) {
+				if (article.id != this.displayed.articles[iter].id){
+					if(items.articles.filter(el => el.id == this.displayed.articles[iter].id).length > 0){
+						this.displayed.articles.splice(iter, 0, article);
+						$('.list .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+						iter++;
+					} else {
+						this.displayed.articles.splice(iter, 1);
+						$('.list .article').eq(iter).remove();
+					}
+				} else {
+					iter++;
 				}
 			}
 			else{
-				$('.list').append(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
+				this.displayed.articles.splice(iter, 0, article);
+				$('.list').append(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+				iter++;
 			}
-		});
+
+		}
 		$('.list .article').slice(items.articles.length).remove();
+		this.displayed.articles = this.displayed.articles.slice(0, items.articles.length);
+		
 
-
-		items.previews.forEach((preview, index) => {
-			console.log(preview);
-			if (this.displayed.previews[index]) {
-				if (preview.id != this.displayed.previews[index].id){
-					$('.prevList .preview').eq(index).after(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
-					$('.prevList .preview').eq(index).remove();
-				}
-			}
-			else{
-				$('.prevList').append(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
-			}
-		});
-		$('.prevList .preview').slice(items.previews.length).remove();
-
-
-		setTimeout(function(){
-			$('.article, .preview').removeClass('animateSlideTop');
-		},600);
-
-		this.displayed = {
-			articles: items.articles,
-			previews: items.previews
-		}
-
-		this.started = data.dateStart != 0;
-
-	}
-	setData(app, data){
-
-		this.id = data.idCourse;
-		this.total = data.total;
-		this.maxPrice = data.max;
-		$('#maxprice').html(data.max + app.params.currency);
-		this.monthCost = data.monthly;
-		this.coef = data.coef;
-		this.old = data.oldCourse;
-
-		app.totalPP(0, true);
-
-		var attribute = "";
-		if (this.old) {
-			attribute = "disabled";
-		}
-
-		var iter = 0;
-		data.articles.forEach((article, index) => {
-			iter++;
-			if (this.displayed.articles[index]) {
-				if (article.id != this.displayed.articles[index].id){
-					$('.list .article').eq(index).after(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
-					$('.list .article').eq(index).remove();
-				}
-			}
-			else{
-				$('.list').append(Generate.article(article.id, article.titre, article.prix, app, 'animateSlideTop', attribute));
-			}
-		});
-
-
-		if (iter < this.displayed.articles.length) {
-			$('.list .article').slice(iter).remove();
-		}
 
 		iter = 0;
-		data.previews.forEach((preview, index) => {
-			iter++;
-			if (this.displayed.previews[index]) {
-				if (preview.id != this.displayed.previews[index].id){
-					$('.prevList .preview').eq(index).after(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
-					$('.prevList .preview').eq(index).remove();
+		while(iter < items.previews.length){
+			let preview = items.previews[iter];
+			if (this.displayed.previews[iter]) {
+				if (preview.id != this.displayed.previews[iter].id){
+					if(items.previews.filter(el => el.id == this.displayed.previews[iter].id).length > 0){
+						this.displayed.previews.splice(iter, 0, preview);
+						$('.prevList .preview').eq(iter).before(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+						iter++;
+					} else {
+						this.displayed.previews.splice(iter, 1);
+						$('.prevList .preview').eq(iter).remove();
+					}
+				} else {
+					iter++;
 				}
 			}
 			else{
-				$('.prevList').append(Generate.preview(preview.id, preview.titre, preview.color, app, 'animateSlideTop', attribute));
+				this.displayed.previews.splice(iter, 0, preview);
+				$('.prevList').append(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+				iter++;
 			}
-		});
 
-		if (iter < this.displayed.previews.length) {
-			$('.prevList .preview').slice(iter).remove();
 		}
+		$('.prevList .preview').slice(items.previews.length).remove();
+		this.displayed.previews = this.displayed.previews.slice(0, items.previews.length);
 
+		
 		setTimeout(function(){
 			$('.article, .preview').removeClass('animateSlideTop');
 		},600);
 
-		this.displayed = {
-			articles: data.articles,
-			previews: data.previews
-		}
-
-		this.started = data.startedState;
+		this.started = data.dateStart != 0;
 
 	}
 }

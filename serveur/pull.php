@@ -10,7 +10,7 @@ function pull($user, $usedCourse, $bdd){
 
 	$reqColor = $bdd->prepare('SELECT hexColor FROM securite WHERE id = ?');
 
-	$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ?');
+	$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ? ORDER BY id DESC');
 	$reqItems->execute(array($_POST['id']));
 
 	while($article = $reqItems->fetch()){
@@ -21,20 +21,14 @@ function pull($user, $usedCourse, $bdd){
 
 			array_push($previews, array(
 				'id' => $article['id'],
-				'titre' => $article['titre'],
 				'color' => $color['hexColor'],
-				'course' => $article['course'],
-				'preview' => $article['preview'],
-				'idAuteur' => $article['idAuteur']
+				'titre' => $article['titre']
 			));
 		} else {
 			array_push($articles, array(
 				'id' => $article['id'],
 				'prix' => $article['prix'],
-				'titre' => $article['titre'],
-				'course' => $article['course'],
-				'preview' => $article['preview'],
-				'idAuteur' => $article['idAuteur']
+				'titre' => $article['titre']
 			));
 		}
 	}

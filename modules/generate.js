@@ -1,7 +1,41 @@
-import $_GET from "./get.js";
+import {$_GET} from "./tools.js";
 
 export default class Generate{
-	static article(id, titre, prix, app, animation = 'animateSlideIn', addClass = ''){
+	static course(app, rank, nom, classe = ''){
+		let button = document.createElement('button');
+		button.className = `course ${classe}`;
+		button.innerHTML = nom;
+		$(button).on('click', e => {
+			app.open(rank)
+		});
+
+		return button;
+		/* return `<button class="course ${id} ${classe}" onclick="app.open(${id},true);">${nom}</button>`; */
+	}
+	static groupe(app, id, nom, code, membres){
+		let button = document.createElement('button'),
+			h4 = document.createElement('h4'),
+			ul = document.createElement('ul'),
+			remv = document.createElement('i'),
+			childrens = [h4, ul, remv];
+
+		button.className = "groupe g"+id;
+		h4.innerHTML = `${nom} (${code})`;
+		remv.className = "ms-Icon ms-Icon--Leave";
+		remv.setAttribute("aria-hidden","true");
+		membres.forEach(membre => {
+			let li = document.createElement('li');
+			li.innerHTML = membre;
+			ul.appendChild(li);
+		});
+
+		childrens.forEach(child => {
+			button.appendChild(child);
+		});
+
+		return button;
+	}
+	static article(app, id, titre, prix, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
 			h2 = document.createElement('h2'),
 			h3 = document.createElement('h3'),
@@ -36,7 +70,7 @@ export default class Generate{
 			<div class="bgCards"></div>
 		</li>`; */
 	}
-	static preview(id, titre, couleur, app = app, animation = 'animateSlideIn', addClass = ''){
+	static preview(app ,id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
 			h2 = document.createElement('h2'),
 			del = document.createElement('i'),
@@ -122,41 +156,39 @@ export default class Generate{
 		});
 
 		return button;
-
-		/* return `<button class="activate">
-			<i class="ms-Icon ms-Icon--Play" aria-hidden="true"></i>
-			Je suis dans le magasin<br>
-			<p>Je lance mes courses</p>
-		</button>`; */
 	}
-	static course(app, rank, nom, classe = ''){
-		let button = document.createElement('button');
-		button.className = `course ${classe}`;
-		button.innerHTML = nom;
-		$(button).on('click', e => {
-			app.open(rank, true)
+	static noGroupe(){
+		let button = document.createElement('button'),
+			i = document.createElement('i'),
+			h4 = document.createElement('h4'),
+			p = document.createElement('p'),
+			childrens = [i, h4, p];
+
+		button.className = "noGroupe";
+		i.className = "ms-Icon ms-Icon--Settings";
+		i.setAttribute("aria-hidden","true");
+		h4.innerHTML = "Aucun groupe";
+		p.innerHTML = "Ouvrir les paramètres en tapant ici";
+		
+		childrens.forEach(child => {
+			button.appendChild(child);
 		});
 
 		return button;
-		/* return `<button class="course ${id} ${classe}" onclick="app.open(${id},true);">${nom}</button>`; */
 	}
-	static groupe(app, id, nom, code, membres){
+	static noSelected(){
 		let button = document.createElement('button'),
+			i = document.createElement('i'),
 			h4 = document.createElement('h4'),
-			ul = document.createElement('ul'),
-			remv = document.createElement('i'),
-			childrens = [h4, ul, remv];
+			p = document.createElement('p'),
+			childrens = [i, h4, p];
 
-		button.className = "groupe g"+id;
-		h4.innerHTML = `${nom} (${code})`;
-		remv.className = "ms-Icon ms-Icon--Leave";
-		remv.setAttribute("aria-hidden","true");
-		membres.forEach(membre => {
-			let li = document.createElement('li');
-			li.innerHTML = membre;
-			ul.appendChild(li);
-		});
-
+		button.className = "noCourse";
+		i.className = "ms-Icon ms-Icon--GlobalNavButton";
+		i.setAttribute("aria-hidden","true");
+		h4.innerHTML = "Rien par ici";
+		p.innerHTML = "Selectionnez une course";
+		
 		childrens.forEach(child => {
 			button.appendChild(child);
 		});

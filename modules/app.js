@@ -1,14 +1,12 @@
 import UI from './UI.js';
 import Course from './course.js';
-import Generate from './generate.js';
 import Storage from './storage.js';
-import $_GET from './get.js';
+import {$_GET, jsonEqual} from './tools.js';
 import Pull from './requests.js';
+import Generate from './generate.js';
 
 
-var course,
-	serveurURL,
-	storageUPD;
+let course;
 
 class App{
 	constructor(){
@@ -16,10 +14,15 @@ class App{
 
 		this.groupes;
 		this.usedGroupe; // Rank in array of groups
-		this.liPrices = ['0.1','0.5','0.9','1','2','3','4','5','6','7','8','9','10','12','15','17','20'];
+		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.state = 0;
 		this.setParameters();
 		this.open(Number($_GET('course')) || 0);
+
+		this.errors = {
+			readOnly: "Vous êtes hors ligne, vous pouvez utiliser l'application consultation seulement",
+			noAccess: "Cette page est innaccessible pour l'instant"
+		}
 	}
 	setParameters(){
 		this.params = {
@@ -51,118 +54,73 @@ class App{
 	}
 	open(rank = 0){// Rank as index of array
 		$('.loader').addClass('opened');
-		Pull.groupes(this).then(state => {
-			if (state){
-				Pull.course(this, this.getUsedGroup().coursesList[rank].id).then(() => {
+		// Load from localStorage
+		var hasCached = this.openOffline(rank);
+		setTimeout(() => {$('.loader').removeClass('opened')}, 3000);
+
+		
+		// Load from network
+		Pull.groupes(this, hasCached.groupes).then(state => {
+			if (state || hasCached.groupes){
+				if(this.getUsedGroup().coursesList.length != 0){
+					Pull.course(this, this.getUsedGroup().coursesList[rank].id, hasCached.course).then(() => {
+						$('.loader').removeClass('opened');
+					});
+				} else {
 					$('.loader').removeClass('opened');
-				});
-			} else {
-				$('.loader').removeClass('opened');
+				}
 			}
 		});
 		
 	}
-	refresh(rank = 0){
+	openOffline(rank = 0){
+		let hasCached = {
+			groupes: false,
+			course: false
+		};
+		
+		if(Storage.getItem('groupes')){
+			let groupData = {
+				status: 200,
+				groupes: Storage.getItem('groupes')
+			};
+			if(groupData.groupes && groupData.groupes.length != 0){
+				let initGroupes = this.updateGroups(groupData);
+				hasCached.groupes = true;
+				if(initGroupes){
+					console.log('Storage groupes fetched:', groupData);
+
+					if(Storage.getItem('courses')){
+						let idCourse = this.getUsedGroup().coursesList[rank].id,
+							courseData = {
+								status: 200,
+								course: Storage.getItem('courses').filter(el => el.id == idCourse)[0]
+							};
+						if(courseData.course) {
+							this.updateItems(courseData);
+							$('.loader').removeClass('opened');
+							hasCached.course = true;
+							console.log('Storage items fetched:', courseData);
+						}
+
+					}
+				} else if (initGroupes == false) {
+					return {groupes: true, course: 204};
+				}
+
+				setTimeout(() => {$('.loader').removeClass('opened')}, 1000);
+			}
+		}
+
+		return hasCached;
+	}
+	refresh(){
+		let rank = $_GET('course') || 0;
 		Pull.groupes(this).then(state => {
 			if (state){
 				Pull.course(this, this.getUsedGroup().coursesList[rank].id);
 			}
 		});
-	}
-	updatePage(data, hasCached = true, refresh = false, network = false){
-		if (data[0] == 'error') {
-			console.log('error:', data[1]);
-			if (error[1] == 'login') {
-				alert('Vous avez été déconnectés du service, pour vous reconnecter, demandez un code barre. Une fois scanné le téléphone sera enregistré dans le service.');
-			}
-		}
-		else if(data[0] == 'exception' || data[1] == 'noCourses'){
-			setTimeout(() => {
-				UI.openMenu();
-				setTimeout(() => {
-					UI.addCourse();
-					$('.add').css({'display':'none'});
-				}, 500);
-			}, 1000);
-			Storage.clear();
-		}
-		else if(data[0] == 'done'){
-
-			course.setData(data, this);
-
-
-			$('.activate').remove();
-			$('.add, .calcul').removeClass('hidden').css({'display':''});
-			$('#btTouchSurf').css({'visibility':''});
-
-			$('.menu .course').remove();
-			data.coursesList.forEach(el => {
-				if(el.id == data.idCourse) {
-					$('.menu article').append(Generate.course(this, el.id, el.nom, 'opened'));
-				} else {
-					$('.menu article').append(Generate.course(this, el.id, el.nom));
-				}
-			});
-
-			if (!refresh) {
-				UI.acc(this);
-			}
-			else{
-				$('#refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
-				setTimeout(function(){
-					$('#refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
-				},2000);
-			}
-
-			if (data.oldCourse) {
-				$('.add, .calcul').addClass('hidden');
-				$('#btTouchSurf').css({'visibility':'hidden'});
-				$('.add').css({'display':'none'});
-				history.replaceState({key:'openCourse'}, '',`index.php?course=${data.idCourse}`);
-			}
-			else{
-				history.replaceState({key:'openCourse'}, '','index.php');
-			}
-
-			if (!data.startedState && !data.oldCourse) {
-				$('.main ul').prepend(Generate.activate());
-				$('.add').addClass('hidden');
-
-				if (!refresh) {
-					this.setSwipe(1);
-				}
-			}
-
-			if (network) { // Update storage
-				if(!data.oldCourse){
-					var stored = (Storage.getItem('courses') || new Array).filter(el => el.idCourse < data.idCourse);
-				}else{
-					var stored = (Storage.getItem('courses') || new Array).filter(el => el.idCourse != data.idCourse);
-				}
-				//console.log(stored);
-				stored.unshift(data);
-				Storage.setItem('items', stored);
-			}
-
-
-		}
-		else if(data[0] == 'offline'){
-			if (refresh == false) {
-				if (!hasCached) {
-					$('.add').css({'display':'none'});
-					$('.list, .prevList').html(
-						`<button class="offline" onclick="window.location = 'index.php';">
-							<i class="ms-Icon ms-Icon--NetworkTower" aria-hidden="true"></i>
-							Vous n'etes pas connectés<br>
-							<p>Je reviens à la dernière course</p>
-						</button>`
-					);
-				}
-			}
-		}
-		else{
-			console.log('unknown:', data);
-		}
 	}
 	notificationHandler(callback){
 		if (!("Notification" in window)) {
@@ -257,20 +215,19 @@ class App{
 
 				var storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
-					if(el.idCourse == course.id){
-						storage[i].articles = storage[i].articles.filter(el => el.id != index);
+					if(el.id == course.id){
+						storage[i].items.articles = storage[i].items.articles.filter(el => el.id != index);
 					}
 				});
+				Storage.setItem('courses', storage);
 
 				course.displayed.articles = course.displayed.articles.filter(el => el.id != index);
-
-				Storage.setItem('items', storage);
 			}
 
 		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			App.offlineMsg(err);
+			UI.offlineMsg(err);
 		});
 		
 	}
@@ -287,21 +244,20 @@ class App{
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
 
-
 				var storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
 					if(el.idCourse == course.id){
-						storage[i].previews = storage[i].previews.filter(el => el.id != index);
+						storage[i].items.previews = storage[i].items.previews.filter(el => el.id != index);
 					}
 				});
-				course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
+				Storage.setItem('courses', storage);
 
-				Storage.setItem('items', storage);
+				course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
 			}
 		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			App.offlineMsg(err);
+			UI.offlineMsg(err);
 		});
 	}
 	buy(id, prix){
@@ -311,25 +267,23 @@ class App{
 			url: "serveur/push.php",
 			data: { update: 'true', buyPreview: 'true', id: id, prix: prix, groupe: this.getUsedGroup().id}
 		}).then(data => {
-			var timer = 600;
-			var displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
+			let timer = 600,
+				displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
 	
 			$('.loader').removeClass('opened');
-			if (course.started == false) {
+			if (!course.started) {
 				$('.activate').click();
 				timer = 1000;
 			}
 	
 			this.closePrice();
-			UI.remove("preview",displayedIndex);
+			UI.remove("preview", displayedIndex);
 			setTimeout(() => {
 				this.setSwipe(0);
 				setTimeout(() => {
-					UI.closeCourse();
-					UI.closeMenu();
-					UI.closeArticle();
-					UI.closePreview();
-					$('.list').prepend(Generate.article(data.idArticle, data.titre, data.prix, this));
+					UI.acc(this);
+					$('.list').prepend(Generate.article(this, data.id, data.titre, data.prix));
+
 					this.totalPP(data.prix);
 					$('.prices #titreA, .prices #prix').val('');
 		
@@ -341,36 +295,39 @@ class App{
 	
 			var storage = Storage.getItem('courses');				
 			storage.forEach((el, i) => {
-				if(el.idCourse == course.id){
-					storage[i].previews = storage[i].previews.filter((obj) => (obj.id != data.idArticle));
-					storage[i].articles.unshift({id: data.idArticle, titre: data.titre, prix: data.prix});
+				if(el.id == course.id){
+					storage[i].items.previews = storage[i].items.previews.filter((obj) => (obj.id != data.id));
+					storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
 				}
 			});
-			Storage.setItem('items', storage);
+			Storage.setItem('courses', storage);
 	
-			course.displayed.previews = course.displayed.previews.filter((obj) => (obj.id != data.idArticle));
-			course.displayed.articles.unshift({id: data.idArticle, titre: data.titre, prix: data.prix});
+			course.displayed.previews = course.displayed.previews.filter((obj) => (obj.id != data.id));
+			course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
 	
 		}).catch((err) => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			self.offlineMsg(err);
+			UI.offlineMsg(err);
 		});
 	}
 	updateGroups(data){
 		if (data.status === 200){
-			$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
-			$('.main ul').children('.activate, .noCourse').remove();
+			let usedGroupRank = Storage.getItem('usedGroup') || 0;
+			if(!jsonEqual(this.groupes, data.groupes)){
+				Storage.setItem('groupes', data.groupes);
+				$('.groupe').remove();
+				data.groupes.forEach(grp => {
+					$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.code, grp.membres));
+				});
+				this.groupes = data.groupes;
 
-			this.groupes = data.groupes;
-			Storage.setItem('groupes', this.groupes);
-			$('.groupe').remove();
-			this.groupes.forEach(grp => {
-				$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.code, grp.membres));
-			});
-
-			return this.switchGroup(Storage.getItem('usedGroupe') || 0);
+			}
+			if(this.getUsedGroup() != this.getGroup(usedGroupRank)){
+				return this.switchGroup(usedGroupRank);
+			} else return true;
 		}
+
 	}
 	switchGroup(rank){ // Rank in array
 		this.usedGroupe = rank;
@@ -378,11 +335,13 @@ class App{
 		// UPD UI parametres
 		$('.groupe').removeClass('opened'); // Change Group
 		$('.groupe').eq(rank).addClass('opened');
+	
+		$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
+		$('.activate, .noCourse, noGroupe').remove();
 		
 		// UPD CourseList
 		$('.menu .course').remove();
-
-		if(this.getUsedGroup().coursesList.length != 0){
+		if(this.getUsedGroup().coursesList && this.getUsedGroup().coursesList.length != 0){
 			this.getUsedGroup().coursesList.forEach((el, id) => {
 				$('.menu article').append(Generate.course(this, id, el.nom));
 			});
@@ -390,17 +349,23 @@ class App{
 		} else {
 			$('.add, .calcul').css({'visibility':'hidden'});
 			$('.main ul').prepend(Generate.noCourse());
+			return false;
 		}
+		
 	}
 	getUsedGroup(){
-		return this.groupes[this.usedGroupe];
+		if(this.groupes) return this.groupes[this.usedGroupe];
+	}
+	getGroup(rank){
+		if(this.groupes) return this.groupes[rank]
 	}
 	updateItems(data, network = false, refresh = false){
 		if (data.status === 200){
 			let rank = this.getUsedGroup().coursesList.indexOf(this.getUsedGroup().coursesList.filter(el => el.id == data.course.id)[0]);
 			course.update(this, data.course);
 
-			$('.activate').remove();
+			$('.menu .course').removeClass('opened');
+			$('.activate, .noCourse').remove();
 			$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 			$('#btTouchSurf').css({'visibility':''});
 

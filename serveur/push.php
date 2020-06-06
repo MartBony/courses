@@ -35,7 +35,11 @@ function push($user, $usedCourse, PDO $bdd){
 		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
 		$reqIdInserted->execute(array($usedCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
-		echo json_encode(['prix'=>$prix, 'idArticle'=> $idInserted['id'], 'titre'=> $titre]);
+		echo json_encode([
+			'id' => $idInserted['id'],
+			'titre' => $titre,
+			'prix' => $prix
+		]);
 
 		return true;
 	}
@@ -49,7 +53,11 @@ function push($user, $usedCourse, PDO $bdd){
 			SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
 		$reqIdInserted->execute(array($usedCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
-		echo json_encode(['idPreview'=> $idInserted['id'], 'titre'=> $titre, 'color' => $user['hexColor']]);
+		echo json_encode([
+			'id'=> $idInserted['id'],
+			'titre'=> $titre,
+			'color' => $user['hexColor']
+		]);
 		
 		return true;
 	}
@@ -92,15 +100,24 @@ function push($user, $usedCourse, PDO $bdd){
 		$reqIdInserted = $bdd->prepare('SELECT * FROM articles WHERE id=?');
 		$reqIdInserted->execute(array((int) $_POST['id']));
 		$idInserted = $reqIdInserted->fetch();
-		echo json_encode(['prix'=>$idInserted['prix'], 'idArticle'=> (int) $_POST['id'], 'titre'=> $idInserted['titre'], 'prix2' => (float) $_POST['prix']]);
+
+		echo json_encode([
+			'id' => $_POST['id'],
+			'titre' => $idInserted['titre'],
+			'prix' => $idInserted['prix']
+		]);
 	
 		return true;
 	}
 	elseif(isset($_POST['activate'])) {
+		$time = time();
 		$updCourse = $bdd->prepare('UPDATE courses SET dateStart=? WHERE id=?');
-		$updCourse->execute(array(time(), (int) $_POST['id']));
+		$updCourse->execute(array($time, $usedCourse['id']));
 
-		echo json_encode(['done']);
+		echo json_encode([
+			"status" => 200,
+			"time" => $time
+		]);
 		
 		return true;
 	}

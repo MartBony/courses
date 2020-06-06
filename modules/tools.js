@@ -1,4 +1,4 @@
-export default function $_GET(param) {
+function $_GET(param) {
 	var vars = {};
 	window.location.href.replace( location.hash, '' ).replace( 
 		/[?&]+([^=&]+)=?([^&]*)?/gi, // regexp
@@ -12,3 +12,9 @@ export default function $_GET(param) {
 	}
 	return vars;
 }
+
+function jsonEqual(a,b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export { $_GET, jsonEqual };

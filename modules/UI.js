@@ -123,7 +123,7 @@ export default class UI {
 			'left': olds[index].x,
 			'width': olds[index].width,
 			'height': olds[index].height,
-			'transition':'all 300ms var(--ease-sortir)',
+			'transition':'all 100ms var(--ease-sortir)',
 			'transform':'scale(0.7)',
 			'opacity':'0'
 		});
@@ -138,7 +138,7 @@ export default class UI {
 
 		// Apply transformations
 		$(selector).each(function(e){
-			if(e > index) {
+			if(e != index) {
 				$(selector).eq(e).css({
 					'position':'absolute',
 					'top': olds[e].y +"px",
@@ -153,9 +153,9 @@ export default class UI {
 						'left': news[e].x +"px",
 						'width': news[e].width,
 						'height': news[e].height,
-						'transition':'all 300ms var(--ease)'
+						'transition':'all 180ms var(--ease)'
 					});
-				}, e*30+200);
+				}, e*30+100);
 			}
 		});
 		setTimeout(function(){
@@ -169,9 +169,9 @@ export default class UI {
 				'width':'',
 				'height':''
 			});
-		}, 510+(olds.length)*30);
+		}, 310+(olds.length)*30);
 	}
-	static offlineMsg(err, msg = 'Le réseau est déconnecté ou insuffisant, la requette à été annulée'){
+	static offlineMsg(err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée"){
 		console.log(err);
 		$('.error').css({'display':'flex'});
 		$('.error p').html(msg);

@@ -31,7 +31,7 @@ function swipedetect(el, callback){
 		
 		$('header h1').css({'transform':'translateX('+ distX/20 +'px)'});
 		$('.add').css({'transform':'translateX('+ distX/20 +'px)', 'transition':'none'});
-		$('.refresh').css({'transform':'translateX('+ distX/40 +'px)', 'transition':'none'});
+		$('#refresh').css({'transform':'translateX('+ distX/40 +'px)', 'transition':'none'});
 		if($('body').hasClass('bodyPreview')){
 			if (distX > 0) {
 				$('.prevList').css({'transform':'translateX('+ distX/2 +'px)'});

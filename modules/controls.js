@@ -30,7 +30,7 @@ export default function initEvents(app, course){
 
 
 		$('header h1').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':'translateX(0px)'});
-		$('.add, .refresh').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
+		$('.add, #refresh').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
 
 		setTimeout(function(){
 			$('.calcul').css({'height': '', 'transition':'', 'display':''});
@@ -81,6 +81,10 @@ export default function initEvents(app, course){
 
 	$(document).on('click', '.noCourse',() => {
 		UI.openMenu();
+	});
+
+	$(document).on('click', '.noGroupe',() => {
+		UI.openParams();
 	});
 
 	$('#params input').change(()=>{
@@ -168,8 +172,8 @@ export default function initEvents(app, course){
 
 	$(document).on('click', '.groupe',e => {
 		var index = Array.from(document.querySelectorAll('#groupes .groupe')).indexOf(e.currentTarget);
-		Storage.setItem('usedGroupe', index);
-		app.open(0);
+		Storage.setItem('usedGroup', index);
+		app.open();
 	});
 
 	$('header i').click(function(){
@@ -203,35 +207,39 @@ export default function initEvents(app, course){
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', activate: 'true', id: course.id, groupe: app.getUsedGroup().id}
+			data: { update: 'true', activate: 'true', groupe: app.getUsedGroup().id}
 			})
 		.then(function( data ) {
-			setTimeout(function(){
-				$('.add').removeClass('hidden');
-				$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
+			if(data.status == 200){
 				setTimeout(function(){
-					$('.activate').css({'display':'none'});
-				}, 420);	
-			},400);
-			if(course.swipe == 1){
-				setTimeout(function(){
-					app.setSwipe(0);
-				},200);
-			}
-
-			var storage = Storage.getItem('items');				
-			storage.forEach((el, i) => {
-				if(el.idCourse == course.id){
-					storage[i].startedState = true;
+					$('.add').removeClass('hidden');
+					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
+					setTimeout(function(){
+						$('.activate').css({'display':'none'});
+					}, 420);	
+				},400);
+				if(course.swipe == 1){
+					setTimeout(function(){
+						app.setSwipe(0);
+					},200);
 				}
-			});
-			course.started = true;
 
-			Storage.setItem('items', storage);
+				var storage = Storage.getItem('courses');				
+				storage.forEach((el, i) => {
+					if(el.id == course.id){
+						storage[i].dateStart = data.time;
+					}
+				});
+				course.started = true;
+
+				Storage.setItem('courses', storage);
+			} else {
+				alert("Un problème du serveur est survenu, réessayez");
+			}
 		})
 		.catch(function(err){
 			$('.activate').css({'opacity':'1'});
-			course.offlineMsg(err);
+			UI.offlineMsg(err);
 		});
 	});
 
@@ -248,18 +256,13 @@ export default function initEvents(app, course){
 						})
 					.then(function( data ) {
 						$('.loader').removeClass('opened');
-						UI.closeCourse();
-						UI.closeMenu();
-						UI.closeParams();
-						UI.closeArticle();
-						UI.closePreview();
+						UI.acc(app);
 
-						if (!course.started) {
-							$('.activate').after(Generate.article(data.idArticle, data.titre, data.prix, app));
-						}else{
-							$('html, body').animate({scrollTop: 0}, 30);
-							$('.list').prepend(Generate.article(data.idArticle, data.titre, data.prix, app));
-						}
+						if (!course.started) $('.activate').click();
+
+						$('html, body').animate({scrollTop: 0}, 30);
+						$('.list').prepend(Generate.article(app, data.id, data.titre, data.prix));
+				
 						app.totalPP(data.prix);
 						$('#addarticle #titreA, #addarticle #prix').val('');
 
@@ -267,20 +270,23 @@ export default function initEvents(app, course){
 							$('.article').removeClass('animateSlideIn');
 						},300);
 
-						var storage = Storage.getItem('items');				
+						console.log(data)
+
+						var storage = Storage.getItem('courses');
+						storage.total = course.total;		
 						storage.forEach((el, i) => {
-							if(el.idCourse == course.id){
-								storage[i].articles.unshift({id: data.idArticle, titre: data.titre, prix: data.prix});
+							if(el.id == course.id){
+								storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
 							}
 						});
-						course.displayed.articles.unshift({id: data.idArticle, titre: data.titre, prix: data.prix});
 
-						Storage.setItem('items', storage);
+						course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+
+						Storage.setItem('courses', storage);
 					})
 					.catch(err => {
-						console.log(err);
 						$('.loader').removeClass('opened');
-						course.offlineMsg(err);
+						UI.offlineMsg(err);
 					});
 				}
 				else{
@@ -309,11 +315,11 @@ export default function initEvents(app, course){
 				$('.loader').removeClass('opened');
 				UI.acc(app);
 				if (!course.started) {
-					$('.activate').eq(1).after(Generate.preview(data.idPreview, data.titre, data.color, app));
+					$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
 				}
 				else{
 					$('html, body').animate({scrollTop: 0}, 30);
-					$('.prevList').prepend(Generate.preview(data.idPreview, data.titre, data.color, app));
+					$('.prevList').prepend(Generate.preview(app, data.id, data.titre, data.color));
 				}
 				$('#addpreview #titreP').val('');
 				setTimeout(function(){
@@ -321,19 +327,19 @@ export default function initEvents(app, course){
 				},300);
 
 
-				var storage = Storage.getItem('items');				
+				var storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
-					if(el.idCourse == course.id){
-						storage[i].previews.unshift({id: data.idPreview, titre: data.titre, color: data.color});
+					if(el.id == course.id){
+						storage[i].items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
 					}
 				});
-				course.displayed.previews.unshift({id: data.idPreview, titre: data.titre, color: data.color});
+				course.displayed.previews.unshift({id: data.id, titre: data.titre, color: data.color});
 
-				Storage.setItem('items', storage);
+				Storage.setItem('courses', storage);
 			}).catch(err => {
 				console.log(err);
 				$('.loader').removeClass('opened');
-				course.offlineMsg();
+				UI.offlineMsg();
 			});
 		}
 		else
@@ -347,12 +353,9 @@ export default function initEvents(app, course){
 		if ($('#prices #newPrice').val() && $('#prices #newPrice').val() != '') {
 			if (!isNaN(parseFloat( $('#prices #newPrice').val().replace(',','.')))) {
 				app.buy(course.priceCursor.index,$('#prices #newPrice').val().replace(',','.'));
+			} else {
+				alert('Il faux rentrer un prix numérique');
 			}
-			else
-			{
-				alert('Il faut donner un nom à l\'article 😑');
-			}
-
 		}
 		else{
 			alert('Il faut rentrer un prix');
@@ -385,7 +388,7 @@ export default function initEvents(app, course){
 					})
 					.catch(function(err){
 						$('.loader').removeClass('opened');
-						course.offlineMsg(err);
+						UI.offlineMsg(err);
 					});
 
 				}
