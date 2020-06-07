@@ -4,7 +4,7 @@ function getCourse($user, PDO $bdd, $callback) {
 	if(isset($_POST['groupe']) && !empty($_POST['groupe'])){
 		if (strpos($user['groupe'], $_POST['groupe']) !== false) {
 		
-			$reqGroupe = $bdd->prepare('SELECT * FROM groupes WHERE id = ?');
+			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
 			$reqGroupe->execute(array($_POST['groupe']));
 			$reqGroupe->closeCursor();
 

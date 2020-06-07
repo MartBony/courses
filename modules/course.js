@@ -28,9 +28,9 @@ export default class Course{
 		this.total = Number(data.total);
 		this.maxPrice = data.maxPrice;
 		$('#maxprice').html(this.maxPrice + app.params.currency);
-		this.monthCost = app.getUsedGroup().monthCost;
-		this.coef = Number(app.getUsedGroup().coef);
-		this.old = data.id != app.getUsedGroup().coursesList[0].id;
+		this.monthCost = app.usedGroupe.monthCost;
+		this.coef = Number(app.usedGroupe.coef);
+		this.old = data.id != app.usedGroupe.coursesList[0].id;
 
 		app.totalPP(0, true);
 

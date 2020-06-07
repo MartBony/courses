@@ -3,14 +3,14 @@ require('../dbConnect.php');
 require_once('checkers/login.php');
 
 function groupes($user, PDO $bdd) {
-	$reqAllCourses = $bdd->prepare('SELECT * FROM courses WHERE groupe = ? ORDER BY id DESC');
+	$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC');
 	$groupsInfo = array();
-	$reqAllUsers = $bdd->prepare('SELECT nom, groupe FROM securite');
+	$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
 
-	foreach(str_split($user['groupe']) as $idGroupe){
+	foreach(preg_split("/\s/",$user['groupe']) as $idGroupe){
 
 		// Pulling group info
-		$reqGroupe = $bdd->prepare('SELECT * FROM groupes WHERE id = ?');
+		$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
 		$reqGroupe->execute(array($idGroupe));
 		$groupe = $reqGroupe->fetch();
 		$reqGroupe->closeCursor();
@@ -65,7 +65,6 @@ function groupes($user, PDO $bdd) {
 			array_push($groupsInfo, array(
 				'id' => $groupe['id'],
 				'nom' => $groupe['nom'],
-				'code' => $groupe['code'],
 				'coursesList' => $coursesList,
 				'membres' => $membresGp,
 				'monthCost' => $monthCost,
@@ -73,14 +72,13 @@ function groupes($user, PDO $bdd) {
 				'error' => $error
 			));
 		
-		} else {
-			echo json_encode(array('status' => 204));
 		}
 	}
 
 	echo json_encode(array(
 		'status' => 200,
-		'groupes' => $groupsInfo
+		'groupes' => $groupsInfo,
+		'nom' => $user['nom']
 	));
 }
 

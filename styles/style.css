@@ -1,6 +1,7 @@
 @import "./switches.css";
 @import "./parametres.css";
 @import "./popups.css";
+@import "./forms.css";
 
 :root{
 	font-size: 10px;
@@ -255,7 +256,7 @@ body, .overflowed
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	z-index: 6;
+	z-index: 8;
 	background: rgba(255,255,255,0.7);
 	display: flex;
 	flex-direction: column;
@@ -888,178 +889,7 @@ section.calcul
 
 
 
-#addCourse
-{
-	z-index: 5;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: white;
-	padding-top: 50px;
-	opacity: 0;
-	transform: translateY(200px);
-	display: none;
-	transition: all 400ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
 
-#addCourse h1
-{
-	font-size: 2.5rem;
-	font-weight: bold;
-	text-transform: uppercase;
-	position: absolute;
-	width: 100%;
-	top: 0;
-	left: 0;
-	text-align: center;
-	padding: 8px 8px 8px 50px;
-	margin: 0;
-	box-sizing: border-box;
-}
-
-
-
-#addarticle, #addpreview, #prices
-{
-	z-index: 5;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: white;
-	padding-top: 60px;
-	opacity: 0;
-	display: none;
-	transition: 100ms all 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#prices
-{
-	overflow: auto;
-	flex-direction: column;
-	align-items: center;
-}
-
-#addarticle i, #addCourse i, #addpreview i, #prices i{
-	opacity: 0;
-	transform: all 100ms ease;
-	position: absolute;
-	padding: 10px;
-	top: 10px;
-	left: 10px;
-	font-size: 3rem;
-}
-
-#addCourse i{
-	top: 0;
-	left: 0;
-}
-
-#addarticle i.opened, #addCourse i.opened, #addpreview i.opened, #prices i
-{
-	opacity: 1;
-}
-
-#addarticle form, #addCourse form, #addpreview form, #prices form
-{
-	width: 90%;
-	margin: 10px auto;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	box-sizing: border-box;
-}
-
-.prixFlex, .setPrixFlex
-{
-	display: flex;
-	align-items: center;
-	font-size: 1.5rem;
-	margin: 0px 0 30px 0px;
-	padding: 0;
-	width: 100%;
-	box-sizing: border-box;
-	height: 30px;
-	opacity: 0;
-	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#addarticle input, #addCourse input, #addpreview input, #prices input
-{
-	outline: none;
-	font-size: 1.5rem;
-	margin: 0 0 15px 0;
-	width: 100%;
-	box-sizing: border-box;
-	height: 30px;
-	border-radius: 2px;
-	border: 0px black solid;
-	border-bottom: 1px black solid;
-	box-shadow: 0 0 10px -6px rgba(0,0,0,0.3);
-	padding: 2px 5px;
-	box-sizing: border-box;
-	transform: translateY(50px);
-	opacity: 0;
-	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#addarticle input:focus, #addCourse input:focus, #addpreview input:focus, #prices input:focus
-{
-	box-shadow: 0 0 6px -4px rgba(0,0,0,0.5);
-}
-
-input#prix, input#maxPrice, input#newPrice
-{
-	width: auto;
-	margin: 0px 10px 0px 0px;
-	flex: 1;
-}
-
-#addarticle label, #addCourse label, #addpreview label, #prices label
-{
-	font-size: 1.6rem;
-	box-sizing: border-box;
-	transform: translateY(50px);
-	opacity: 0;
-	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#prices ul
-{
-	opacity: 0;
-	transform: translateY(30px);
-	width: 100%;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	list-style-type: none;
-	grid-gap: 4px;
-	padding: 4px;
-	box-sizing: border-box;
-	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#prices li
-{
-	padding: 10px 0px;
-	text-align: center;
-	border-radius: 4px;
-	font-size: 1.7rem;
-	background: #ffa811;
-	color: white;
-}
-
-#addarticle label.opened, #addarticle input.opened, 
-#addCourse label.opened, #addCourse input.opened, 
-.prixFlex.opened, #addpreview label.opened, 
-#addpreview input.opened, 
-#prices label.opened, #prices input.opened, .setPrixFlex.opened, #prices ul.opened, .titrePrice.opened
-{
-	transform: translateY(0px);
-	opacity: 1;
-}
 
 .labelfile
 {

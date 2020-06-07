@@ -1,4 +1,5 @@
 import App from './app.js';
+import Pull from './requests.js';
 import UI from './UI.js';
 import Storage from './storage.js';
 import Generate from './generate.js';
@@ -83,7 +84,7 @@ export default function initEvents(app, course){
 		UI.openMenu();
 	});
 
-	$(document).on('click', '.noGroupe',() => {
+	$(document).on('click', '.lienParams',() => {
 		UI.openParams();
 	});
 
@@ -134,7 +135,7 @@ export default function initEvents(app, course){
 		UI.openParams();
 	});
 
-	$('#params i').click(function(){
+	$('#params > i').click(function(){
 		UI.closeParams();
 	});
 
@@ -170,11 +171,56 @@ export default function initEvents(app, course){
 		$(this).removeClass('ready');
 	});
 
-	$(document).on('click', '.groupe',e => {
-		var index = Array.from(document.querySelectorAll('#groupes .groupe')).indexOf(e.currentTarget);
-		Storage.setItem('usedGroup', index);
-		app.open();
+	// Groupes
+
+	$(document).on('click', '.groupe', e => {
+		if(e.target.tagName !== "I"){
+			let index = app.groupes[Array.from(document.querySelectorAll('#groupes .groupe')).indexOf(e.currentTarget)].id;
+			app.open(index);
+		}
 	});
+	
+	$(document).on('click', '.groupe i.ms-Icon--Leave', e => {
+		UI.promptLeave(app);
+	});
+	
+	$(document).on('click', '.groupe i.ms-Icon--AddFriend', e => {
+		UI.promptAddFriend(app);
+	});
+
+	$(document).on('click', '#leaveGrp .back', e => {
+		UI.backLeave();
+	});
+
+	$(document).on('click', '#leaveGrp .leaveGrp', e => {
+		app.leaveGrp();
+	});
+
+	$('#newgroupe').on('click', e => {
+		UI.openAddGroup();
+	});
+
+	$('#addGroupe > i').click(function(){
+		UI.closeAddGroup();
+	});
+
+	// invitations
+	$('#generateId').click(e => {
+		app.generateInviteKey();
+	});
+
+	$('#invitation > i').click(function(){
+		UI.closeInvite(app);
+	});
+
+	$('#invitations button').click(() => {
+		Pull.invitations(app);
+	});
+
+
+
+
+
 
 	$('header i').click(function(){
 		UI.openMenu();
@@ -207,7 +253,7 @@ export default function initEvents(app, course){
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', activate: 'true', groupe: app.getUsedGroup().id}
+			data: { update: 'true', activate: 'true', groupe: app.usedGroupe.id}
 			})
 		.then(function( data ) {
 			if(data.status == 200){
@@ -252,7 +298,7 @@ export default function initEvents(app, course){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { update: 'true', submitArticle: 'true', titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.getUsedGroup().id}
+						data: { update: 'true', submitArticle: 'true', titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id}
 						})
 					.then(function( data ) {
 						$('.loader').removeClass('opened');
@@ -272,10 +318,10 @@ export default function initEvents(app, course){
 
 						console.log(data)
 
-						var storage = Storage.getItem('courses');
-						storage.total = course.total;		
+						var storage = Storage.getItem('courses') || new Array();
 						storage.forEach((el, i) => {
 							if(el.id == course.id){
+								storage[i].total = course.total;
 								storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
 							}
 						});
@@ -310,7 +356,7 @@ export default function initEvents(app, course){
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: { update: 'true', submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.getUsedGroup().id}
+				data: { update: 'true', submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.usedGroupe.id}
 			}).then(data => {
 				$('.loader').removeClass('opened');
 				UI.acc(app);
@@ -376,17 +422,16 @@ export default function initEvents(app, course){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { update: 'true', submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.getUsedGroup().id}
-						})
-					.then(function(data){
-						history.replaceState({key:'createCourse'}, '','index.php');
-						$('#addCourse #titreC, #addCourse #maxPrice').val('');
-						$('.loader').removeClass('opened');
+						data: { update: 'true', submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id}
+					}).then(function(data){
+						if(data.status == 200){
+							history.replaceState({key:'createCourse'}, '','index.php');
+							$('#addCourse #titreC, #addCourse #maxPrice').val('');
+							$('.loader').removeClass('opened');
 
-						app.open();
-						
-					})
-					.catch(function(err){
+							app.refresh(0);
+						}
+					}).catch(function(err){
 						$('.loader').removeClass('opened');
 						UI.offlineMsg(err);
 					});
@@ -404,6 +449,65 @@ export default function initEvents(app, course){
 		else
 		{
 			alert('Il faut donner un nom à la course 😑');
+		}
+	});
+
+	$('#addGroupe form').on('submit', e => {
+		e.preventDefault();
+		if ($('#addGroupe #titreG').val() && $('#addGroupe #titreG').val() != '') {
+			$('.loader').addClass('opened');
+			$.ajax({
+				method: "POST",
+				url: "serveur/push.php",
+				data: { newGroupe: 'true', titre: $('#addGroupe #titreG').val() }
+			}).then(data => {
+				if(data.status == 200){
+					$('.loader').removeClass('opened');
+					$('#addGroupe #titreG').val("");
+					Storage.clear();
+					UI.closeAddGroup();
+					app.open();
+					
+				}
+			}).catch(function(err){
+				$('.loader').removeClass('opened');
+				UI.offlineMsg(err);
+			});
+		}
+		else
+		{
+			alert('Il faut donner un nom à la course 😑');
+		}
+	});
+
+	$('#invitation form').on('submit', e => {
+		e.preventDefault();
+		if ($('#invitation #nomInv').val() && $('#invitation #nomInv').val() != '') {
+			if ($('#invitation #keyInv').val() && $('#invitation #keyInv').val() != '') {
+		
+				$('.loader').addClass('opened');
+				$.ajax({
+					method: "POST",
+					url: "serveur/invites.php",
+					data: { invite: 'true', nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id}
+				}).then(function(data){
+					if(data.status == 200){
+						UI.closeInvite();
+						$('.loader').removeClass('opened');
+						alert("Invitation envoyée, surveillez les paramètres de l'utilisateur à la section invitation");
+					}
+				}).catch(function(err){
+					$('.loader').removeClass('opened');
+					UI.offlineMsg(err);
+				});
+			}
+			else{
+				alert('Rensignez la clef générée par l\'utilisateur');
+			}
+		}
+		else
+		{
+			alert('Renseignez le nom de l\'utilisateur');
 		}
 	});
 }

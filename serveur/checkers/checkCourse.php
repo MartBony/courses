@@ -2,7 +2,7 @@
 
 function checkCourse($user, PDO $bdd, $callback) {
 	if(isset($_POST['id']) && !empty($_POST['id'])){
-		$reqUsedCourse = $bdd->prepare('SELECT * FROM `courses` WHERE id = ?');
+		$reqUsedCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = ?');
 		$reqUsedCourse->execute(array($_POST['id']));
 		if($reqUsedCourse->rowCount() == 1){
 			$usedCourse = $reqUsedCourse->fetch();

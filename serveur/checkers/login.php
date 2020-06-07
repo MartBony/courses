@@ -2,7 +2,7 @@
 
 function login( PDO $bdd, $callback){
 	if(isset($_COOKIE['clefCourses'])){
-		$requser = $bdd->prepare('SELECT * FROM securite WHERE clef = ?');
+		$requser = $bdd->prepare('SELECT * FROM `users` WHERE `clef` = ?');
 		$requser->execute(array(hash('sha512', (string) $_COOKIE['clefCourses'])));
 		$userexist = $requser->rowCount();
 

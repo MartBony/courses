@@ -1,4 +1,5 @@
 import {$_GET} from "./tools.js";
+import UI from './UI.js';
 
 export default class Generate{
 	static course(app, rank, nom, classe = ''){
@@ -12,17 +13,20 @@ export default class Generate{
 		return button;
 		/* return `<button class="course ${id} ${classe}" onclick="app.open(${id},true);">${nom}</button>`; */
 	}
-	static groupe(app, id, nom, code, membres){
+	static groupe(app, id, nom, membres){
 		let button = document.createElement('button'),
 			h4 = document.createElement('h4'),
 			ul = document.createElement('ul'),
 			remv = document.createElement('i'),
-			childrens = [h4, ul, remv];
+			invite = document.createElement('i'),
+			childrens = [h4, ul, invite, remv];
 
 		button.className = "groupe g"+id;
-		h4.innerHTML = `${nom} (${code})`;
+		h4.innerHTML = nom;
 		remv.className = "ms-Icon ms-Icon--Leave";
 		remv.setAttribute("aria-hidden","true");
+		invite.className = "ms-Icon ms-Icon--AddFriend";
+		invite.setAttribute("aria-hidden","true");
 		membres.forEach(membre => {
 			let li = document.createElement('li');
 			li.innerHTML = membre;
@@ -150,25 +154,6 @@ export default class Generate{
 		i.setAttribute("aria-hidden","true");
 		h4.innerHTML = "Aucune course";
 		p.innerHTML = "Ouvrir le menu en tapant ici";
-		
-		childrens.forEach(child => {
-			button.appendChild(child);
-		});
-
-		return button;
-	}
-	static noGroupe(){
-		let button = document.createElement('button'),
-			i = document.createElement('i'),
-			h4 = document.createElement('h4'),
-			p = document.createElement('p'),
-			childrens = [i, h4, p];
-
-		button.className = "noGroupe";
-		i.className = "ms-Icon ms-Icon--Settings";
-		i.setAttribute("aria-hidden","true");
-		h4.innerHTML = "Aucun groupe";
-		p.innerHTML = "Ouvrir les paramètres en tapant ici";
 		
 		childrens.forEach(child => {
 			button.appendChild(child);

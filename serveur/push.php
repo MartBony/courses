@@ -9,12 +9,78 @@ function pushCousesIndependent($user, PDO $bdd){
 		$titre = htmlspecialchars((string)  $_POST['titre']);
 		$maxPrice = htmlspecialchars((string)  $_POST['maxPrice']);
 
-		$insert = $bdd->prepare('INSERT INTO courses (nom, maxprice, groupe) VALUES (?,?,?)');
+		$insert = $bdd->prepare('INSERT INTO courses (`nom`, `maxprice`, `groupe`) VALUES (?,?,?)');
 		$insert->execute(array($titre, $maxPrice, $_POST['groupe']));
 
-		echo json_encode(['done']);
+		echo json_encode(array('status' => 200));
 		return true;
 
+	} else if(isset($_POST['newGroupe'])) {
+		if(isset($_POST['titre']) && strlen($_POST['titre']) < 15){
+			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)');
+			$insertGroupe->execute(array($_POST['titre']));
+
+			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `nom` = ? ORDER BY `id` DESC LIMIT 0,1');
+			$reqGroupe->execute(array($_POST['titre']));
+			$groupe = $reqGroupe->fetch();
+
+			$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
+			$insertUser->execute(array(( $groupe['id'] . " " . $user['groupe']), $user['id']));
+
+			echo json_encode(array('status' => 200));
+
+		} else {
+			echo json_encode(array('status' => 400));
+		}
+
+		return true;
+	} else if(isset($_POST['leaveGroup']) && isset($_POST['groupe']) && strlen($_POST['groupe']) != 0) {
+		if(strpos($user['groupe'], $_POST['groupe']) !== false){
+			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
+			$reqGroupe->execute(array($_POST['groupe']));
+			$reqGroupe->closeCursor();
+			if($reqGroupe->rowCount() == 1){
+				$membres = 0;
+				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
+				$reqAllUsers->execute();
+				while($scanedUser = $reqAllUsers->fetch()){
+					if (strpos($scanedUser['groupe'], $_POST['groupe']) !== false) {
+						$membres++;
+					}
+				}
+				$reqAllUsers->closeCursor();
+
+				if($membres == 1){
+					$reqAllCourses = $bdd->prepare('SELECT id FROM courses WHERE groupe = ? ORDER BY id DESC');
+					$reqAllCourses->execute(array($_POST['groupe']));
+					while($resCoursesGp = $reqAllCourses->fetch()){
+						$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+						$delArticles->execute(array($resCoursesGp['id']));
+					}
+					$reqAllCourses->closeCursor();
+					$delCourses = $bdd->prepare('DELETE FROM `courses` WHERE `groupe` = ?');
+					$delCourses->execute(array($_POST['groupe']));
+					$delCourses->closeCursor();
+
+					$delgroupe = $bdd->prepare('DELETE FROM `groupes` WHERE `id` = ?');
+					$delgroupe->execute(array($_POST['groupe']));
+					$delgroupe->closeCursor();
+				}
+
+				$newString = str_replace("  ", " ", str_replace($_POST['groupe'],"",$user['groupe']));
+
+				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
+				$updateUser->execute(array($newString, $user['id']));
+
+				echo json_encode(array('status' => 200));
+			
+			} else {
+				echo json_encode(array('status' => 204));
+			}
+		} else {
+			echo json_encode(array('status' => 403));
+		}
+		return true;
 	} else {
 		return false;
 	}

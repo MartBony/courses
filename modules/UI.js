@@ -94,7 +94,7 @@ export default class UI {
 		$('.menu').removeClass('opened');
 	}
 	static openParams(){
-		$('#params').css({'display':'flex'});
+		$('#params').css({'display':'block'});
 		setTimeout(function(){
 			$('#params').addClass('opened');
 		},10);
@@ -102,6 +102,25 @@ export default class UI {
 	static closeParams(){
 		$('#params').css({'display':'none'});
 		$('#params').removeClass('opened');
+	}
+	static openAddGroup(){
+		$('#addGroupe').css({'display':'block'});
+
+		setTimeout(() => {
+			$('#addGroupe').css({'opacity':'1', 'transform':'translateY(0)'});
+		},10);
+		$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').each(function(i){	
+			setTimeout(function(){
+				$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').eq(i).addClass('opened');
+			},20*i+250);
+		});
+		setTimeout(function(){
+			$('#addGroupe input').eq(0).focus();
+		},200);
+	}
+	static closeAddGroup(){
+		$('#addGroupe').css({'display':'', 'opacity':'', 'transform':''});
+		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
 	static remove(type, index){
 		let selector = "."+ type,
@@ -170,6 +189,65 @@ export default class UI {
 				'height':''
 			});
 		}, 310+(olds.length)*30);
+	}
+	static promptAddFriend(app){	
+		$('#invitation').css({'display':'block'});
+		$('#invitation span').html(app.usedGroupe.nom);
+
+		setTimeout(() => {
+			$('#invitation').css({'opacity':'1', 'transform':'translateY(0)'});
+		},10);
+		$('#invitation div, #invitation input, #invitation label, #invitation i').each(function(i){	
+			setTimeout(function(){
+				$('#invitation div, #invitation input, #invitation label, #invitation i').eq(i).addClass('opened');
+			},20*i+250);
+		});
+		setTimeout(function(){
+			$('#invitation input').eq(0).focus();
+		},200);
+	}
+	static closeInvite(){
+		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
+		$('#invitation label, #invitation input').removeClass('opened');
+	}
+	static promptLeave(app){
+		let h4 = document.createElement('h4'),
+			ul = document.createElement('ul'),
+			childrens = [h4, ul];
+
+		$('#leaveGrp div').children().remove();
+
+		h4.innerHTML = app.usedGroupe.nom;
+		app.usedGroupe.membres.forEach(membre => {
+			let li = document.createElement('li');
+			li.innerHTML = membre;
+			ul.appendChild(li);
+		});
+
+		childrens.forEach(child => {
+			$('#leaveGrp div')[0].appendChild(child);
+		});
+
+		$('#leaveGrp').css({'display':'flex'});
+		setTimeout(() => {
+			$('#leaveGrp').addClass('opened');
+		}, 10);
+	}
+	static backLeave(){
+		$('#leaveGrp').removeClass('opened');
+		setTimeout(() => {
+			$('#leaveGrp').css({'display':'none'});
+		}, 300);
+	}
+	static promptNoGroupe(app){
+		$('#noGroupe').css({'display':'flex'});
+		setTimeout(() => {
+			$('#noGroupe').addClass('opened');
+		}, 10);
+	}
+	static closeNoGroupe(){
+		$('#noGroupe').removeClass('opened');
+		$('#noGroupe').css({'display':'none'});
 	}
 	static offlineMsg(err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée"){
 		console.log(err);

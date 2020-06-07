@@ -51,3 +51,152 @@
 	top: 10px;
 	font-size: 41px;
 }
+
+#leaveGrp, #noGroupe{
+	display: none;
+	z-index: 6;
+	align-items: center;
+	justify-content: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+
+	opacity: 0;
+	background: rgba(0,0,0,0.3);
+	transition: all 300ms ease;
+}
+
+#leaveGrp.opened, #noGroupe.opened{
+	opacity: 1;
+}
+
+#noGroupe{
+	z-index: 3;
+}
+
+#leaveGrp article, #noGroupe article{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	opacity: 0;
+	transform: scale(0.98);
+	max-width: 90vw;
+	background: white;
+	border-radius: 5px;
+	box-shadow: 0 3px 20px -10px rgba(0,0,0,0.4);
+	padding: 20px 15px;
+
+	box-sizing: border-box;
+	transition: all 200ms var(--ease-sortir);
+}
+
+#leaveGrp.opened article, #noGroupe.opened article{
+	opacity: 1;
+	transform: scale(1);
+	transition: all 200ms var(--ease-entrer) 100ms;
+}
+
+#leaveGrp h2, #noGroupe h2{
+	text-align: center;
+	font-size: 1.8rem;
+	font-weight: 700;
+	margin: 5px 0 10px 0;
+}
+
+#leaveGrp p, #noGroupe p{
+	text-align: center;
+	font-size: 1.2rem;
+	margin: 10px 0 10px 0;
+}
+
+#leaveGrp div{
+	font-size: 1.2rem;
+	margin: 10px 0 10px 0;
+	width: 100%;
+}
+
+#leaveGrp footer, #noGroupe footer{
+	display: flex;
+	justify-content: space-evenly;
+
+	font-size: 1.2rem;
+	margin: 10px 0 10px 0;
+	width: 100%;
+}
+
+#leaveGrp button, #noGroupe button{
+	flex: 1;
+	border: none;
+	outline: none;
+	background: rgb(243, 243, 243);
+	padding: 5px;
+	margin: 0 8%;
+}
+
+#leaveGrp .leaveGrp, #noGroupe button{
+	background: rgb(255, 175, 143);
+	color: white;
+}
+
+#leaveGrp div
+{
+	position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+	max-width: 150px;
+	width: 100%;
+	min-height: 80px;
+	padding: 10px;
+
+	transform: scale(0.99);
+	background: #f6f6f6;
+	border: none;
+	outline: none;
+	box-shadow: 0px 0.5px 0 1px rgba(0,0,0,0.06);
+	border-radius: 2px;
+	transition: all 100ms var(--ease-enter);
+}
+
+#leaveGrp div.opened
+{
+	transform: scale(1) translateY(-2px);
+	box-shadow: 0px 5px 5px -1px rgba(0,0,0,0.06);
+	background: #f3beb4;
+
+}
+
+#leaveGrp div h4{
+	margin: 5px;
+	text-align: left;
+	font-size: 1.3rem;
+}
+
+#leaveGrp div ul{
+	margin: 5px;
+	padding: 0;
+	text-align: left;
+	font-size: 1.3rem;
+}
+
+#leaveGrp div li{
+	list-style-type: none;
+}
+
+#leaveGrp div i{
+	display: none;
+	position: absolute;
+	padding: 0.5rem;
+	right: 5%;
+	bottom: 0;
+	font-size: 2rem;
+	align-self: center;
+	justify-self: flex-end;
+}
+
+#leaveGrp div.opened i{
+	display: block;
+}
