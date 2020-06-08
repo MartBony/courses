@@ -250,7 +250,7 @@ div#idInvit h4{
 	font-size: 1.5rem;
 }
 
-div#idInvit button, #invitations > button{
+div#idInvit button, #invitations > button, #application button{
 	outline: none;
 	border: none;
 	border-radius: 3px;
@@ -259,7 +259,7 @@ div#idInvit button, #invitations > button{
 	box-shadow: 0 0.3px 1px 1px rgba(0,0,0,0.1);
 }
 
-div#idInvit button:active, #invitations > button:active{
+div#idInvit button:active, #invitations > button:active, #application button:active{
 	transform: scale(0.95);
 	box-shadow: 0 0.1px 0px 1px rgba(0,0,0,0.1);
 }

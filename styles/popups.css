@@ -200,3 +200,41 @@
 #leaveGrp div.opened i{
 	display: block;
 }
+
+/* Update */
+#update{
+	z-index: 6;
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+	right: 5px;
+	border-radius: 15px;
+	background: white;
+	box-shadow: 0 2px 5px -1px rgba(0,0,0,0.3);
+}
+
+#update.opened{
+	display: flex;
+}
+
+#update p{
+	font-size: 2rem;
+	margin: 10px;
+	font-weight: 700;
+}
+
+#update button{
+	font-size: 2em;
+	font-weight: 700;
+	border: none;
+	outline: none;
+	color: white;
+	background: linear-gradient(90deg, rgba(90,149,213,1) 0%, rgba(0,210,143,1) 100%);
+	width: 98%;
+	margin: 1%;
+	border-radius: 12px;
+	padding: 5px 10px;
+}

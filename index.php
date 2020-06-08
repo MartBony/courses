@@ -42,6 +42,10 @@
 </head>
 <body>
 	<div class="overflowed">
+		<div id="update">
+			<p>Une mise à jour est disponible</p>
+			<button>Installer</button>
+		</div>
 		<section class="install">
 			<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
 			<div class="logo">
