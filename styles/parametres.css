@@ -4,6 +4,7 @@
 
 #params
 {
+	font-size: 1.4rem;
 	position: relative;
 	opacity: 0;
 	transform: translateX(100px);
@@ -188,6 +189,10 @@ article#invitations{
 	display: flex;
 	align-items: flex-start;
 	flex-direction: column;
+}
+
+#invitations p{
+	margin: 0 0 15px 0;
 }
 
 #invitations div{

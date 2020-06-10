@@ -2,8 +2,7 @@ import App, { course } from './app.js';
 import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 
-let app,
-	groupes;
+let app;
 
 // Initialise on read
 addSiteCache('site-course', 'coursesCache.json');

@@ -1,10 +1,9 @@
 import UI from './UI.js';
 import Course from './course.js';
 import Storage from './storage.js';
-import {$_GET, jsonEqual} from './tools.js';
+import {jsonEqual} from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
-import mod from './math.js';
 
 
 let course;
@@ -19,7 +18,7 @@ class App{
 		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.state = 0;
 		this.setParameters();
-		this.open(Number($_GET('course')) || 0);
+		this.pull("open");
 
 		this.errors = {
 			readOnly: "Vous êtes hors ligne, vous pouvez utiliser l'application consultation seulement",
@@ -54,26 +53,42 @@ class App{
 			item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency);
 		});
 	}
-	open(groupe, rang){// Rank as index of array
-		$('.loader').addClass('opened');
-		// Load from localStorage
-		var hasCached = this.openOffline(groupe, rang);
+	pull(action, idGroupe, idCourse, callback){// Rank as index of array
+		callback = callback || function(){};
+		idGroupe = idGroupe || Storage.getItem('usedGroupe') || null;
+		switch(action){
+			case "open":
+				$('.loader').addClass('opened');
+				// Load from localStorage
+				var hasCached = this.openOffline(idGroupe, idCourse);
 
-		
-		Pull.invitations(this);
-		// Load from network
-		Pull.groupes(this, groupe, hasCached.groupes).then(state => {
-			if(state){ // Si les groupes ont étés chargés et si il existe des courses
-				let rangCourse = mod(rang, this.usedGroupe.coursesList.length-1) || Storage.getItem('usedCourse') || 0,
-					idCourse = this.usedGroupe.coursesList[rangCourse].id;
-				Pull.course(this, idCourse, rangCourse, hasCached.course).then(() => {
-					$('.loader').removeClass('opened');
+				
+				Pull.invitations(this);
+				// Load from network
+				Pull.groupes(this, idGroupe, hasCached.groupes).then(state => {
+					if(state){ // Si les groupes ont étés chargés et si il existe des courses
+						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id || null;
+						Pull.course(this, idCourse, hasCached.course).then(() => {
+							$('.loader').removeClass('opened');
+							callback();
+						});
+					} else $('.loader').removeClass('opened');
 				});
-			} else $('.loader').removeClass('opened');
-		});
-		
+				break;
+			case "refresh":
+				Pull.groupes(this, idGroupe).then(state => {
+					if(state){
+						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id || null;
+						Pull.course(this, idCourse).then(() => {
+							$('.loader').removeClass('opened');
+							callback();
+						});
+					} else $('.loader').removeClass('opened');
+				});
+				break;
+		}
 	}
-	openOffline(groupe, rangCourse){
+	openOffline(groupe, course){
 		let hasCached = {
 			groupes: false,
 			course: false
@@ -90,14 +105,13 @@ class App{
 			hasCached.groupes = true;
 
 			if(initGroupes){ // Si il existe des courses
-				rangCourse = mod(rangCourse, this.usedGroupe.coursesList.length-1) || Storage.getItem('usedCourse') || 0;
-				let idCourse = this.usedGroupe.coursesList[rangCourse].id;
-				if(Storage.getItem('courses') && Storage.getItem('courses').filter(el => el.id == idCourse).length == 1){
+				course = course || this.usedGroupe.coursesList[0].id;
+				if(Storage.getItem('courses') && Storage.getItem('courses').filter(el => el.id == course).length == 1){
 					let courseData = {
 							status: 200,
-							course: Storage.getItem('courses').filter(el => el.id == idCourse)[0]
+							course: Storage.getItem('courses').filter(el => el.id == course)[0]
 						},
-						initCourse = this.updateCourse(courseData, rangCourse, false);
+						initCourse = this.updateCourse(courseData, false);
 					if(initCourse) {
 						console.log('Storage items fetched:', courseData);
 						hasCached.course = true;
@@ -109,17 +123,6 @@ class App{
 		}
 
 		return hasCached;
-	}
-	refresh(rang){ // No storage invoqued, rank of course
-		Pull.groupes(this).then(state => {
-			if(state){ // Si les groupes ont étés chargés et si il existe des courses
-				let rangCourse = mod(rang, this.usedGroupe.coursesList.length-1) || Storage.getItem('usedCourse') || 0,
-					idCourse = this.usedGroupe.coursesList[rangCourse].id;
-				Pull.course(this, idCourse, rangCourse).then(() => {
-					$('.loader').removeClass('opened');
-				});
-			} else $('.loader').removeClass('opened');
-		});
 	}
 	notificationHandler(callback){
 		if (!("Notification" in window)) {
@@ -198,12 +201,36 @@ class App{
 			this.swipe(binaryToLF[side]);
 		}
 	}
+	deleteCourse(id){
+		$('.loader').addClass('opened');
+		$.ajax({
+			method: "POST",
+			url: "serveur/push.php",
+			data: { deleteCourse: true, id: id, groupe: this.usedGroupe.id}
+		}).then(data => {
+			if (data.status == 200) {
+				$('.loader').removeClass('opened');
+
+				var storage = Storage.getItem('courses');				
+				storage = storage.filter((el, i) => el.id != id);
+				Storage.setItem('courses', storage);
+
+				this.pull("refresh");
+
+			}
+
+		}).catch(err => {
+			console.log(err);
+			$('.loader').removeClass('opened');
+			UI.offlineMsg(err);
+		});
+	}
 	deleteArticle(e, index, prix){
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
+			data: { deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
 		}).then(data => {
 
 			var displayedIndex = $(e.target).parent().prevAll('li').length;
@@ -235,7 +262,7 @@ class App{
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
+			data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
 		}).then(data => {
 			var displayedIndex = $(e.target).parent().prevAll('li').length;
 			if (data[0] == 'done') {
@@ -245,7 +272,7 @@ class App{
 
 				var storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
-					if(el.idCourse == course.id){
+					if(el.course == course.id){
 						storage[i].items.previews = storage[i].items.previews.filter(el => el.id != index);
 					}
 				});
@@ -269,9 +296,9 @@ class App{
 			}).then(data => {
 				if(data.status == 200){
 					$('.loader').removeClass('opened');
-					UI.backLeave();
+					UI.closeModal();
 					Storage.clear();
-					this.open();
+					this.pull("refresh");
 				} else {
 					alert("Le serveur a rencontré un problème");
 				}
@@ -304,7 +331,7 @@ class App{
 				setTimeout(() => {
 					UI.acc(this);
 					$('.list').prepend(Generate.article(this, data.id, data.titre, data.prix));
-
+					$('#prices #newPrice').val('');
 					this.totalPP(data.prix);
 					$('.prices #titreA, .prices #prix').val('');
 		
@@ -338,7 +365,7 @@ class App{
 			}
 
 			if(data.groupes && data.groupes.length != 0){ // There are groups
-				UI.closeNoGroupe();
+				UI.closeModal();
 				if(!jsonEqual(this.groupes, data.groupes)){ // The groups changed
 
 					if(network) Storage.setItem('groupes', data.groupes)
@@ -358,7 +385,7 @@ class App{
 
 				if(target && target.coursesList && target.id && target.membres && target.nom){
 					$('.activate, .noCourse').remove();
-					UI.closeNoGroupe();
+					UI.closeModal();
 					$('.add, .calcul').css({'visibility':''});
 					
 					return this.switchGroup(target, network);
@@ -371,14 +398,14 @@ class App{
 				$('.loader').removeClass('opened');
 				$('.activate, .noCourse').remove();
 				$('.add, .calcul').css({'visibility':'hidden'});
-				UI.promptNoGroupe();
+				UI.modal(this, 'noGroupe');
 			}
 			
 		}
 	}
 	switchGroup(groupe, network){
 		this.usedGroupe = groupe;
-		Storage.setItem('usedCourse', false);
+		Storage.setItem('usedCourse', null);
 		Storage.setItem('usedGroup', groupe.id);
 
 		// UPD UI parametres
@@ -387,17 +414,17 @@ class App{
 	
 		$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 		$('.activate, .noCourse').remove();
-		UI.closeNoGroupe();
+		UI.closeModal();
 		
 		// UPD CourseList
 		$('.menu .course').remove();
 		if(this.usedGroupe.coursesList && this.usedGroupe.coursesList.length != 0){ // Il y a une course
-			this.usedGroupe.coursesList.forEach((el, id) => {
-				$('.menu article').append(Generate.course(this, id, el.nom));
+			this.usedGroupe.coursesList.forEach((el, rang) => {
+				$('.menu article').append(Generate.course(this, el.id, el.nom, rang));
 			});
 		} else {
 			$('.activate, .noCourse').remove();
-			UI.closeNoGroupe();
+			UI.closeModal();
 			$('.add, .calcul').css({'visibility':'hidden'});
 			$('.main ul').children().remove();
 			$('.main ul').prepend(Generate.noCourse());
@@ -409,12 +436,12 @@ class App{
 		return true;
 
 	}
-	updateCourse(data, rang, network = true, refresh = false){
+	updateCourse(data, rang, network = true){
 		if(data.status == 200){
 			rang = rang || 0;
 			if(data.course && data.course.id && data.course.nom && data.course.items){
 				$('.activate, .noCourse').remove();
-				UI.closeNoGroupe();
+				UI.closeModal();
 				$('.add, .calcul').css({'visibility':''});
 
 				
@@ -437,38 +464,34 @@ class App{
 
 		}
 	}
-	switchCourse(data, rank, network, refresh){
-		Storage.setItem('usedCourse', rank);
+	switchCourse(data, network){
+		Storage.setItem('usedCourse', data.id);
 		course.update(this, data);
 
 		$('.menu .course').removeClass('opened');
 		$('.activate, .noCourse').remove();
-		UI.closeNoGroupe();
+		UI.closeModal();
 		$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 		$('#btTouchSurf').css({'visibility':''});
 
-		$('.menu .course').eq(rank).addClass('opened');
+		$('.course.c'+ data.id).addClass('opened');
 
-		if (!refresh) UI.acc(this)
-		else {
-			$('#refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
-			setTimeout(function(){
-				$('#refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
-			},2000);
-		}
+		$('#refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
+		setTimeout(function(){
+			$('#refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
+		},2000);
+
 		if (course.old) {
 			$('.add, .calcul').addClass('hidden');
 			$('#btTouchSurf').css({'visibility':'hidden'});
 			$('.add').css({'display':'none'});
-			history.replaceState({key:'openCourse'}, '',`index.php?course=${rank}`);
 		}
-		else history.replaceState({key:'openCourse'}, '','index.php')
 
 		if (data.dateStart == 0 && !course.old) {
 			$('.main ul').prepend(Generate.activate());
 			$('.add').addClass('hidden');
 
-			if (!refresh) this.setSwipe(1)
+			this.setSwipe(1)
 		}
 	}
 	updateInvites(data){
@@ -509,7 +532,7 @@ class App{
 			data: {push: true, id: id}
 		}).then(() =>{
 			Pull.invitations(this);
-			this.refresh();
+			this.pull("refresh");
 		}).catch(err => {
 			$('#invitations div').append('Un problème est survenu');
 		});
@@ -523,7 +546,7 @@ class App{
 			data: {remove: true, id: id}
 		}).then(() =>{
 			Pull.invitations(this);
-			this.refresh();
+			this.pull("refresh");
 		}).catch(err => {
 			$('#invitations div').append('Un problème est survenu');
 		});

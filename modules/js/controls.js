@@ -98,7 +98,7 @@ export default function initEvents(app, course){
 	});
 
 	$('#refresh').click(function(){
-		app.refresh();
+		app.pull("refresh");
 	});
 
 	$('.install i').click(function(){
@@ -172,27 +172,20 @@ export default function initEvents(app, course){
 	});
 
 	// Groupes
-
-	$(document).on('click', '.groupe', e => {
-		if(e.target.tagName !== "I"){
-			let index = app.groupes[Array.from(document.querySelectorAll('#groupes .groupe')).indexOf(e.currentTarget)].id;
-			app.open(index);
-		}
-	});
 	
 	$(document).on('click', '.groupe i.ms-Icon--Leave', e => {
-		UI.promptLeave(app);
+		UI.modal(app, 'leaveGroupe');
 	});
 	
 	$(document).on('click', '.groupe i.ms-Icon--AddFriend', e => {
 		UI.promptAddFriend(app);
 	});
 
-	$(document).on('click', '#leaveGrp .back', e => {
-		UI.backLeave();
+	$(document).on('click', '#leaveGroupe .back', e => {
+		UI.closeModal();
 	});
 
-	$(document).on('click', '#leaveGrp .leaveGrp', e => {
+	$(document).on('click', '#leaveGroupe .leaveGrp', e => {
 		app.leaveGrp();
 	});
 
@@ -228,12 +221,12 @@ export default function initEvents(app, course){
 
 	document.addEventListener("visibilitychange", ()=>{
 		if (document.visibilityState == "visible") {
-			app.refresh();
+			app.pull("refresh");
 		}
 	}, false);
 
 	window.addEventListener('online', () => {
-		app.refresh();
+		app.pull("refresh");
 	});
 
 	$('.error button').click(function(){
@@ -429,7 +422,10 @@ export default function initEvents(app, course){
 							$('#addCourse #titreC, #addCourse #maxPrice').val('');
 							$('.loader').removeClass('opened');
 
-							app.refresh(0);
+							Storage.setItem('usedCourse', null);
+							app.pull("refresh", null, null, () => {
+								UI.acc(app);
+							});
 						}
 					}).catch(function(err){
 						$('.loader').removeClass('opened');
@@ -466,7 +462,7 @@ export default function initEvents(app, course){
 					$('#addGroupe #titreG').val("");
 					Storage.clear();
 					UI.closeAddGroup();
-					app.open();
+					app.pull("refresh");
 					
 				}
 			}).catch(function(err){
@@ -491,10 +487,18 @@ export default function initEvents(app, course){
 					url: "serveur/invites.php",
 					data: { invite: 'true', nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id}
 				}).then(function(data){
+					$('.loader').removeClass('opened');
 					if(data.status == 200){
+						$('#invitation #nomInv').val('');
+						$('#invitation #keyInv').val('');
 						UI.closeInvite();
-						$('.loader').removeClass('opened');
-						alert("Invitation envoyée, surveillez les paramètres de l'utilisateur à la section invitation");
+						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", "C'est noté", function(){
+							UI.closeMessage();
+						});
+					} else if(data.status == 403) {
+						UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
+					} else if(data.status == 400) {
+						UI.erreur('Erreur',"Les informations entrées ne correspondent à aucun utilisateur, réessayez");
 					}
 				}).catch(function(err){
 					$('.loader').removeClass('opened');

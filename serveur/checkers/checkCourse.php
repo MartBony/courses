@@ -6,7 +6,7 @@ function checkCourse($user, PDO $bdd, $callback) {
 		$reqUsedCourse->execute(array($_POST['id']));
 		if($reqUsedCourse->rowCount() == 1){
 			$usedCourse = $reqUsedCourse->fetch();
-			if(strpos($user['groupe'], $usedCourse['groupe']) !== false){
+			if(strpos($user['groupe'], "[". $usedCourse['groupe'] ."]") !== false){
 
 				call_user_func($callback, $user, $usedCourse, $bdd);
 				

@@ -1,7 +1,7 @@
 import UI from './UI.js';
 
 class Pull{
-	static course(app, idCourse, rangCourse, hasCached){
+	static course(app, idCourse, hasCached){
 		return $.ajax({
 			method: 'POST',
 			url: 'serveur/pull.php',
@@ -9,7 +9,7 @@ class Pull{
 		}).then(data => {
 			data = JSON.parse(data);
 			console.log('Network items fetched:', data);
-			app.updateCourse(data, rangCourse, true);
+			app.updateCourse(data, true);
 		}).catch(err => {
 			if (!hasCached) {
 				UI.offlineMsg(err, app.errors.noAccess);

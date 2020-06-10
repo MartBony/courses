@@ -423,6 +423,7 @@ header h1
 
 .menu .course
 {
+	position: relative;
 	font-size: 1.6rem;
 	color: black;
 	text-transform: uppercase;
@@ -442,7 +443,23 @@ header h1
 	box-shadow: 0px 2px 3px -1px rgba(0,0,0,0.2);
 }
 
-.menu i
+.course i{
+	display: none;
+	position: absolute;
+	width: 1.8rem;
+	height: 1.8rem;
+	font-size: 1.8rem;
+	right: 2px;
+	top: calc(50% - 1.25rem);
+	margin: 0;
+	padding: 3px;
+}
+
+.course.opened i{
+	display: block;
+}
+
+.menu > i
 {
 	vertical-align: -20%;
 }

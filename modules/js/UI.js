@@ -1,6 +1,51 @@
 import mod from './math.js';
 
 export default class UI {
+	static message(titre, texte, button, action){
+		document.querySelector('#message').classList.add('opened');
+
+		if(titre) document.querySelector('#message h2').innerHTML = titre
+		else document.querySelector('#message h2').style.display = "none"
+
+		if(texte) document.querySelector('#message p').innerHTML = texte
+		else document.querySelector('#message p').style.display = "none"
+
+		if(button && action) {
+			document.querySelector('#message button').innerHTML = button;
+			document.querySelector('#message button').addEventListener('click', function(){
+				action();
+			});
+		}
+		else document.querySelector('#message button').style.display = "none"
+
+		if(!action){
+			setTimeout(() => {UI.closeMessage()}, 7000);
+		}
+	}
+	static erreur(titre, texte, button, action){
+		document.querySelector('#erreur').classList.add('opened');
+
+		if(titre) document.querySelector('#erreur h2').innerHTML = titre
+		else document.querySelector('#erreur h2').style.display = "none"
+
+		if(texte) document.querySelector('#erreur p').innerHTML = texte
+		else document.querySelector('#erreur p').style.display = "none"
+
+		if(button && action) {
+			document.querySelector('#erreur button').innerHTML = button;
+			document.querySelector('#erreur button').addEventListener('click', function(){
+				action();
+			});
+		}
+		else document.querySelector('#erreur button').style.display = "none"
+
+		if(!action){
+			setTimeout(() => {UI.closeMessage()}, 7000);
+		}
+	}
+	static closeMessage(){
+		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
+	}
 	static showInstall(delay){
 		setTimeout(function(){
 			$('.install').css({'display':'flex'});
@@ -210,44 +255,29 @@ export default class UI {
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
 	}
-	static promptLeave(app){
-		let h4 = document.createElement('h4'),
-			ul = document.createElement('ul'),
-			childrens = [h4, ul];
+	static modal(app, id){
+		document.querySelector('#modal').classList.add('opened', id || '');
+		if(id == "leaveGroupe"){
+			let h4 = document.createElement('h4'),
+				ul = document.createElement('ul'),
+				childrens = [h4, ul];
 
-		$('#leaveGrp div').children().remove();
+			$('#leaveGroupe div').children().remove();
 
-		h4.innerHTML = app.usedGroupe.nom;
-		app.usedGroupe.membres.forEach(membre => {
-			let li = document.createElement('li');
-			li.innerHTML = membre;
-			ul.appendChild(li);
-		});
+			h4.innerHTML = app.usedGroupe.nom;
+			app.usedGroupe.membres.forEach(membre => {
+				let li = document.createElement('li');
+				li.innerHTML = membre;
+				ul.appendChild(li);
+			});
 
-		childrens.forEach(child => {
-			$('#leaveGrp div')[0].appendChild(child);
-		});
-
-		$('#leaveGrp').css({'display':'flex'});
-		setTimeout(() => {
-			$('#leaveGrp').addClass('opened');
-		}, 10);
+			childrens.forEach(child => {
+				$('#leaveGroupe div')[0].appendChild(child);
+			});
+		}
 	}
-	static backLeave(){
-		$('#leaveGrp').removeClass('opened');
-		setTimeout(() => {
-			$('#leaveGrp').css({'display':'none'});
-		}, 300);
-	}
-	static promptNoGroupe(app){
-		$('#noGroupe').css({'display':'flex'});
-		setTimeout(() => {
-			$('#noGroupe').addClass('opened');
-		}, 10);
-	}
-	static closeNoGroupe(){
-		$('#noGroupe').removeClass('opened');
-		$('#noGroupe').css({'display':'none'});
+	static closeModal(){
+		document.querySelector('#modal').className = '';
 	}
 	static offlineMsg(err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée"){
 		console.log(err);

@@ -1,59 +1,55 @@
-.activate, .noCourse, .noGroupe
+.activate, .noCourse
 {
-	outline: none;
-	position: relative;
 	display: flex;
+	position: relative;
 	align-items: flex-end;
 	flex-direction: column;
 	height: 61px;
 	width: 100%;
-	overflow: hidden;
-	color: white;
-	font-weight: bold;
 	padding: 10px 10px 10px 60px;
 	margin-bottom: 10px;
+	overflow: hidden;
+
+	color: white;
+	font-weight: bold;
 	background: linear-gradient(141deg, #9fb8ad 0%, #1fc8db 51%, #2cb5e8 75%);
 	border-radius: 5px;
 	cursor: pointer;
-	transition: all 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 	border: none;
-	box-sizing: border-box;
+	outline: none;
 	box-shadow: 0 5px 10px -5px rgba(0,0,0,0.3);
+	transition: all 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+	box-sizing: border-box;
 }
 
 .noCourse{
 	background: linear-gradient(90deg, rgba(90,149,213,1) 0%, rgba(0,210,143,1) 100%);
 }
 
-.noGroupe{
-	background: linear-gradient(10deg, rgb(153, 51, 255) 0%, rgb(255, 51, 51) 100%);
-}
-
-.activate h4, .noCourse h4, .noGroupe h4{
+.activate h4, .noCourse h4{
 	margin: 0;
 	padding: 0;
 	text-transform: uppercase;
 	font-size: 1.9rem;
 }
 
-.activate p, .noCourse p, .noGroupe p
-{
+.activate p, .noCourse p{
 	margin: 5px 0 0 0;
 	text-transform: lowercase;
 	font-size: 1.2rem;
 	color: rgba(255,255,255,0.95);
 }
 
-.activate i, .noCourse i, .noGroupe i
-{
+.activate i, .noCourse i{
 	position: absolute;
 	left: 10px;
 	top: 10px;
 	font-size: 41px;
 }
 
-#leaveGrp, #noGroupe{
-	display: none;
+#modal{
+	visibility: hidden;
+	display: flex;
 	z-index: 6;
 	align-items: center;
 	justify-content: center;
@@ -68,16 +64,13 @@
 	transition: all 300ms ease;
 }
 
-#leaveGrp.opened, #noGroupe.opened{
+#modal.opened{
+	visibility: visible;
 	opacity: 1;
 }
 
-#noGroupe{
-	z-index: 3;
-}
-
-#leaveGrp article, #noGroupe article{
-	display: flex;
+#modal article{
+	display: none;
 	flex-direction: column;
 	align-items: center;
 
@@ -93,32 +86,44 @@
 	transition: all 200ms var(--ease-sortir);
 }
 
-#leaveGrp.opened article, #noGroupe.opened article{
-	opacity: 1;
-	transform: scale(1);
-	transition: all 200ms var(--ease-entrer) 100ms;
+#modal.noGroupe{
+	z-index: 3;
 }
 
-#leaveGrp h2, #noGroupe h2{
+#modal.leaveGroupe #leaveGroupe{
+	display: flex;
+	opacity: 1;
+	transform: scale(1);
+	transition: all 200ms var(--ease-enter) 100ms;
+}
+
+#modal.noGroupe #noGroupe{
+	display: flex;
+	opacity: 1;
+	transform: scale(1);
+	transition: all 200ms var(--ease-enter) 100ms;
+}
+
+#modal h2{
 	text-align: center;
 	font-size: 1.8rem;
 	font-weight: 700;
 	margin: 5px 0 10px 0;
 }
 
-#leaveGrp p, #noGroupe p{
+#modal p{
 	text-align: center;
 	font-size: 1.2rem;
 	margin: 10px 0 10px 0;
 }
 
-#leaveGrp div{
+#modal div{
 	font-size: 1.2rem;
 	margin: 10px 0 10px 0;
 	width: 100%;
 }
 
-#leaveGrp footer, #noGroupe footer{
+#modal footer{
 	display: flex;
 	justify-content: space-evenly;
 
@@ -127,7 +132,7 @@
 	width: 100%;
 }
 
-#leaveGrp button, #noGroupe button{
+#modal button{
 	flex: 1;
 	border: none;
 	outline: none;
@@ -136,12 +141,14 @@
 	margin: 0 8%;
 }
 
-#leaveGrp .leaveGrp, #noGroupe button{
+#modal .leaveGrp, #noGroupe button{
 	background: rgb(255, 175, 143);
 	color: white;
 }
 
-#leaveGrp div
+/* Groupe dans le modal */
+
+#modal div
 {
 	position: relative;
     display: flex;
@@ -161,7 +168,7 @@
 	transition: all 100ms var(--ease-enter);
 }
 
-#leaveGrp div.opened
+#modal div.opened
 {
 	transform: scale(1) translateY(-2px);
 	box-shadow: 0px 5px 5px -1px rgba(0,0,0,0.06);
@@ -169,24 +176,24 @@
 
 }
 
-#leaveGrp div h4{
+#modal div h4{
 	margin: 5px;
 	text-align: left;
 	font-size: 1.3rem;
 }
 
-#leaveGrp div ul{
+#modal div ul{
 	margin: 5px;
 	padding: 0;
 	text-align: left;
 	font-size: 1.3rem;
 }
 
-#leaveGrp div li{
+#modal div li{
 	list-style-type: none;
 }
 
-#leaveGrp div i{
+#modal div i{
 	display: none;
 	position: absolute;
 	padding: 0.5rem;
@@ -197,36 +204,56 @@
 	justify-self: flex-end;
 }
 
-#leaveGrp div.opened i{
+#modal div.opened i{
 	display: block;
 }
 
-/* Update */
-#update{
-	z-index: 6;
-	display: none;
-	flex-direction: column;
-	align-items: center;
-	position: absolute;
+/* Notification */
+.notification{
+	position: fixed;
 	bottom: 5px;
 	left: 5px;
 	right: 5px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	visibility: hidden;
+	
+	z-index: 6;
 	border-radius: 15px;
 	background: white;
-	box-shadow: 0 2px 5px -1px rgba(0,0,0,0.3);
+	opacity: 0;
+	transform: translateY(100px);
+	box-shadow: 0 0 0 0px rgba(0,0,0,0.4);
+	transition: all 300ms var(--ease-enter);
 }
 
-#update.opened{
-	display: flex;
+.notification.opened{
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+	box-shadow: 0 0 20px -5px rgba(0,0,0,0.4);
 }
 
-#update p{
-	font-size: 2rem;
-	margin: 10px;
+.notification h2{
+	color: #00ad56;
+	font-size: 2.3rem;
+	margin: 10px 0 0 0;
 	font-weight: 700;
 }
 
-#update button{
+#erreur h2{
+	color: #d13438;
+}
+
+.notification p{
+	text-align: center;
+	font-size: 1.8rem;
+	margin: 10px;
+	color: #222;
+}
+
+.notification button{
 	font-size: 2em;
 	font-weight: 700;
 	border: none;
@@ -237,4 +264,8 @@
 	margin: 1%;
 	border-radius: 12px;
 	padding: 5px 10px;
+}
+
+#erreur button{
+	background: #d13438;
 }

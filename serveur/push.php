@@ -25,7 +25,7 @@ function pushCousesIndependent($user, PDO $bdd){
 			$groupe = $reqGroupe->fetch();
 
 			$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-			$insertUser->execute(array(( $groupe['id'] . " " . $user['groupe']), $user['id']));
+			$insertUser->execute(array(( "[". $groupe['id'] ."]". $user['groupe']), $user['id']));
 
 			echo json_encode(array('status' => 200));
 
@@ -44,7 +44,7 @@ function pushCousesIndependent($user, PDO $bdd){
 				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
 				$reqAllUsers->execute();
 				while($scanedUser = $reqAllUsers->fetch()){
-					if (strpos($scanedUser['groupe'], $_POST['groupe']) !== false) {
+					if (strpos($scanedUser['groupe'], "[". $_POST['groupe'] ."]") !== false) {
 						$membres++;
 					}
 				}
@@ -67,7 +67,7 @@ function pushCousesIndependent($user, PDO $bdd){
 					$delgroupe->closeCursor();
 				}
 
-				$newString = str_replace("  ", " ", str_replace($_POST['groupe'],"",$user['groupe']));
+				$newString = str_replace("[". $_POST['groupe'] ."]","",$user['groupe']);
 
 				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
 				$updateUser->execute(array($newString, $user['id']));
@@ -125,6 +125,18 @@ function push($user, $usedCourse, PDO $bdd){
 			'color' => $user['hexColor']
 		]);
 		
+		return true;
+	}
+	elseif (isset($_POST['deleteCourse'])) {
+
+		$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
+		$reqDelete->bindParam(':index', $usedCourse['id'], PDO::PARAM_INT);
+		$reqDelete->execute();
+		
+		$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+		$delArticles->execute(array($usedCourse['id']));
+
+		echo json_encode(array('status' => 200));
 		return true;
 	}
 	elseif (isset($_POST['deleteArticle'])) {

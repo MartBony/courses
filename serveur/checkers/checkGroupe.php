@@ -5,12 +5,13 @@ function checkGroupe($user, PDO $bdd, $callback) {
 		if(strpos($user['groupe'], $_POST['groupe']) !== false){
 			$reqUsedGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
 			$reqUsedGroupe->execute(array($_POST['groupe']));
-			$reqUsedGroupe->closeCursor();
 			if($reqUsedGroupe->rowCount() == 1){
-				call_user_func($callback, $user, $reqUsedGroupe->fetch(), $bdd);
+				$groupe = $reqUsedGroupe->fetch();
+				call_user_func($callback, $user, $groupe, $bdd);
 			} else {
 				echo json_encode(array('status' => 404));
 			}
+			$reqUsedGroupe->closeCursor();
 			
 		} else {
 			echo json_encode(array('status' => 403));

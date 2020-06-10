@@ -9,12 +9,13 @@ header('Content-type: application/json');
 function pushCousesIndependent($user, PDO $bdd){
 	if(isset($_POST['getInviteKey'])) {
 		$id = rand(0, 999999);
-		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ?,`inviteTime` = ? WHERE id = ?');
-		$reqStoreId->execute(array($id, time(), $user['id']));
+		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ? WHERE id = ?');
+		$reqStoreId->execute(array($id, $user['id']));
 
 		echo json_encode(array(
 			'status' => 200,
-			'id' => $id
+			'id' => $id,
+			'user' => $user['id']
 		));
 
 		return true;
@@ -27,15 +28,31 @@ function pushCousesIndependent($user, PDO $bdd){
 		$reqPullPendings->closeCursor();
 
 		if($reqPullPendings->rowCount() == 1){
-			foreach( preg_split( "/\s/", $pullPendings['pending'] ) as $idGroupe ){
-				$reqAskingGroupe = $bdd->prepare('SELECT `nom` FROM `groupes` WHERE `id` = ?');
-				$reqAskingGroupe->execute(array($idGroupe));
-				$groupe = $reqAskingGroupe->fetch();
-				if($reqAskingGroupe->rowCount() == 1){
-					array_push($groupes, array('id' => $idGroupe, 'nom' => $groupe['nom']));
+			$cursor = "outside";
+			$idGroupe = "";
+		
+			foreach(str_split($pullPendings['pending']) as $char ){
+				if($char == "[") {
+					$cursor = "inside";
+				} else if ($char == "]") {
+					$cursor = "outside";
+
+					$reqAskingGroupe = $bdd->prepare('SELECT `nom` FROM `groupes` WHERE `id` = ?');
+					$reqAskingGroupe->execute(array($idGroupe));
+					$groupe = $reqAskingGroupe->fetch();
+					if($reqAskingGroupe->rowCount() == 1){
+						array_push($groupes, array('id' => $idGroupe, 'nom' => $groupe['nom']));
+					}
+					$reqAskingGroupe->closeCursor();
+
+					$idGroupe = "";
+		
+				} else if ($cursor == "inside") {
+					$idGroupe .= $char;
 				}
-				$reqAskingGroupe->closeCursor();
+			
 			}
+
 		}
 
 		echo json_encode(array(
@@ -55,20 +72,34 @@ function pushCousesIndependent($user, PDO $bdd){
 
 		if($reqPullPendings->rowCount() == 1){
 
-			foreach( preg_split( "/\s/", $pullPendings['pending'] ) as $idGroupe ){
-				if($idGroupe == $id){
-					$newString = str_replace("  ", " ", str_replace($id,"",$pullPendings['pending']));
-					$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
-					$updateUser->execute(array($newString, $user['id']));
+			$cursor = "outside";
+			$idGroupe = "";
+			foreach(str_split($pullPendings['pending']) as $char ){
+				if($char == "[") {
+					$cursor = "inside";
+				} else if ($char == "]") {
+					$cursor = "outside";
 
-					$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-					$insertUser->execute(array(( $idGroupe . " " . $user['groupe']), $user['id']));
+					if($idGroupe == $id){
+						$newString = str_replace("  ", " ", str_replace("[".$id."]","",$pullPendings['pending']));
+						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
+						$updateUser->execute(array($newString, $user['id']));
+	
+						$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
+						$insertUser->execute(array(( "[". $idGroupe ."] ". $user['groupe']), $user['id']));
+	
+						echo json_encode(array('status' => 200));
+						$gotIt = true;
+	
+						break;
+					}
 
-					echo json_encode(array('status' => 200));
-					$gotIt = true;
-
-					break;
+					$idGroupe = "";
+		
+				} else if ($cursor == "inside") {
+					$idGroupe .= $char;
 				}
+			
 			}
 
 		}
@@ -89,17 +120,31 @@ function pushCousesIndependent($user, PDO $bdd){
 
 		if($reqPullPendings->rowCount() == 1){
 
-			foreach( preg_split( "/\s/", $pullPendings['pending'] ) as $idGroupe ){
-				if($idGroupe == $id){
-					$newString = str_replace("  ", " ", str_replace($id,"",$pullPendings['pending']));
-					$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
-					$updateUser->execute(array($newString, $user['id']));
+			$cursor = "outside";
+			$idGroupe = "";
+			foreach(str_split($pullPendings['pending']) as $char ){
+				if($char == "[") {
+					$cursor = "inside";
+				} else if ($char == "]") {
+					$cursor = "outside";
 
-					echo json_encode(array('status' => 200));
-					$gotIt = true;
+					if($idGroupe == $id){
+						$newString = str_replace("  ", " ", str_replace("[". $id ."]","",$pullPendings['pending']));
+						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
+						$updateUser->execute(array($newString, $user['id']));
+	
+						echo json_encode(array('status' => 200));
+						$gotIt = true;
+	
+						break;
+					}
 
-					break;
+					$idGroupe = "";
+		
+				} else if ($cursor == "inside") {
+					$idGroupe .= $char;
 				}
+			
 			}
 
 		}
@@ -114,16 +159,21 @@ function pushCousesIndependent($user, PDO $bdd){
 
 function pushGroupeDependent($user, $groupe, PDO $bdd){
 	if(isset($_POST['invite']) && isset($_POST['nom']) && isset($_POST['key'])) {
-		$reqInvited = $bdd->prepare('SELECT `pending`, `id` FROM `users` WHERE `inviteKey` = ? AND nom = ?');
+		$reqInvited = $bdd->prepare('SELECT `pending`, `id`,`groupe` FROM `users` WHERE `inviteKey` = ? AND nom = ?');
 		$reqInvited->execute(array($_POST['key'], $_POST['nom']));
+		$invited = $reqInvited->fetch();
 		if($reqInvited->rowCount() == 1){
-			$target = $reqInvited->fetch();
-			$reqInvited->closeCursor();
-			$setPending = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE id = ?');
-			$setPending->execute(array( $_POST['groupe'] . " " . $target['pending'], $target['id']));
-			$setPending->closeCursor();
+			if(strpos($invited['groupe'], "[".$groupe['id']."]") === false && strpos($invited['pending'], "[".$groupe['id']."]") === false){
 
-			echo json_encode(array('status' => 200));
+				$reqInvited->closeCursor();
+				$setPending = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE id = ?');
+				$setPending->execute(array( "[". $groupe['id'] ."]" . $invited['pending'], $invited['id']));
+				$setPending->closeCursor();
+				echo json_encode(array('status' => 200));
+
+			} else {
+				echo json_encode(array('status' => 403));
+			}
 
 		} else {
 			echo json_encode(array('status' => 400));

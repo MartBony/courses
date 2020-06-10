@@ -7,72 +7,85 @@ function groupes($user, PDO $bdd) {
 	$groupsInfo = array();
 	$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
 
-	foreach(preg_split("/\s/",$user['groupe']) as $idGroupe){
+	$cursor = "outside";
+	$idGroupe = "";
+	foreach(str_split($user['groupe']) as $char){
+		if($char == "[") {
+			$cursor = "inside";
+		} else if ($char == "]") {
+			$cursor = "outside";
 
-		// Pulling group info
-		$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
-		$reqGroupe->execute(array($idGroupe));
-		$groupe = $reqGroupe->fetch();
-		$reqGroupe->closeCursor();
+			// Pulling group info
+			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
+			$reqGroupe->execute(array($idGroupe));
+			$groupe = $reqGroupe->fetch();
+			$reqGroupe->closeCursor();
 
-		if($reqGroupe->rowCount() == 1){
-			$coursesList = array();
-			$membresGp = array();
-			$error = false;
+			if($reqGroupe->rowCount() == 1){
+				$coursesList = array();
+				$membresGp = array();
+				$error = false;
 
-			// Pulling membres for specified group
-			$reqAllUsers->execute();
-			while($scanedUser = $reqAllUsers->fetch()){
-				if (strpos($scanedUser['groupe'], $idGroupe) !== false) {
-					array_push($membresGp, $scanedUser['nom']);
+				// Pulling membres for specified group
+				$reqAllUsers->execute();
+				while($scanedUser = $reqAllUsers->fetch()){
+					if (strpos($scanedUser['groupe'], $idGroupe) !== false) {
+						array_push($membresGp, $scanedUser['nom']);
+					}
 				}
-			}
-			$reqAllUsers->closeCursor();
+				$reqAllUsers->closeCursor();
 
-			// Pulling courses + Get additionnal data
+				// Pulling courses + Get additionnal data
 
-			$monthCost = 0;
-			$firstDate = time();
-			$coef = 0;
+				$monthCost = 0;
+				$firstDate = time();
+				$coef = 0;
 
-			$reqAllCourses->execute(array($idGroupe));
-			while($resCoursesGp = $reqAllCourses->fetch()){
-				
-				if (time() - $resCoursesGp['dateStart'] < 31*24*60*60) {
-					$monthCost += $resCoursesGp['total'];
+				$reqAllCourses->execute(array($idGroupe));
+				while($resCoursesGp = $reqAllCourses->fetch()){
+					
+					if (time() - $resCoursesGp['dateStart'] < 31*24*60*60) {
+						$monthCost += $resCoursesGp['total'];
+					}
+					if ($resCoursesGp['dateStart'] != 0) {
+						$firstDate = min($resCoursesGp['dateStart'], $firstDate);
+					}
+
+					array_push($coursesList, array(
+						'id' => $resCoursesGp['id'],
+						'nom' => $resCoursesGp['nom']
+					));
 				}
-				if ($resCoursesGp['dateStart'] != 0) {
-					$firstDate = min($resCoursesGp['dateStart'], $firstDate);
-				}
+				$reqAllCourses->closeCursor();
 
-				array_push($coursesList, array(
-					'id' => $resCoursesGp['id'],
-					'nom' => $resCoursesGp['nom']
-				));
-			}
-			$reqAllCourses->closeCursor();
-
-			if (!empty($coursesList)) {
-				if (time() - $firstDate > 31*24*60*60) {
-					$coef = max(1,sizeof($coursesList)*(31*24*60*60)/(time() - $firstDate));
+				if (!empty($coursesList)) {
+					if (time() - $firstDate > 31*24*60*60) {
+						$coef = max(1,sizeof($coursesList)*(31*24*60*60)/(time() - $firstDate));
+					} else {
+						$coef = 2.5;
+					}
 				} else {
-					$coef = 2.5;
+					$error = 204;
 				}
-			} else {
-				$error = 204;
-			}
 
-			array_push($groupsInfo, array(
-				'id' => $groupe['id'],
-				'nom' => $groupe['nom'],
-				'coursesList' => $coursesList,
-				'membres' => $membresGp,
-				'monthCost' => $monthCost,
-				'coef' => $coef,
-				'error' => $error
-			));
-		
+				array_push($groupsInfo, array(
+					'id' => $groupe['id'],
+					'nom' => $groupe['nom'],
+					'coursesList' => $coursesList,
+					'membres' => $membresGp,
+					'monthCost' => $monthCost,
+					'coef' => $coef,
+					'error' => $error
+				));
+
+			}
+			
+			$idGroupe = "";
+
+		} else if ($cursor == "inside") {
+			$idGroupe .= $char;
 		}
+
 	}
 
 	echo json_encode(array(
