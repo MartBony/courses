@@ -222,7 +222,7 @@ class App{
 		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			UI.offlineMsg(err);
+			UI.offlineMsg(this, err);
 		});
 	}
 	deleteArticle(e, index, prix){
@@ -253,7 +253,7 @@ class App{
 		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			UI.offlineMsg(err);
+			UI.offlineMsg(this, err);
 		});
 		
 	}
@@ -283,7 +283,7 @@ class App{
 		}).catch(err => {
 			console.log(err);
 			$('.loader').removeClass('opened');
-			UI.offlineMsg(err);
+			UI.offlineMsg(this, err);
 		});
 	}
 	leaveGrp(){
@@ -304,7 +304,7 @@ class App{
 				}
 			}).catch(err => {
 				$('.loader').removeClass('opened');
-				UI.offlineMsg(err);
+				UI.offlineMsg(this, err);
 			});
 		}
 	}
@@ -355,7 +355,7 @@ class App{
 	
 		}).catch((err) => {
 			$('.loader').removeClass('opened');
-			UI.offlineMsg(err);
+			UI.offlineMsg(this, err);
 		});
 	}
 	updateGroups(data, idGroupe, network = true){
@@ -391,7 +391,7 @@ class App{
 					return this.switchGroup(target, network);
 			
 
-				} else UI.offlineMsg("Targeted group content lacks/incomplete", "Le groupe demandé est indisponible pour l'instant")
+				} else UI.offlineMsg(this, "Targeted group content lacks/incomplete", "Le groupe demandé est indisponible pour l'instant")
 			} else {
 				$('.groupe').remove();
 				Storage.clear();
@@ -460,7 +460,7 @@ class App{
 
 				return true;
 
-			} else UI.offlineMsg("Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
+			} else UI.offlineMsg(this, "Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
 
 		}
 	}
@@ -594,7 +594,7 @@ class App{
 			}
 		}).catch(err => {
 			$('.loader').removeClass('opened');
-			UI.offlineMsg(err);
+			UI.offlineMsg(this, err);
 		});
 	}
 }

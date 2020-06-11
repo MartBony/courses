@@ -1,16 +1,12 @@
-<div class="notification" id="update">
-	<p>Une mise à jour est disponible</p>
-	<button>Installer</button>
-</div>
 <div class="notification" id="message">
 	<h2></h2>
 	<p></p>
-	<button></button>
+	<div></div>
 </div>
 <div class="notification" id="erreur">
 	<h2></h2>
 	<p></p>
-	<button></button>
+	<div></div>
 </div>
 <section class="install">
 	<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
@@ -46,9 +42,3 @@
 		</footer>
 	</article>
 </section>
-<div class="error">
-	<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
-	<h1><i class="ms-Icon ms-Icon--NetworkTower" aria-hidden="true"></i> Oups, problème de réseau</h1>
-	<p></p>
-	<button>M'avertir lorsque le réseau est de retour</button>
-</div>

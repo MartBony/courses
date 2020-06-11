@@ -225,7 +225,7 @@
 	opacity: 0;
 	transform: translateY(100px);
 	box-shadow: 0 0 0 0px rgba(0,0,0,0.4);
-	transition: all 300ms var(--ease-enter);
+	transition: all 100ms var(--ease-sortir);
 }
 
 .notification.opened{
@@ -233,6 +233,7 @@
 	visibility: visible;
 	transform: translateY(0);
 	box-shadow: 0 0 20px -5px rgba(0,0,0,0.4);
+	transition: all 300ms var(--ease-enter);
 }
 
 .notification h2{
@@ -253,19 +254,38 @@
 	color: #222;
 }
 
+.notification div{
+	display: flex;
+	align-items: center;
+	width: 99%;
+	margin: 0.5%;
+	gap: 1%;
+	box-sizing: border-box;
+}
+
 .notification button{
 	font-size: 2em;
 	font-weight: 700;
 	border: none;
 	outline: none;
 	color: white;
+	margin: 0.5%;
 	background: linear-gradient(90deg, rgba(90,149,213,1) 0%, rgba(0,210,143,1) 100%);
-	width: 98%;
-	margin: 1%;
+	flex: 1;
 	border-radius: 12px;
 	padding: 5px 10px;
 }
 
-#erreur button{
+#erreur button:nth-child(1){
 	background: #d13438;
+}
+
+#erreur button.errorGradient{
+	background: linear-gradient(10deg, rgb(153, 51, 255) 0%, rgb(255, 51, 51) 100%);
+}
+
+button.greyish{
+	flex: 0.5;
+	background: #eee;
+	color: #444;
 }

@@ -12,7 +12,7 @@ class Pull{
 			app.updateCourse(data, true);
 		}).catch(err => {
 			if (!hasCached) {
-				UI.offlineMsg(err, app.errors.noAccess);
+				UI.offlineMsg(app, err, app.errors.noAccess);
 				$('.refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--NetworkTower');
 				setTimeout(function(){
 					$('.refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--NetworkTower');
@@ -28,7 +28,7 @@ class Pull{
 			return app.updateGroups(data, idGroupe);
 		}).catch(err => {
 			if(!hasCached){
-				UI.offlineMsg(err, app.errors.noAccess);
+				UI.offlineMsg(app, err, app.errors.noAccess);
 				$('.refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--NetworkTower');
 				setTimeout(function(){
 					$('.refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--NetworkTower');

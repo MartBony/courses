@@ -160,13 +160,6 @@ export default function initEvents(app, course){
 		$('.article, .preview').removeClass('ready');
 	});
 
-	$(document).on('click', '.error > i',function(){
-		$('.error').removeClass('opened');
-		setTimeout(function(){
-			$('.error').css({'display':''});
-		},110);
-	});
-
 	$(document).on('click', '.ready',function(){
 		$(this).removeClass('ready');
 	});
@@ -229,18 +222,6 @@ export default function initEvents(app, course){
 		app.pull("refresh");
 	});
 
-	$('.error button').click(function(){
-		app.notificationHandler(function(){
-			navigator.serviceWorker.ready.then(function(swRegistration) {
-				return swRegistration.sync.register('pushOnline');
-			});	
-		});
-		$('.error').removeClass('opened');
-		setTimeout(function(){
-			$('.error').css({'display':''});
-		},110);
-	});
-
 	$(document).on('click', '.activate',function(){
 		$('.activate').css({'opacity':'0.8'});
 		$.ajax({
@@ -278,7 +259,7 @@ export default function initEvents(app, course){
 		})
 		.catch(function(err){
 			$('.activate').css({'opacity':'1'});
-			UI.offlineMsg(err);
+			UI.offlineMsg(app, err);
 		});
 	});
 
@@ -325,7 +306,7 @@ export default function initEvents(app, course){
 					})
 					.catch(err => {
 						$('.loader').removeClass('opened');
-						UI.offlineMsg(err);
+						UI.offlineMsg(app, err);
 					});
 				}
 				else{
@@ -378,7 +359,7 @@ export default function initEvents(app, course){
 			}).catch(err => {
 				console.log(err);
 				$('.loader').removeClass('opened');
-				UI.offlineMsg();
+				UI.offlineMsg(app, );
 			});
 		}
 		else
@@ -429,7 +410,7 @@ export default function initEvents(app, course){
 						}
 					}).catch(function(err){
 						$('.loader').removeClass('opened');
-						UI.offlineMsg(err);
+						UI.offlineMsg(app, err);
 					});
 
 				}
@@ -467,7 +448,7 @@ export default function initEvents(app, course){
 				}
 			}).catch(function(err){
 				$('.loader').removeClass('opened');
-				UI.offlineMsg(err);
+				UI.offlineMsg(app, err);
 			});
 		}
 		else
@@ -492,9 +473,9 @@ export default function initEvents(app, course){
 						$('#invitation #nomInv').val('');
 						$('#invitation #keyInv').val('');
 						UI.closeInvite();
-						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", "C'est noté", function(){
-							UI.closeMessage();
-						});
+						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
+							{ texte:"C'est noté", action : () => UI.closeMessage()}
+						]);
 					} else if(data.status == 403) {
 						UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
 					} else if(data.status == 400) {
@@ -502,7 +483,7 @@ export default function initEvents(app, course){
 					}
 				}).catch(function(err){
 					$('.loader').removeClass('opened');
-					UI.offlineMsg(err);
+					UI.offlineMsg(app, err);
 				});
 			}
 			else{

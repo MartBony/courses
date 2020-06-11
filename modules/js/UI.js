@@ -1,7 +1,7 @@
 import mod from './math.js';
 
 export default class UI {
-	static message(titre, texte, button, action){
+	static message(titre, texte, buttons){
 		document.querySelector('#message').classList.add('opened');
 
 		if(titre) document.querySelector('#message h2').innerHTML = titre
@@ -10,19 +10,24 @@ export default class UI {
 		if(texte) document.querySelector('#message p').innerHTML = texte
 		else document.querySelector('#message p').style.display = "none"
 
-		if(button && action) {
-			document.querySelector('#message button').innerHTML = button;
-			document.querySelector('#message button').addEventListener('click', function(){
-				action();
+		document.querySelectorAll('#message button').forEach(el => el.remove());
+		if(!buttons || buttons.length == 0){
+			setTimeout(() => {UI.closeMessage()}, 7000);
+		} else {
+
+			buttons.forEach(button => {
+				if(button.texte && button.action) {
+					let buttonElement  = document.createElement('button');
+					buttonElement.innerHTML = button.texte;
+					buttonElement.addEventListener('click', () => button.action());
+					document.querySelector('#message div').appendChild(buttonElement);
+
+					if(button.class) buttonElement.classList.add(button.class)
+				}
 			});
 		}
-		else document.querySelector('#message button').style.display = "none"
-
-		if(!action){
-			setTimeout(() => {UI.closeMessage()}, 7000);
-		}
 	}
-	static erreur(titre, texte, button, action){
+	static erreur(titre, texte, buttons){
 		document.querySelector('#erreur').classList.add('opened');
 
 		if(titre) document.querySelector('#erreur h2').innerHTML = titre
@@ -31,16 +36,20 @@ export default class UI {
 		if(texte) document.querySelector('#erreur p').innerHTML = texte
 		else document.querySelector('#erreur p').style.display = "none"
 
-		if(button && action) {
-			document.querySelector('#erreur button').innerHTML = button;
-			document.querySelector('#erreur button').addEventListener('click', function(){
-				action();
-			});
-		}
-		else document.querySelector('#erreur button').style.display = "none"
-
-		if(!action){
+		document.querySelectorAll('#erreur button').forEach(el => el.remove());
+		if(!buttons || buttons.length == 0){
 			setTimeout(() => {UI.closeMessage()}, 7000);
+		} else {
+			buttons.forEach(button => {
+				if(button.texte && button.action) {
+					let buttonElement  = document.createElement('button');
+					buttonElement.innerHTML = button.texte;
+					buttonElement.addEventListener('click', () => button.action());
+					document.querySelector('#erreur div').appendChild(buttonElement);
+
+					if(button.class) buttonElement.classList.add(button.class)
+				}
+			});
 		}
 	}
 	static closeMessage(){
@@ -279,13 +288,21 @@ export default class UI {
 	static closeModal(){
 		document.querySelector('#modal').className = '';
 	}
-	static offlineMsg(err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée"){
-		console.log(err);
-		$('.error').css({'display':'flex'});
-		$('.error p').html(msg);
-		setTimeout(function(){
-			$('.error').addClass('opened');
-		}, 10);
+	static offlineMsg(app, err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour"){
+		
+		UI.erreur("Erreur de réseau", msg, [
+			{ texte: "Me notifier", class:'errorGradient',
+				action: () => {
+					app.notificationHandler(function(){
+						navigator.serviceWorker.ready.then(function(swRegistration) {
+							return swRegistration.sync.register('pushOnline');
+						});	
+					});
+					UI.closeMessage();
+				} 
+			},
+			{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
+		]);
 	}
 	static acc(app){
 		UI.closeCourse();

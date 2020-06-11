@@ -1,4 +1,5 @@
 import App from './app.js';
+import UI from './UI.js';
 
 let deferredPrompt,
 	newWorker;
@@ -36,10 +37,6 @@ function initPwaEvents(){
 	});
 
 	// Update app - https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
-	document.querySelector('#update button').addEventListener('click', function(){
-		newWorker.postMessage({ action: 'skipWaiting' });
-	});
-
 	navigator.serviceWorker.ready.then(reg => {
 		reg.addEventListener('updatefound', () => {
 			newWorker = reg.installing;
@@ -47,8 +44,10 @@ function initPwaEvents(){
 				switch (newWorker.state) {
 					case 'installed':
 					if (navigator.serviceWorker.controller) {
-						let notification = document.getElementById('update');
-						notification.className = 'opened';
+						UI.message("Une mise à jour est displonible", "Installer en un click ou laisser l'application s'en occuper plus tard", [
+							{ texte: "Mettre à jour", action: () => newWorker.postMessage({ action: 'skipWaiting' }) },
+							{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
+						]);
 					}
 					break;
 				}
