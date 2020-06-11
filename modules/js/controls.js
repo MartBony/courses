@@ -102,7 +102,7 @@ export default function initEvents(app, course){
 	});
 
 	$('.install i').click(function(){
-		App.hideInstall();
+		UI.hideInstall();
 	});
 
 	$('.newCourse').click(function(){
@@ -151,7 +151,7 @@ export default function initEvents(app, course){
 		app.closePrice();
 	});
 
-	$(document).on('click', '.ms-Icon--Delete',function(){
+	$(document).on('click', '.main .ms-Icon--Delete',function(){
 		$('.article, .preview').removeClass('ready initSwitch');
 		$(this).parent().addClass('ready');
 	});
@@ -396,17 +396,19 @@ export default function initEvents(app, course){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { update: 'true', submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id}
+						data: { submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id}
 					}).then(function(data){
+						$('.loader').removeClass('opened');
 						if(data.status == 200){
 							history.replaceState({key:'createCourse'}, '','index.php');
 							$('#addCourse #titreC, #addCourse #maxPrice').val('');
-							$('.loader').removeClass('opened');
 
 							Storage.setItem('usedCourse', null);
 							app.pull("refresh", null, null, () => {
 								UI.acc(app);
 							});
+						} else if (data.status == 403){
+							UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
 						}
 					}).catch(function(err){
 						$('.loader').removeClass('opened');

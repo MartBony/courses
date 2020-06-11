@@ -2,21 +2,15 @@
 require_once('../dbConnect.php');
 require_once('checkers/login.php');
 require_once('checkers/getLatestCourse.php');
+require_once('checkers/checkGroupe.php');
+
 header('Content-type: application/json');
 
 function pushCousesIndependent($user, PDO $bdd){
-	if(isset($_POST['submitCourse'])) {
-		$titre = htmlspecialchars((string)  $_POST['titre']);
-		$maxPrice = htmlspecialchars((string)  $_POST['maxPrice']);
-
-		$insert = $bdd->prepare('INSERT INTO courses (`nom`, `maxprice`, `groupe`) VALUES (?,?,?)');
-		$insert->execute(array($titre, $maxPrice, $_POST['groupe']));
-
-		echo json_encode(array('status' => 200));
-		return true;
-
-	} else if(isset($_POST['newGroupe'])) {
+	if(isset($_POST['newGroupe'])) {
 		if(isset($_POST['titre']) && strlen($_POST['titre']) < 15){
+			$_POST['titre'] = htmlspecialchars($_POST['titre']);
+
 			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)');
 			$insertGroupe->execute(array($_POST['titre']));
 
@@ -30,16 +24,26 @@ function pushCousesIndependent($user, PDO $bdd){
 			echo json_encode(array('status' => 200));
 
 		} else {
-			echo json_encode(array('status' => 400));
+			echo json_encode(array('status' => 403));
 		}
 
 		return true;
-	} else if(isset($_POST['leaveGroup']) && isset($_POST['groupe']) && strlen($_POST['groupe']) != 0) {
-		if(strpos($user['groupe'], $_POST['groupe']) !== false){
-			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
-			$reqGroupe->execute(array($_POST['groupe']));
-			$reqGroupe->closeCursor();
-			if($reqGroupe->rowCount() == 1){
+	} else {
+
+		return checkGroupe($user, $bdd, function($user, $groupe, $bdd){
+	
+			if(isset($_POST['submitCourse'])) {
+				$titre = htmlspecialchars( $_POST['titre']);
+				$maxPrice = (float)  $_POST['maxPrice'];
+		
+				$insert = $bdd->prepare('INSERT INTO courses (`nom`, `maxprice`, `groupe`) VALUES (?,?,?)');
+				$insert->execute(array($titre, $maxPrice, $groupe['id']));
+		
+				echo json_encode(array('status' => 200));
+				return true;
+		
+			} else if(isset($_POST['leaveGroup'])) {
+
 				$membres = 0;
 				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
 				$reqAllUsers->execute();
@@ -73,16 +77,15 @@ function pushCousesIndependent($user, PDO $bdd){
 				$updateUser->execute(array($newString, $user['id']));
 
 				echo json_encode(array('status' => 200));
-			
-			} else {
-				echo json_encode(array('status' => 204));
+
+
+				return true;
+
 			}
-		} else {
-			echo json_encode(array('status' => 403));
-		}
-		return true;
-	} else {
-		return false;
+
+			return false;
+				
+		});
 	}
 }
 

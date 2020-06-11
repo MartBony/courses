@@ -5,6 +5,7 @@
 	"/courses/manifest.json",
 	"/courses/styles/parametres.css",
 	"/courses/styles/popups.css",
+	"/courses/styles/forms.css",
 	"/courses/styles/style.css",
 	"/courses/styles/switches.css",
 	"/courses/modules/js/app.js",

@@ -288,9 +288,10 @@ export default class UI {
 	static closeModal(){
 		document.querySelector('#modal').className = '';
 	}
-	static offlineMsg(app, err, msg = "Le réseau est déconnecté ou insuffisant, la requette à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour"){
-		
-		UI.erreur("Erreur de réseau", msg, [
+	static offlineMsg(app, err, msg){
+		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
+
+		UI.erreur("Pas de réseau", msg, [
 			{ texte: "Me notifier", class:'errorGradient',
 				action: () => {
 					app.notificationHandler(function(){

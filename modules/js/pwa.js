@@ -21,11 +21,11 @@ function initPwaEvents(){
 	window.addEventListener('beforeinstallprompt', (e) => {
 		e.preventDefault();
 		deferredPrompt = e;
-		//App.showInstall(500);
+		UI.showInstall(500);
 	});
 	
 	$('.install button').on('click', (e) => {
-		App.hideInstall();
+		UI.hideInstall();
 		deferredPrompt.prompt();
 		deferredPrompt.userChoice.then((choiceResult) => {
 			if (choiceResult.outcome === 'accepted') {

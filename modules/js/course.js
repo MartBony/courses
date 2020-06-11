@@ -21,6 +21,7 @@ export default class Course{
 		};
 	}
 	update(app, data){
+
 		let items = data.items,
 			attribute = "";
 		

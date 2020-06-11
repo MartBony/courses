@@ -1,7 +1,8 @@
 import UI from './UI.js';
 
 class Pull{
-	static course(app, idCourse, hasCached){
+	static course(app, idCourse, hasCached, callback){
+		callback = callback || function(){};
 		return $.ajax({
 			method: 'POST',
 			url: 'serveur/pull.php',
@@ -10,14 +11,10 @@ class Pull{
 			data = JSON.parse(data);
 			console.log('Network items fetched:', data);
 			app.updateCourse(data, true);
+			callback();
 		}).catch(err => {
-			if (!hasCached) {
-				UI.offlineMsg(app, err, app.errors.noAccess);
-				$('.refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--NetworkTower');
-				setTimeout(function(){
-					$('.refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--NetworkTower');
-				},2000);
-			}
+			if (!hasCached) UI.offlineMsg(app, err)
+			else {UI.offlineMsg(app, err, "Vous êtes déconnectés, la page est en lecture seule et certains éléments peuvent ne pas être à jour"); callback();}
 		});
 	}
 	static groupes(app, idGroupe, hasCached){
@@ -27,13 +24,8 @@ class Pull{
 			console.log('Network groups fetched:', data);
 			return app.updateGroups(data, idGroupe);
 		}).catch(err => {
-			if(!hasCached){
-				UI.offlineMsg(app, err, app.errors.noAccess);
-				$('.refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--NetworkTower');
-				setTimeout(function(){
-					$('.refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--NetworkTower');
-				},2000);
-			}
+			if(!hasCached) UI.offlineMsg(app, err)	
+		 	else UI.offlineMsg(app, err, "Vous êtes déconnectés, la page ne peut pas être actualisée")
 		});
 	}
 	static invitations(app){
@@ -43,7 +35,6 @@ class Pull{
 			data: {pull: true}
 		}).then(data => app.updateInvites(data))
 		.catch(err => {
-			console.log(err);
 			$('#invitations div').html('Un problème est survenu');
 		});
 	}

@@ -2,10 +2,12 @@ import {$_GET} from "./tools.js";
 import UI from './UI.js';
 
 export default class Generate{
-	static course(app, id, nom){
+	static course(app, id, nom, selected){
 		let button = document.createElement('button'),
 			i = document.createElement('i');
-		button.className = `course c${id}`;
+		button.classList.add("course");
+		button.classList.add("c"+ id);
+		if(selected) button.classList.add("opened");
 		button.innerHTML = nom;
 		i.className = "ms-Icon ms-Icon--Delete";
 		i.setAttribute("aria-hidden","true");
@@ -13,7 +15,7 @@ export default class Generate{
 
 		$(button).on('click', e => {
 			if(e.target == e.currentTarget) {
-				app.pull("refresh", null, id, () => {
+				app.pull("open", null, id, () => {
 					UI.acc(app);
 				});
 			}
@@ -50,7 +52,7 @@ export default class Generate{
 
 		$(button).on('click', e => {
 			if(e.target.tagName !== "I"){
-				app.pull("refresh", id); 
+				app.pull("open", id);
 			}
 		});
 
