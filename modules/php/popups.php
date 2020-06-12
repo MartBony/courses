@@ -16,9 +16,7 @@
 		<img src="images/logo_md.png">
 		<img src="images/logo_tp.png">
 	</div>
-	<button>
-		Télécharger l'application
-	</button>
+	<button>Télécharger l'application</button>
 </section>
 <section class="loader">
 	<div></div>

@@ -138,23 +138,23 @@ export default class UI {
 		$('#addCourse label, #addCourse input').removeClass('opened');
 	}
 	static openMenu(){
-		$('.menu').css({'display':'block'});
+		//$('.menu').css({'display':'block'});
 		setTimeout(function(){
 			$('.menu').addClass('opened');
 		},10);
 	}
 	static closeMenu(){
-		$('.menu').css({'display':'none'});
+		//$('.menu').css({'display':'none'});
 		$('.menu').removeClass('opened');
 	}
 	static openParams(){
-		$('#params').css({'display':'block'});
+		//$('#params').css({'display':'block'});
 		setTimeout(function(){
 			$('#params').addClass('opened');
 		},10);
 	}
 	static closeParams(){
-		$('#params').css({'display':'none'});
+		//$('#params').css({'display':'none'});
 		$('#params').removeClass('opened');
 	}
 	static openAddGroup(){

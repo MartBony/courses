@@ -1,4 +1,5 @@
-<section id="prices">
+<section id="prices" class="fromContainer">
+	<div class="blur"></div>
 	<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>				
@@ -7,11 +8,12 @@
 			<input id="newPrice" type="double" name="aprix" required />
 			€
 		</div>
-		<input type="submit" name="submit" id="setPrice" value="Ajouter">
+		<input class="submit" type="submit" name="submit" id="setPrice" value="Ajouter">
 	</form>
 	<ul></ul>
 </section>
-<section id="addarticle">
+<section id="addarticle" class="fromContainer">
+	<div class="blur"></div>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>
 		<label for="titre">Titre de l'article</label>
@@ -21,18 +23,20 @@
 			<input id="prix" type="double" name="prix" required />
 			€
 		</div>
-		<input type="submit" name="submit" id="submitArticle" value="Ajouter">
+		<input class="submit" type="submit" name="submit" id="submitArticle" value="Ajouter">
 	</form>
 </section>
-<section id="addpreview">
+<section id="addpreview" class="fromContainer">
+	<div class="blur"></div>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>
 		<label for="titreP">Titre de l'article</label>
 		<input maxlength="50" id="titreP" type="text" name="titreP" required />
-		<input type="submit" name="submit" id="submitPreview" value="Ajouter">
+		<input class="submit" type="submit" name="submit" id="submitPreview" value="Ajouter">
 	</form>
 </section>
-<section id="addCourse">
+<section id="addCourse" class="fromContainer">
+	<div class="blur"></div>
 	<h1>Créer une course</h1>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>
@@ -43,20 +47,22 @@
 			<input id="maxPrice" type="double" name="maxPrice" required />
 			€
 		</div>
-		<input type="submit" name="submitCourse" id="submitCourse" value="Créer">
+		<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 	</form>
 </section>
-<section id="addGroupe">
+<section id="addGroupe" class="fromContainer">
+	<div class="blur"></div>
 	<h1>Créer un groupe</h1>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>
 		<p>Nombre de groupe maximum: 5</p>
 		<label for="titreG">Titre du groupe</label>
 		<input maxlength="20" id="titreG" type="text" name="titreG" required />
-		<input type="submit" name="submitGroupe" id="submitGroupe" value="Créer">
+		<input class="submit" type="submit" name="submitGroupe" id="submitGroupe" value="Créer">
 	</form>
 </section>
-<section id="invitation">
+<section id="invitation" class="fromContainer">
+	<div class="blur"></div>
 	<h1>Inviter - <span></span></h1>
 	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<form>
@@ -64,7 +70,7 @@
 		<input maxlength="50" id="nomInv" type="text" name="nomInv" required />
 		<label for="keyInv">Id temporaire</label>
 		<input max="999999" id="keyInv" type="number" name="keyInv" required />
-		<input type="submit" name="sendInv" id="sendInv" value="Inviter">
+		<input class="submit" type="submit" name="sendInv" id="sendInv" value="Inviter">
 	</form>
 	<article>
 		<h2>Procédure</h2>

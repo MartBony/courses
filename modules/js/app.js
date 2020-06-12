@@ -469,9 +469,9 @@ class App{
 
 		$('.course.c'+ data.id).addClass('opened');
 
-		$('#refresh i').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
+		$('#refresh i, #headRefresh').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
 		setTimeout(function(){
-			$('#refresh i').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
+			$('#refresh i, #headRefresh').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
 		},2000);
 
 		if (course.old) {

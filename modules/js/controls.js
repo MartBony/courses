@@ -1,4 +1,3 @@
-import App from './app.js';
 import Pull from './requests.js';
 import UI from './UI.js';
 import Storage from './storage.js';
@@ -69,6 +68,11 @@ export default function initEvents(app, course){
 		}
 	});
 
+	// Shell Events
+	if (window.innerWidth < 900) {
+		document.querySelectorAll('.main')[1].styles.display = "none";
+	}
+
 	// Regular Events
 
 	$(document).on('click', '.add.closed',function(){
@@ -97,7 +101,7 @@ export default function initEvents(app, course){
 		app.setParameters();
 	});
 
-	$('#refresh').click(function(){
+	$('#refresh, #headRefresh').click(function(){
 		app.pull("refresh");
 	});
 
@@ -208,8 +212,18 @@ export default function initEvents(app, course){
 
 
 
-	$('header i').click(function(){
+	$('header.phones i, header.tablet i.ms-Icon--GlobalNavButton').click(function(){
 		UI.openMenu();
+	});
+
+	$(' header.tablet i.ms-Icon--Settings').click(function(){
+		UI.openParams();
+	});
+
+	$(' header.tablet i.ms-Icon--BarChartVertical').click(function(){
+		let calcul = document.querySelector('.calcul');
+		if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
+		else calcul.classList.add('opened');
 	});
 
 	document.addEventListener("visibilitychange", ()=>{
