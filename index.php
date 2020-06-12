@@ -45,13 +45,27 @@
 		<?php require('modules/php/popups.php'); ?>
 		<?php require('modules/php/menus.php'); ?>
 		<?php require('modules/php/forms.php'); ?>
-		<header>
+		<header class="phones">
 			<section id="touchSurface"></section>
 			<h1 class="noselect">Panier</h1>
 			<i class="ms-Icon ms-Icon--GlobalNavButton" aria-hidden="true"></i>
 		</header>
-		<section class="main"><ul class="list"></ul></section>
-		<section class="main" style="display: none"><ul class="prevList"></ul></section>
+		<header class="tablet">
+			<h1 class="noselect">Faire ses courses</h1>
+			<i id="headRefresh" class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i>
+			<i class="ms-Icon ms-Icon--Settings" aria-hidden="true"></i>
+			<i class="ms-Icon ms-Icon--GlobalNavButton" aria-hidden="true"></i>
+		</header>
+		<h1>Panier</h1>
+		<h1>Liste de course</h1>
+		<section id="panier" class="main">
+			<ul class="list"></ul>
+			<button class="adder">Ajouter au panier</button>
+		</section>
+		<section id="liste" class="main">
+			<ul class="prevList"></ul>
+			<button class="adder">Ajouter à la liste</button>
+		</section>
 		
 		<div class="add closed noselect"><i class="ms-Icon ms-Icon--ShoppingCart" aria-hidden="true"></i> Ajouter un article</div>
 		<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
