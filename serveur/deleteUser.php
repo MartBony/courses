@@ -16,7 +16,7 @@ login($bdd, function($user) use ($bdd){
 				$cursor = "outside";
 
 				// Sortir des groupes
-				/* $membres = 0;
+				$membres = 0;
 				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
 				$reqAllUsers->execute();
 				while($scanedUser = $reqAllUsers->fetch()){
@@ -46,7 +46,8 @@ login($bdd, function($user) use ($bdd){
 				$newString = str_replace("[". $idGroupe ."]","",$user['groupe']);
 
 				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-				$updateUser->execute(array($newString, $user['id'])); */
+				$updateUser->execute(array($newString, $user['id']));
+
 
 				$idGroupe = "";
 	
@@ -56,10 +57,13 @@ login($bdd, function($user) use ($bdd){
 		
 		}
 
+		$updUser = $bdd->prepare('UPDATE `users` SET `nom` = "", `mail` = "", `pass` = "", `salage` = "", `clef` = "", `inviteKey` = "", `activated` = 0, `pending` = "", `deleted` = 1 WHERE `id` = ?');
+		$updUser->execute(array($user['id']));
 
-
+		echo json_encode(array('status' => 200));
 		
 	}
+
 });
 
 ?>

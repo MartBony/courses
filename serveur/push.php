@@ -124,10 +124,10 @@ function push($user, $usedCourse, PDO $bdd){
 		$reqIdInserted->execute(array($usedCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
 		echo json_encode([
-			'submit' => 200,
+			'status' => 200,
 			'id'=> $idInserted['id'],
 			'titre'=> $titre,
-			'color' => $user['hexColor']
+			'color' => $user['hueColor']
 		]);
 		
 		return true;

@@ -41,7 +41,10 @@ if(isset($_POST['inscript'])){
 		$mail = htmlspecialchars($_POST['mail']);
 		$clef = hash('sha512', $_POST['clef']);
 
-		$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? && clef = ? ');
+		$reqUser = $bdd->prepare(
+			'SELECT * FROM users 
+			WHERE mail = ? AND clef = ? AND `deleted` = 0'
+		);
 		$reqUser->execute(array($mail, $clef));
 
 		if ($reqUser->rowCount() == 1) {
@@ -82,14 +85,14 @@ if(isset($_POST['inscript'])){
 }
 
 function connect(PDO $bdd, $mail, $pass){
-	$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ?');
+	$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ?AND `deleted` = 0');
 	$reqPreUser->execute(array($mail));
 
 	if ($reqPreUser->rowCount() == 1) {
 		$preUser = $reqPreUser->fetch();
 		$hash = hash('sha512', $preUser['salage'].$pass);
 
-		$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ?');
+		$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ? AND `deleted` = 0');
 		$reqUser->execute(array($mail, $hash));
 
 		if ($reqUser->rowCount() == 1) {
@@ -146,12 +149,11 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 	$salted = $salage.$pass;
 	$hash = hash('sha512', $salted);
 
-	$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ?');
+	$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND `deleted` = 0');
 	$reqUser->execute(array($mail));
 	$user = $reqUser->fetch();
 
 	if ($reqUser->rowCount() == 0) {
-		$colors = array("#ff9999","#a1ef9b","#ffafdf","#d7afff","#9edfff","#e0e0e0","#ff976e","#7cf88f","#68b1e4","#fe6bad","#f7ff6e");
 		$clef = generateRandomString(30);
 
 		$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)'); // Create groupe
@@ -161,15 +163,15 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 		$reqGroupe->execute(array("Groupe de ".$nom));
 		$groupe = $reqGroupe->fetch();
 
-		$setUser = $bdd->prepare('INSERT INTO `users`(`mail`, `pass`, `salage`, `nom`, `clef`, `hexColor`, `groupe`, `inviteKey`) 
-			VALUES (:mail,:pass,:salage,:nom,:clef,:hexColor,:groupe,:inviteKey)');
+		$setUser = $bdd->prepare('INSERT INTO `users`(`mail`, `pass`, `salage`, `nom`, `clef`, `hueColor`, `groupe`, `inviteKey`) 
+			VALUES (:mail,:pass,:salage,:nom,:clef,:hueColor,:groupe,:inviteKey)');
 		$setUser->execute(array(
 			'mail' => $mail,
 			'pass' => $hash,
 			'salage' => $salage,
 			'nom' => $nom,
 			'clef' => hash('sha512', $clef),
-			'hexColor' => $colors[rand(0,count($colors))],
+			'hueColor' => rand(0,359),
 			'groupe' => "[". $groupe['id'] ."]",
 			'inviteKey' => rand(0, 999999)
 		));

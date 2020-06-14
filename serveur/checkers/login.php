@@ -5,14 +5,14 @@ function login( PDO $bdd, $callback){
 		$mail = htmlspecialchars($_COOKIE['email']);
 		$pass = $_COOKIE['pass'];
 
-		$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ?');
+		$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ? AND `deleted` = 0');
 		$reqPreUser->execute(array($mail));
 
 		if ($reqPreUser->rowCount() == 1) {
 			$preUser = $reqPreUser->fetch();
 			$hash = hash('sha512', $preUser['salage'].$pass);
 
-			$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ?');
+			$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ? AND `deleted` = 0');
 			$reqUser->execute(array($mail, $hash));
 
 			if ($reqUser->rowCount() == 1) {

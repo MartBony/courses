@@ -8,7 +8,7 @@ function pull($user, $usedCourse, $bdd){
 	$previews = array();
 
 
-	$reqColor = $bdd->prepare('SELECT `hexColor` FROM `users` WHERE id = ?');
+	$reqColor = $bdd->prepare('SELECT `hueColor` FROM `users` WHERE id = ?');
 
 	$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ? ORDER BY id DESC');
 	$reqItems->execute(array($_POST['id']));
@@ -18,10 +18,10 @@ function pull($user, $usedCourse, $bdd){
 			$reqColor->execute(array($article['idAuteur']));
 			$color = $reqColor->fetch();
 			$reqColor->closecursor();
-
+			
 			array_push($previews, array(
 				'id' => $article['id'],
-				'color' => $color['hexColor'],
+				'color' => $color['hueColor'],
 				'titre' => $article['titre']
 			));
 		} else {
