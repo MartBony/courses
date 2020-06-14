@@ -12,8 +12,8 @@ window.addEventListener('load', () => {
 	compte = Account.auth().then(isAuth => {
 		if(isAuth){
 			// Initialise on read
-			//addSiteCache('site-course', 'coursesCache.json'); To uncomment
-			//initPwaEvents(); To uncomment
+			addSiteCache('site-course', 'coursesCache.json');
+			initPwaEvents();
 			
 			app = new App();
 			initEvents(app, course);
