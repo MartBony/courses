@@ -11,7 +11,7 @@ function pushCousesIndependent($user, PDO $bdd){
 		if(isset($_POST['titre']) && strlen($_POST['titre']) < 15){
 			$_POST['titre'] = htmlspecialchars($_POST['titre']);
 
-			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)');
+			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (`nom`) VALUES (?)');
 			$insertGroupe->execute(array($_POST['titre']));
 
 			$reqGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `nom` = ? ORDER BY `id` DESC LIMIT 0,1');
@@ -30,22 +30,25 @@ function pushCousesIndependent($user, PDO $bdd){
 		return true;
 	} else {
 
-		return checkGroupe($user, $bdd, function($user, $groupe, $bdd){
+		return checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
 	
 			if(isset($_POST['submitCourse']) && isset($_POST['titre']) && isset($_POST['maxPrice'])) {
 				$titre = htmlspecialchars($_POST['titre']);
 				$maxPrice = (float)  $_POST['maxPrice'];
 		
-				$insert = $bdd->prepare('INSERT INTO courses (`nom`, `maxprice`, `groupe`) VALUES (?,?,?)');
+				$insert = $bdd->prepare(
+					'INSERT INTO `courses`
+					(`nom`, `maxPrice`, `total`, `dateStart`, `groupe`)
+					VALUES (?,?,0,0,?)'
+				);
 				$insert->execute(array($titre, $maxPrice, $groupe['id']));
 		
 				echo json_encode(array('status' => 200));
 				return true;
 		
 			} else if(isset($_POST['leaveGroup'])) {
-
 				$membres = 0;
-				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
+				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users` WHERE `deleted` = 0');
 				$reqAllUsers->execute();
 				while($scanedUser = $reqAllUsers->fetch()){
 					if (strpos($scanedUser['groupe'], "[". $_POST['groupe'] ."]") !== false) {
@@ -95,7 +98,11 @@ function push($user, $usedCourse, PDO $bdd){
 		$titre = htmlspecialchars($_POST['titre']);
 		$prix = (float) $_POST['prix'];
 
-		$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur) VALUES (?,?,?,0,?)');
+		$insertArt = $bdd->prepare(
+			'INSERT INTO `articles`
+			(`titre`, `prix`, `course`, `preview`, `idAuteur`)
+			VALUES (?,?,?,0,?)'
+		);
 		$insertArt->execute(array($titre, $prix, $usedCourse['id'], $user['id']));
 
 		$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
@@ -116,11 +123,14 @@ function push($user, $usedCourse, PDO $bdd){
 	elseif (isset($_POST['submitPreview']) && isset($_POST['titre'])) {
 		$titre = htmlspecialchars($_POST['titre']);
 
-		$insertArt = $bdd->prepare('INSERT INTO articles (titre, prix, course, preview, idAuteur) VALUES (?,0,?,1,?)');
+		$insertArt = $bdd->prepare(
+			'INSERT INTO `articles`
+			(`titre`, `prix`, `course`, `preview`, `idAuteur`)
+			VALUES (?,0,?,1,?)'
+		);
 		$insertArt->execute(array($titre, $usedCourse['id'], $user['id']));
 
-		$reqIdInserted = $bdd->prepare('
-			SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
+		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
 		$reqIdInserted->execute(array($usedCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
 		echo json_encode([
@@ -205,7 +215,7 @@ function push($user, $usedCourse, PDO $bdd){
 }
 
 login($bdd, function($user, $bdd){
-	if(!pushCousesIndependent($user, $bdd)){	
+	if(!pushCousesIndependent($user, $bdd)){
 		getCourse($user, $bdd, function($user, $usedCourse, $bdd){
 			push($user, $usedCourse, $bdd);
 		});

@@ -62,7 +62,8 @@ class App{
 				// Load from network
 				Pull.groupes(this, idGroupe, hasCached.groupes).then(state => {
 					if(state || hasCached.groupes){ // Si les groupes ont étés chargés et si il existe des courses
-						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id || null;
+						idCourse = idCourse || Storage.getItem('usedCourse');
+						if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
 						Pull.course(this, idCourse, hasCached.course, callback).then(() => {
 							$('.loader').removeClass('opened');
 						});
@@ -72,7 +73,8 @@ class App{
 			case "refresh":
 				Pull.groupes(this, idGroupe, true).then(state => {
 					if(state){
-						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id || null;
+						idCourse = idCourse || Storage.getItem('usedCourse');
+						if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
 						Pull.course(this, idCourse, null, callback).then(() => {
 							$('.loader').removeClass('opened');
 						});
@@ -234,7 +236,7 @@ class App{
 				let displayedIndex = $(e.target).parent().prevAll('li').length;
 
 
-				this.totalPP(-data.id);
+				this.totalPP(-data.prix);
 				UI.remove("article", displayedIndex);
 
 				let storage = Storage.getItem('courses');				
@@ -265,9 +267,8 @@ class App{
 			data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
 		}).then(data => {
 			$('.loader').removeClass('opened');
-			if (data[0] == 'done') {
+			if (data.status == 200) {
 				let displayedIndex = $(e.target).parent().prevAll('li').length;
-
 
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
@@ -543,8 +544,8 @@ class App{
 		$.ajax({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: { push: true, id: id }
-		}).then(() =>{
+			data: { accept: true, id: id }
+		}).then(data =>{
 			if(data.status = 200){
 				Pull.invitations(this);
 				this.pull("refresh");
@@ -554,6 +555,7 @@ class App{
 				]);
 			}
 		}).catch(err => {
+			console.err(err);
 			$('#invitations div').append('Un problème est survenu');
 		});
 
@@ -563,8 +565,8 @@ class App{
 		$.ajax({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: { remove: true, id: id }
-		}).then(() =>{
+			data: { reject: true, id: id }
+		}).then(data =>{
 			if(data.status = 200){
 				Pull.invitations(this);
 				this.pull("refresh");
@@ -574,6 +576,7 @@ class App{
 				]);
 			}
 		}).catch(err => {
+			console.err(err);
 			$('#invitations div').append('Un problème est survenu');
 		});
 

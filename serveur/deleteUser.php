@@ -17,8 +17,9 @@ login($bdd, function($user) use ($bdd){
 
 				// Sortir des groupes
 				$membres = 0;
-				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
+				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users` WHERE `deleted` = 0');
 				$reqAllUsers->execute();
+				
 				while($scanedUser = $reqAllUsers->fetch()){
 					if (strpos($scanedUser['groupe'], "[". $idGroupe ."]") !== false) {
 						$membres++;
@@ -26,7 +27,9 @@ login($bdd, function($user) use ($bdd){
 				}
 				$reqAllUsers->closeCursor();
 
+
 				if($membres == 1){
+
 					$reqAllCourses = $bdd->prepare('SELECT id FROM courses WHERE groupe = ? ORDER BY id DESC');
 					$reqAllCourses->execute(array($idGroupe));
 					while($resCoursesGp = $reqAllCourses->fetch()){
@@ -34,6 +37,7 @@ login($bdd, function($user) use ($bdd){
 						$delArticles->execute(array($resCoursesGp['id']));
 					}
 					$reqAllCourses->closeCursor();
+
 					$delCourses = $bdd->prepare('DELETE FROM `courses` WHERE `groupe` = ?');
 					$delCourses->execute(array($idGroupe));
 					$delCourses->closeCursor();
@@ -42,11 +46,12 @@ login($bdd, function($user) use ($bdd){
 					$delgroupe->execute(array($idGroupe));
 					$delgroupe->closeCursor();
 				}
+				
 
-				$newString = str_replace("[". $idGroupe ."]","",$user['groupe']);
+				$user['groupe'] = str_replace("[".$idGroupe."]","",$user['groupe']);
 
 				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-				$updateUser->execute(array($newString, $user['id']));
+				$updateUser->execute(array($user['groupe'], $user['id']));
 
 
 				$idGroupe = "";
@@ -57,7 +62,7 @@ login($bdd, function($user) use ($bdd){
 		
 		}
 
-		$updUser = $bdd->prepare('UPDATE `users` SET `nom` = "", `mail` = "", `pass` = "", `salage` = "", `clef` = "", `inviteKey` = "", `activated` = 0, `pending` = "", `deleted` = 1 WHERE `id` = ?');
+		$updUser = $bdd->prepare('UPDATE `users` SET `nom` = "", `mail` = "", `pass` = "", `salage` = "", `clef` = "", `inviteKey` = 0, `activated` = 0, `pending` = "", `groupe` = "", `deleted` = 1 WHERE `id` = ?');
 		$updUser->execute(array($user['id']));
 
 		echo json_encode(array('status' => 200));

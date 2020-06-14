@@ -163,8 +163,9 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 		$reqGroupe->execute(array("Groupe de ".$nom));
 		$groupe = $reqGroupe->fetch();
 
-		$setUser = $bdd->prepare('INSERT INTO `users`(`mail`, `pass`, `salage`, `nom`, `clef`, `hueColor`, `groupe`, `inviteKey`) 
-			VALUES (:mail,:pass,:salage,:nom,:clef,:hueColor,:groupe,:inviteKey)');
+		$setUser = $bdd->prepare('INSERT INTO `users`
+			(`mail`, `pass`, `salage`, `nom`, `clef`, `activated`, `hueColor`, `groupe`, `inviteKey`, `pending`, `deleted`)
+			VALUES (:mail,:pass,:salage,:nom,:clef, 0,:hueColor,:groupe,:inviteKey,"",0)');
 		$setUser->execute(array(
 			'mail' => $mail,
 			'pass' => $hash,
@@ -172,7 +173,7 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 			'nom' => $nom,
 			'clef' => hash('sha512', $clef),
 			'hueColor' => rand(0,359),
-			'groupe' => "[". $groupe['id'] ."]",
+			'groupe' => "[".$groupe['id']."]",
 			'inviteKey' => rand(0, 999999)
 		));
 

@@ -4,7 +4,7 @@ require_once('../dbConnect.php');
 require_once('checkers/login.php');
 require_once('checkers/checkGroupe.php');
 
-header('Content-type: application/json');
+header('Content-Type: application/json');
 
 function pushCousesIndependent($user, PDO $bdd){
 	if(isset($_POST['getInviteKey'])) {
@@ -61,7 +61,7 @@ function pushCousesIndependent($user, PDO $bdd){
 		));
 		
 		return true;
-	} else if(isset($_POST['push']) && isset($_POST['id'])){
+	} else if(isset($_POST['accept']) && isset($_POST['id'])){
 		$id = $_POST['id'];
 
 		$reqPullPendings = $bdd->prepare('SELECT `pending` FROM `users` WHERE `id` = ?');
@@ -81,12 +81,12 @@ function pushCousesIndependent($user, PDO $bdd){
 					$cursor = "outside";
 
 					if($idGroupe == $id){
-						$newString = str_replace("  ", " ", str_replace("[".$id."]","",$pullPendings['pending']));
+						$newString = str_replace("[".$id."]","",$pullPendings['pending']);
 						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
 						$updateUser->execute(array($newString, $user['id']));
 	
 						$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-						$insertUser->execute(array(( "[". $idGroupe ."] ". $user['groupe']), $user['id']));
+						$insertUser->execute(array(( "[". $idGroupe ."]". $user['groupe']), $user['id']));
 	
 						echo json_encode(array('status' => 200));
 						$gotIt = true;
@@ -109,7 +109,7 @@ function pushCousesIndependent($user, PDO $bdd){
 		}
 		
 		return true;
-	} else if(isset($_POST['remove']) && isset($_POST['id'])){
+	} else if(isset($_POST['reject']) && isset($_POST['id'])){
 		$id = $_POST['id'];
 
 		$reqPullPendings = $bdd->prepare('SELECT `pending` FROM `users` WHERE `id` = ?');
@@ -129,7 +129,7 @@ function pushCousesIndependent($user, PDO $bdd){
 					$cursor = "outside";
 
 					if($idGroupe == $id){
-						$newString = str_replace("  ", " ", str_replace("[". $id ."]","",$pullPendings['pending']));
+						$newString = str_replace("[". $id ."]","",$pullPendings['pending']);
 						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
 						$updateUser->execute(array($newString, $user['id']));
 	
@@ -185,7 +185,7 @@ function pushGroupeDependent($user, $groupe, PDO $bdd){
 
 login($bdd, function($user, $bdd){
 	if(!pushCousesIndependent($user, $bdd)){
-		checkGroupe($user, $bdd, function($user, $groupe, $bdd){
+		checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
 			pushGroupeDependent($user, $groupe, $bdd);
 		});
 	}
