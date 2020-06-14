@@ -104,6 +104,13 @@
 	transition: all 200ms var(--ease-enter) 100ms;
 }
 
+#modal.deleteAll #deleteAll{
+	display: flex;
+	opacity: 1;
+	transform: scale(1);
+	transition: all 200ms var(--ease-enter) 100ms;
+}
+
 #modal h2{
 	text-align: center;
 	font-size: 1.8rem;
@@ -141,7 +148,7 @@
 	margin: 0 8%;
 }
 
-#modal .leaveGrp, #noGroupe button{
+#modal .leaveGrp, #noGroupe button, #deleteAll .supprConf{
 	background: rgb(255, 175, 143);
 	color: white;
 }

@@ -21,7 +21,7 @@ function initPwaEvents(){
 	window.addEventListener('beforeinstallprompt', (e) => {
 		e.preventDefault();
 		deferredPrompt = e;
-		UI.showInstall(500);
+		//UI.showInstall(500);
 	});
 	
 	$('.install button').on('click', (e) => {

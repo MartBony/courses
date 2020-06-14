@@ -159,6 +159,7 @@ function pushCousesIndependent($user, PDO $bdd){
 
 function pushGroupeDependent($user, $groupe, PDO $bdd){
 	if(isset($_POST['invite']) && isset($_POST['nom']) && isset($_POST['key'])) {
+
 		$reqInvited = $bdd->prepare('SELECT `pending`, `id`,`groupe` FROM `users` WHERE `inviteKey` = ? AND nom = ?');
 		$reqInvited->execute(array($_POST['key'], $_POST['nom']));
 		$invited = $reqInvited->fetch();
@@ -178,6 +179,7 @@ function pushGroupeDependent($user, $groupe, PDO $bdd){
 		} else {
 			echo json_encode(array('status' => 400));
 		}
+		
 	}
 }
 

@@ -21,7 +21,7 @@ export default class Generate{
 			}
 		});
 		$(i).on('click', e => {
-			app.deleteCourse(e, id);
+			app.deleteCourse(id);
 		});
 
 		return button;

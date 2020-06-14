@@ -8,26 +8,6 @@
 		exit;
 	}*/
 
-	if (isset($_GET['clef'])) {
-		$requser = $bdd->prepare('SELECT * FROM `users` WHERE `clef` = ?');
-		$requser->execute(array(hash('sha512', (string) $_GET['clef'])));
-		if ($requser->rowCount() == 1) {
-			setcookie("clefCourses", (string) $_GET['clef'], time() + 31*24*3600, '/', null, false, true);
-		} else {
-			header('Location: ../index.php');
-		}
-	} elseif(isset($_COOKIE['clefCourses'])) {
-		$requser = $bdd->prepare('SELECT * FROM `users` WHERE `clef` = ?');
-		$requser->execute(array(hash('sha512', (string) $_COOKIE['clefCourses'])));
-		if ($requser->rowCount() == 1) {
-			setcookie('clefCourses', $_COOKIE['clefCourses'], time() + 31*24*3600, '/', null, false, true);
-		} else {
-			header('Location: ../index.php');
-		}
-	} else {
-		header('Location: ../index.php');
-	}
-
 ?>
 <!DOCTYPE html>
 <html>

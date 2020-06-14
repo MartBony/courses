@@ -5,7 +5,6 @@ import {jsonEqual} from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
 
-
 let course;
 
 class App{
@@ -18,9 +17,10 @@ class App{
 		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.state = 0;
 		this.setParameters();
-		this.pull("open");
 
-		this.errors =  "Cette page est innaccessible pour l'instant";
+		//this.errors =  "Cette page est innaccessible pour l'instant";
+		
+		if(compte) this.pull("open")
 	}
 	setParameters(){
 		this.params = {
@@ -201,19 +201,23 @@ class App{
 			url: "serveur/push.php",
 			data: { deleteCourse: true, id: id, groupe: this.usedGroupe.id}
 		}).then(data => {
+			$('.loader').removeClass('opened');
 			if (data.status == 200) {
-				$('.loader').removeClass('opened');
 
 				var storage = Storage.getItem('courses');				
 				storage = storage.filter((el, i) => el.id != id);
 				Storage.setItem('courses', storage);
 
-				this.pull("refresh");
+				Storage.setItem('usedCourse', null);
 
+				this.pull("open");
+
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
 			}
-
 		}).catch(err => {
-			console.log(err);
 			$('.loader').removeClass('opened');
 			UI.offlineMsg(this, err);
 		});
@@ -225,14 +229,15 @@ class App{
 			url: "serveur/push.php",
 			data: { deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
 		}).then(data => {
+			$('.loader').removeClass('opened');
+			if (data.status == 200) {
+				let displayedIndex = $(e.target).parent().prevAll('li').length;
 
-			var displayedIndex = $(e.target).parent().prevAll('li').length;
-			if (data[0] == 'done') {
-				$('.loader').removeClass('opened');
-				this.totalPP(-data[1]);
+
+				this.totalPP(-data.id);
 				UI.remove("article", displayedIndex);
 
-				var storage = Storage.getItem('courses');				
+				let storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
 					if(el.id == course.id){
 						storage[i].items.articles = storage[i].items.articles.filter(el => el.id != index);
@@ -241,10 +246,12 @@ class App{
 				Storage.setItem('courses', storage);
 
 				course.displayed.articles = course.displayed.articles.filter(el => el.id != index);
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
 			}
-
 		}).catch(err => {
-			console.log(err);
 			$('.loader').removeClass('opened');
 			UI.offlineMsg(this, err);
 		});
@@ -257,13 +264,15 @@ class App{
 			url: "serveur/push.php",
 			data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
 		}).then(data => {
-			var displayedIndex = $(e.target).parent().prevAll('li').length;
+			$('.loader').removeClass('opened');
 			if (data[0] == 'done') {
-				$('.loader').removeClass('opened');
+				let displayedIndex = $(e.target).parent().prevAll('li').length;
+
+
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
 
-				var storage = Storage.getItem('courses');				
+				let storage = Storage.getItem('courses');				
 				storage.forEach((el, i) => {
 					if(el.course == course.id){
 						storage[i].items.previews = storage[i].items.previews.filter(el => el.id != index);
@@ -272,9 +281,12 @@ class App{
 				Storage.setItem('courses', storage);
 
 				course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
 			}
 		}).catch(err => {
-			console.log(err);
 			$('.loader').removeClass('opened');
 			UI.offlineMsg(this, err);
 		});
@@ -285,13 +297,17 @@ class App{
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: {leaveGroup: 'true', groupe: this.usedGroupe.id}
+				data: { leaveGroup: 'true', groupe: this.usedGroupe.id }
 			}).then(data => {
+				$('.loader').removeClass('opened');
 				if(data.status == 200){
-					$('.loader').removeClass('opened');
 					UI.closeModal();
 					Storage.clear();
 					this.pull("refresh");
+				} else if (data.notAuthed){
+					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+					]);
 				} else {
 					alert("Le serveur a rencontré un problème");
 				}
@@ -306,46 +322,51 @@ class App{
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', buyPreview: 'true', id: id, prix: prix, groupe: this.usedGroupe.id}
+			data: { buyPreview: 'true', id: id, prix: prix, groupe: this.usedGroupe.id }
 		}).then(data => {
-			let timer = 600,
-				displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
-	
 			$('.loader').removeClass('opened');
-			if (!course.started) {
-				$('.activate').click();
-				timer = 1000;
-			}
-	
-			this.closePrice();
-			UI.remove("preview", displayedIndex);
-			setTimeout(() => {
-				this.setSwipe(0);
-				setTimeout(() => {
-					UI.acc(this);
-					$('.list').prepend(Generate.article(this, data.id, data.titre, data.prix));
-					$('#prices #newPrice').val('');
-					this.totalPP(data.prix);
-					$('.prices #titreA, .prices #prix').val('');
+			if(data.status == 200){
+				let timer = 600,
+					displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
 		
-					setTimeout(() => {
-						$('.article').removeClass('animateSlideIn');
-					},300);
-				}, 150);
-			}, timer);
-	
-			var storage = Storage.getItem('courses');				
-			storage.forEach((el, i) => {
-				if(el.id == course.id){
-					storage[i].items.previews = storage[i].items.previews.filter((obj) => (obj.id != data.id));
-					storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+				if (!course.started) {
+					$('.activate').click();
+					timer = 1000;
 				}
-			});
-			Storage.setItem('courses', storage);
-	
-			course.displayed.previews = course.displayed.previews.filter((obj) => (obj.id != data.id));
-			course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-	
+		
+				this.closePrice();
+				UI.remove("preview", displayedIndex);
+				setTimeout(() => {
+					this.setSwipe(0);
+					setTimeout(() => {
+						UI.acc(this);
+						$('.list').prepend(Generate.article(this, data.id, data.titre, data.prix));
+						$('#prices #newPrice').val('');
+						this.totalPP(data.prix);
+						$('.prices #titreA, .prices #prix').val('');
+			
+						setTimeout(() => {
+							$('.article').removeClass('animateSlideIn');
+						},300);
+					}, 150);
+				}, timer);
+		
+				var storage = Storage.getItem('courses');				
+				storage.forEach((el, i) => {
+					if(el.id == course.id){
+						storage[i].items.previews = storage[i].items.previews.filter((obj) => (obj.id != data.id));
+						storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+					}
+				});
+				Storage.setItem('courses', storage);
+		
+				course.displayed.previews = course.displayed.previews.filter((obj) => (obj.id != data.id));
+				course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
+			}
 		}).catch((err) => {
 			$('.loader').removeClass('opened');
 			UI.offlineMsg(this, err);
@@ -522,10 +543,16 @@ class App{
 		$.ajax({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: {push: true, id: id}
+			data: { push: true, id: id }
 		}).then(() =>{
-			Pull.invitations(this);
-			this.pull("refresh");
+			if(data.status = 200){
+				Pull.invitations(this);
+				this.pull("refresh");
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
+			}
 		}).catch(err => {
 			$('#invitations div').append('Un problème est survenu');
 		});
@@ -536,14 +563,32 @@ class App{
 		$.ajax({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: {remove: true, id: id}
+			data: { remove: true, id: id }
 		}).then(() =>{
-			Pull.invitations(this);
-			this.pull("refresh");
+			if(data.status = 200){
+				Pull.invitations(this);
+				this.pull("refresh");
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
+			}
 		}).catch(err => {
 			$('#invitations div').append('Un problème est survenu');
 		});
 
+	}
+	deleteUser(){
+		$.ajax({
+			method: "POST",
+			url: "serveur/deleteUser.php",
+			data: { deleteUser: true }
+		}).then(data => {
+			if(data.status == 200){
+				alert("Compte supprimé avec succès");
+				window.location = "/";
+			}
+		});
 	}
 	totalPP(constante, reset = false){
 		if(reset){
@@ -579,11 +624,15 @@ class App{
 		$.ajax({
 			method: "POST",
 			url: "serveur/invites.php",
-			data: { getInviteKey: 'true'}
+			data: { getInviteKey: true }
 		}).then(data => {
 			$('.loader').removeClass('opened');
 			if(data.status == 200){
 				$('#idInvit h4').html(data.id);
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
 			}
 		}).catch(err => {
 			$('.loader').removeClass('opened');
