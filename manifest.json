@@ -5,7 +5,7 @@
 	"display" : "standalone",
 	"background_color" : "#fffcfa",
 	"theme_color" : "#f5f9ff",
-	"orientation" : "portrait-primary",
+	"orientation" : "any",
 	"icons" : [{
 		"src": "images/logo512.png",
 		"type" : "image/png",

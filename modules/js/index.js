@@ -1,16 +1,23 @@
 import App, { course } from './app.js';
 import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
-
-let app;
-
-// Initialise on read
-addSiteCache('site-course', 'coursesCache.json');
-initPwaEvents();
+import Account from './account.js';
 
 
-// Initialise on load
-$(window).on('load', function(){
-	app = new App();
-	initEvents(app, course);
+let app, compte;
+
+window.addEventListener('load', () => {
+	
+	// Authenticate
+	compte = Account.auth().then(isAuth => {
+		if(isAuth){
+			// Initialise on read
+			addSiteCache('site-course', 'coursesCache.json');
+			initPwaEvents();
+			
+			app = new App();
+			initEvents(app, course);
+
+		}
+	});
 });

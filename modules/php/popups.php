@@ -39,4 +39,14 @@
 			<button class="lienParams">Aller aux paramètres</button>
 		</footer>
 	</article>
+	<article id="deleteAll">
+		<h2>Confirmez pour supprimer le compte</h2>
+		<p>Les groupes dont vous étiez le dernier participant seront supprimés avec leurs courses et articles. <br>
+		Les groupes encore partagés sont conservés mais votre nom n'y apparait plus. <br>
+		Les données sur votre email, votre nom et votre mot de passe sont supprimées</p>
+		<footer>
+			<button class="supprConf">Confirmer</button>
+			<button class="back">Annuler</button>
+		</footer>
+	</article>
 </section>

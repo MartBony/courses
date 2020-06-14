@@ -39,6 +39,12 @@
 				<button id="generateId">Generer</button>
 				<h4 id="idPrompt"></h4>
 			</div>
+			
+		</article>
+		<article id="conn">
+			<h3>Connection</h3>
+			<button id="deconnect">Se déconnecter</button>
+			<button id="supprCompte">Supprimer le compte</button>
 		</article>
 	</section>
 </section>

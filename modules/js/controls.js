@@ -88,9 +88,8 @@ export default function initEvents(app, course){
 		UI.openMenu();
 	});
 
-	$(document).on('click', '.lienParams',() => {
-		UI.openParams();
-	});
+
+	// Parametres
 
 	$('#params input').change(()=>{
 		if(Storage.getItem('currency')){
@@ -100,6 +99,48 @@ export default function initEvents(app, course){
 		}
 		app.setParameters();
 	});
+
+	
+	$('.menu i.ms-Icon--Settings').click(function(){
+		UI.openParams();
+	});
+
+	$('#params > i').click(function(){
+		UI.closeParams();
+	});
+
+	document.querySelector('#conn').addEventListener('click', (e) => {
+		if(e.target.id == "deconnect"){
+
+			$.ajax({
+				method: 'POST',
+				url: 'serveur/auth.php',
+				data: { deconnect: true }
+			}).then(data => {
+				if(data.status == 200){
+					window.location = "/";
+				} else {
+					UI.erreur("Erreur","Il y a eu un problème inattendu lors de la tentative de déconnection");
+				}
+			}).catch(() => {
+				UI.offlineMsg(app);
+			});
+			
+		} else if (e.target.id == "supprCompte"){
+			UI.modal(app, 'deleteAll');
+		}
+	});
+
+	// Modal
+	document.getElementById('modal').addEventListener('click', e => {
+		if(e.target.classList.contains("back")) UI.closeModal()
+		else if (e.target.classList.contains("leaveGrp")) app.leaveGrp()
+		else if (e.target.classList.contains("lienParams")) UI.openParams()
+		else if (e.target.classList.contains("supprConf")) app.deleteUser();
+
+	});
+
+	// Others
 
 	$('#refresh, #headRefresh').click(function(){
 		app.pull("refresh");
@@ -133,14 +174,6 @@ export default function initEvents(app, course){
 
 	$('.menu i.ms-Icon--Back').click(function(){
 		UI.closeMenu();
-	});
-
-	$('.menu i.ms-Icon--Settings').click(function(){
-		UI.openParams();
-	});
-
-	$('#params > i').click(function(){
-		UI.closeParams();
 	});
 
 	$('#addCourse i').click(function(){
@@ -178,13 +211,6 @@ export default function initEvents(app, course){
 		UI.promptAddFriend(app);
 	});
 
-	$(document).on('click', '#leaveGroupe .back', e => {
-		UI.closeModal();
-	});
-
-	$(document).on('click', '#leaveGroupe .leaveGrp', e => {
-		app.leaveGrp();
-	});
 
 	$('#newgroupe').on('click', e => {
 		UI.openAddGroup();
@@ -237,13 +263,14 @@ export default function initEvents(app, course){
 	});
 
 	$(document).on('click', '.activate',function(){
+		$('.loader').addClass('opened');
 		$('.activate').css({'opacity':'0.8'});
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { update: 'true', activate: 'true', groupe: app.usedGroupe.id}
-			})
-		.then(function( data ) {
+			data: { activate: true, groupe: app.usedGroupe.id }
+		}).then(data => {
+			$('.loader').removeClass('opened');
 			if(data.status == 200){
 				setTimeout(function(){
 					$('.add').removeClass('hidden');
@@ -267,11 +294,15 @@ export default function initEvents(app, course){
 				course.started = true;
 
 				Storage.setItem('courses', storage);
+			} else if (data.notAuthed){
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
 			} else {
-				alert("Un problème du serveur est survenu, réessayez");
+				UI.erreur("Un problème du serveur est survenu, réessayez");
 			}
-		})
-		.catch(function(err){
+		}).catch(function(err){
+			$('.loader').removeClass('opened');
 			$('.activate').css({'opacity':'1'});
 			UI.offlineMsg(app, err);
 		});
@@ -286,37 +317,42 @@ export default function initEvents(app, course){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { update: 'true', submitArticle: 'true', titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id}
-						})
-					.then(function( data ) {
+						data: { submitArticle: true, titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id }
+					}).then(data => {
 						$('.loader').removeClass('opened');
-						UI.acc(app);
+						if(data.status == 200){
+							UI.acc(app);
 
-						if (!course.started) $('.activate').click();
+							if (!course.started) $('.activate').click();
 
-						$('html, body').animate({scrollTop: 0}, 30);
-						$('.list').prepend(Generate.article(app, data.id, data.titre, data.prix));
-				
-						app.totalPP(data.prix);
-						$('#addarticle #titreA, #addarticle #prix').val('');
+							$('html, body').animate({scrollTop: 0}, 30);
+							$('.list').prepend(Generate.article(app, data.id, data.titre, data.prix));
+					
+							app.totalPP(data.prix);
+							$('#addarticle #titreA, #addarticle #prix').val('');
 
-						setTimeout(function(){
-							$('.article').removeClass('animateSlideIn');
-						},300);
+							setTimeout(function(){
+								$('.article').removeClass('animateSlideIn');
+							},300);
 
-						console.log(data)
+							console.log(data)
 
-						var storage = Storage.getItem('courses') || new Array();
-						storage.forEach((el, i) => {
-							if(el.id == course.id){
-								storage[i].total = course.total;
-								storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-							}
-						});
+							var storage = Storage.getItem('courses') || new Array();
+							storage.forEach((el, i) => {
+								if(el.id == course.id){
+									storage[i].total = course.total;
+									storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+								}
+							});
 
-						course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+							course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
 
-						Storage.setItem('courses', storage);
+							Storage.setItem('courses', storage);
+						} else if (data.notAuthed){
+							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+							]);
+						}
 					})
 					.catch(err => {
 						$('.loader').removeClass('opened');
@@ -344,36 +380,41 @@ export default function initEvents(app, course){
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: { update: 'true', submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.usedGroupe.id}
+				data: { submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.usedGroupe.id }
 			}).then(data => {
 				$('.loader').removeClass('opened');
-				UI.acc(app);
-				if (!course.started) {
-					$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
-				}
-				else{
-					$('html, body').animate({scrollTop: 0}, 30);
-					$('.prevList').prepend(Generate.preview(app, data.id, data.titre, data.color));
-				}
-				$('#addpreview #titreP').val('');
-				setTimeout(function(){
-					$('.preview').removeClass('animateSlideIn');
-				},300);
-
-
-				var storage = Storage.getItem('courses');				
-				storage.forEach((el, i) => {
-					if(el.id == course.id){
-						storage[i].items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+				if(data.status == 200){	
+					UI.acc(app);
+					if (!course.started) {
+						$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
 					}
-				});
-				course.displayed.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+					else{
+						$('html, body').animate({scrollTop: 0}, 30);
+						$('.prevList').prepend(Generate.preview(app, data.id, data.titre, data.color));
+					}
+					$('#addpreview #titreP').val('');
+					setTimeout(function(){
+						$('.preview').removeClass('animateSlideIn');
+					},300);
 
-				Storage.setItem('courses', storage);
+
+					var storage = Storage.getItem('courses');				
+					storage.forEach((el, i) => {
+						if(el.id == course.id){
+							storage[i].items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+						}
+					});
+					course.displayed.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+
+					Storage.setItem('courses', storage);
+				} else if (data.notAuthed){
+					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+					]);
+				}
 			}).catch(err => {
-				console.log(err);
 				$('.loader').removeClass('opened');
-				UI.offlineMsg(app, );
+				UI.offlineMsg(app);
 			});
 		}
 		else
@@ -410,7 +451,7 @@ export default function initEvents(app, course){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { submitCourse: 'true', titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id}
+						data: { submitCourse: true, titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id }
 					}).then(function(data){
 						$('.loader').removeClass('opened');
 						if(data.status == 200){
@@ -421,6 +462,10 @@ export default function initEvents(app, course){
 							app.pull("refresh", null, null, () => {
 								UI.acc(app);
 							});
+						} else if (data.notAuthed){
+							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+							]);
 						} else if (data.status == 403){
 							UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
 						}
@@ -452,15 +497,19 @@ export default function initEvents(app, course){
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: { newGroupe: 'true', titre: $('#addGroupe #titreG').val() }
+				data: { newGroupe: true, titre: $('#addGroupe #titreG').val() }
 			}).then(data => {
+				$('.loader').removeClass('opened');
 				if(data.status == 200){
-					$('.loader').removeClass('opened');
 					$('#addGroupe #titreG').val("");
 					Storage.clear();
 					UI.closeAddGroup();
 					app.pull("refresh");
 					
+				} else if (data.notAuthed){
+					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+					]);
 				}
 			}).catch(function(err){
 				$('.loader').removeClass('opened');
@@ -482,7 +531,7 @@ export default function initEvents(app, course){
 				$.ajax({
 					method: "POST",
 					url: "serveur/invites.php",
-					data: { invite: 'true', nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id}
+					data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id }
 				}).then(function(data){
 					$('.loader').removeClass('opened');
 					if(data.status == 200){
@@ -491,6 +540,10 @@ export default function initEvents(app, course){
 						UI.closeInvite();
 						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
 							{ texte:"C'est noté", action : () => UI.closeMessage()}
+						]);
+					} else if (data.notAuthed){
+						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
 					} else if(data.status == 403) {
 						UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
