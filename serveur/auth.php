@@ -109,7 +109,7 @@ function connect(PDO $bdd, $mail, $pass){
 
 				/* 	// Configuration du mail
 				$to = $mail;
-				$subject = "BDE - Activer votre compte" ;
+				$subject = "Courses - Activer votre compte" ;
 				$from = 'gestion@mprojects.fr';
 					
 				// To send HTML mail, the Content-type header must be set
@@ -179,7 +179,7 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 
 	/* 	// Configuration du mail
 		$to = $mail;
-		$subject = "BDE - Activer votre compte" ;
+		$subject = "Courses - Activer votre compte" ;
 		$from = 'gestion@mprojects.fr';
 			
 		// To send HTML mail, the Content-type header must be set
