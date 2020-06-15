@@ -48,7 +48,7 @@
 }
 
 #modal{
-	visibility: hidden;
+	visibility: collapse;
 	display: flex;
 	z-index: 6;
 	align-items: center;
@@ -226,7 +226,7 @@
 	align-items: center;
 	visibility: hidden;
 	
-	z-index: 6;
+	z-index: 7;
 	border-radius: 15px;
 	background: white;
 	opacity: 0;
@@ -295,4 +295,12 @@ button.greyish{
 	flex: 0.5;
 	background: #eee;
 	color: #444;
+}
+
+@media screen and (min-width: 900px){
+	.notification{
+		left: calc(50% - 300px);
+		right: auto;
+		width: 600px;
+	}
 }

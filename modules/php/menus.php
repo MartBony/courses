@@ -50,7 +50,8 @@
 </section>
 <section id="backTouchSurf"></section>
 <section id="btTouchSurf"></section>
-<section class="calcul">
+<section id="calcul">
+	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 	<div class="grip"></div>
 	<h2 class="noselect">Calculer</h2>
 	<h3 class="maxim">Limite envisagée :</h3>

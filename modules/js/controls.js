@@ -30,24 +30,24 @@ export default function initEvents(app, course){
 
 
 		$('header h1').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':'translateX(0px)'});
-		$('.add, #refresh').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
+		$('#add, #refresh').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
 
 		setTimeout(function(){
-			$('.calcul').css({'height': '', 'transition':'', 'display':''});
-			$('header h1, .add').css({'transition':'', 'transform':''});
+			$('#calcul').css({'height': '', 'transition':'', 'display':''});
+			$('header h1, #add').css({'transition':'', 'transform':''});
 		},300);
 	});
 
 	var btTouchSurface = document.getElementById('btTouchSurf'); // Open calcul pane surface
 	SwipeBtPanel(btTouchSurface, function(dir){
-		$('.calcul').css({'height':'', 'transition':''});
+		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			$('.calcul').addClass('opened');
+			$('#calcul').addClass('opened');
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
-			$('.calcul').removeClass('opened');
+			$('#calcul').removeClass('opened');
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -55,34 +55,20 @@ export default function initEvents(app, course){
 
 	var backTouchSurface = document.getElementById('backTouchSurf'); // Close calcul pane surface
 	SwipeBackPanel(backTouchSurface, function(dir){
-		$('.calcul').css({'height':'', 'transition':''});
+		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			$('.calcul').addClass('opened');
+			$('#calcul').addClass('opened');
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
-			$('.calcul').removeClass('opened');
+			$('#calcul').removeClass('opened');
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
 	});
 
-	// Shell Events
-	if (window.innerWidth < 900) {
-		document.querySelectorAll('.main')[1].styles.display = "none";
-	}
-
 	// Regular Events
-
-	$(document).on('click', '.add.closed',function(){
-		if ($('body').hasClass('bodyPreview')) {
-			UI.addPreview();
-		}
-		else{
-			UI.addArticle();
-		}
-	});
 
 	$(document).on('click', '.noCourse',() => {
 		UI.openMenu();
@@ -99,7 +85,6 @@ export default function initEvents(app, course){
 		}
 		app.setParameters();
 	});
-
 	
 	$('.menu i.ms-Icon--Settings').click(function(){
 		UI.openParams();
@@ -140,6 +125,30 @@ export default function initEvents(app, course){
 
 	});
 
+	// Items
+
+	
+	$(document).on('click', '#add.closed',function(){
+		if ($('body').hasClass('bodyPreview')) {
+			UI.addPreview();
+		}
+		else{
+			UI.addArticle();
+		}
+	});
+
+	Array.from(document.getElementsByClassName('main')).forEach(el => {
+		el.addEventListener('click', e => {
+			if(e.target.classList.contains('adder')){
+				if(el.id == "panier"){
+					UI.addArticle();
+				} else {
+					UI.addPreview();
+				}
+			}
+		});
+	});
+
 	// Others
 
 	$('#refresh, #headRefresh').click(function(){
@@ -154,8 +163,8 @@ export default function initEvents(app, course){
 		UI.addCourse();
 	});
 
-	$('#addarticle i').click(function(){
-		UI.closeArticle();
+	$('#addArticle i').click(function(){
+		UI.closeForms();
 	});
 
 	$('#addarticle input').eq(0).on('keypress',function(e){
@@ -177,11 +186,11 @@ export default function initEvents(app, course){
 	});
 
 	$('#addCourse i').click(function(){
-		UI.closeCourse();
+		UI.closeForms();
 	});
 
-	$('#addpreview i').click(function(){
-		UI.closePreview();
+	$('#addPreview i').click(function(){
+		UI.closeForms();
 	});
 
 	$('#prices i').click(function(){
@@ -217,16 +226,17 @@ export default function initEvents(app, course){
 	});
 
 	$('#addGroupe > i').click(function(){
-		UI.closeAddGroup();
+		UI.closeForms();
 	});
 
 	// invitations
+
 	$('#generateId').click(e => {
 		app.generateInviteKey();
 	});
 
 	$('#invitation > i').click(function(){
-		UI.closeInvite(app);
+		UI.closeForms(app);
 	});
 
 	$('#invitations button').click(() => {
@@ -242,12 +252,20 @@ export default function initEvents(app, course){
 		UI.openMenu();
 	});
 
-	$(' header.tablet i.ms-Icon--Settings').click(function(){
+	$('header.tablet i.ms-Icon--Settings').click(function(){
 		UI.openParams();
 	});
 
+	$('header.tablet i.ms-Icon--Calculator').click(function(){
+		document.getElementById('calcul').classList.add('opened');
+	});
+
+	$('#calcul i').click(function(){
+		document.getElementById('calcul').classList.remove('opened');
+	});
+
 	$(' header.tablet i.ms-Icon--BarChartVertical').click(function(){
-		let calcul = document.querySelector('.calcul');
+		let calcul = document.querySelector('#calcul');
 		if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
 		else calcul.classList.add('opened');
 	});
@@ -273,7 +291,7 @@ export default function initEvents(app, course){
 			$('.loader').removeClass('opened');
 			if(data.status == 200){
 				setTimeout(function(){
-					$('.add').removeClass('hidden');
+					$('#add').removeClass('hidden');
 					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
 					setTimeout(function(){
 						$('.activate').css({'display':'none'});
@@ -308,16 +326,16 @@ export default function initEvents(app, course){
 		});
 	});
 
-	$('#addarticle form').on('submit', e => {
+	$('#addArticle form').on('submit', e => {
 		e.preventDefault();
-		if ($('#addarticle #titreA').val() && $('#addarticle #titreA').val() != '') {
-			if ($('#addarticle #prix').val() && $('#addarticle #prix').val() != '') {
-				if (!isNaN(parseFloat($('#addarticle #prix').val().replace(',','.')))) {
+		if ($('#addArticle #titreA').val() && $('#addArticle #titreA').val() != '') {
+			if ($('#addArticle #prix').val() && $('#addArticle #prix').val() != '') {
+				if (!isNaN(parseFloat($('#addArticle #prix').val().replace(',','.')))) {
 					$('.loader').addClass('opened');
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { submitArticle: true, titre: $('#addarticle #titreA').val(), prix: $('#addarticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id }
+						data: { submitArticle: true, titre: $('#addArticle #titreA').val(), prix: $('#addArticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id }
 					}).then(data => {
 						$('.loader').removeClass('opened');
 						if(data.status == 200){
@@ -329,7 +347,7 @@ export default function initEvents(app, course){
 							$('.list').prepend(Generate.article(app, data.id, data.titre, data.prix));
 					
 							app.totalPP(data.prix);
-							$('#addarticle #titreA, #addarticle #prix').val('');
+							$('#addArticle #titreA, #addArticle #prix').val('');
 
 							setTimeout(function(){
 								$('.article').removeClass('animateSlideIn');
@@ -373,14 +391,14 @@ export default function initEvents(app, course){
 		}
 	});
 
-	$('#addpreview form').on('submit', e => {
+	$('#addPreview form').on('submit', e => {
 		e.preventDefault();
-		if ($('#addpreview #titreP').val() && $('#addpreview #titreP').val() != '') {
+		if ($('#addPreview #titreP').val() && $('#addPreview #titreP').val() != '') {
 			$('.loader').addClass('opened');
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: { submitPreview: 'true', titre: $('#addpreview #titreP').val(), groupe: app.usedGroupe.id }
+				data: { submitPreview: 'true', titre: $('#addPreview #titreP').val(), groupe: app.usedGroupe.id }
 			}).then(data => {
 				$('.loader').removeClass('opened');
 				if(data.status == 200){	
@@ -392,7 +410,7 @@ export default function initEvents(app, course){
 						$('html, body').animate({scrollTop: 0}, 30);
 						$('.prevList').prepend(Generate.preview(app, data.id, data.titre, data.color));
 					}
-					$('#addpreview #titreP').val('');
+					$('#addPreview #titreP').val('');
 					setTimeout(function(){
 						$('.preview').removeClass('animateSlideIn');
 					},300);
@@ -503,7 +521,7 @@ export default function initEvents(app, course){
 				if(data.status == 200){
 					$('#addGroupe #titreG').val("");
 					Storage.clear();
-					UI.closeAddGroup();
+					UI.closeForms();
 					app.pull("refresh");
 					
 				} else if (data.notAuthed){
@@ -537,7 +555,7 @@ export default function initEvents(app, course){
 					if(data.status == 200){
 						$('#invitation #nomInv').val('');
 						$('#invitation #keyInv').val('');
-						UI.closeInvite();
+						UI.closeForms();
 						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
 							{ texte:"C'est noté", action : () => UI.closeMessage()}
 						]);

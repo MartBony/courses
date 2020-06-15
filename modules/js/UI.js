@@ -52,6 +52,13 @@ export default class UI {
 			});
 		}
 	}
+	static closeForms(){
+		$('#add').addClass('closed');
+		document.querySelector('#forms').className = "";
+		Array.from(document.querySelectorAll('#forms div, #forms input, #forms label, #forms i, #forms ul')).forEach(el => {
+			el.classList.remove('opened');
+		});
+	}
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
@@ -75,55 +82,35 @@ export default class UI {
 		}, 200);
 	}
 	static addArticle(){
-		$('.add').removeClass('closed');
-		$('#addarticle').css({'display':'block', 'opacity':'1'});
+		$('#add').removeClass('closed');
+		document.getElementById("forms").classList.add('opened','formArticle');
 
-		$('#addarticle div, #addarticle input, #addarticle label, #addarticle i').each(function(i){	
-			$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
+		$('#addArticle div, #addArticle input, #addArticle label, #addArticle i').each(function(i){	
 			setTimeout(function(){
-				$('#addarticle div, #addarticle input, #addarticle label, #addarticle i').eq(i).addClass('opened');
+				$('#addArticle div, #addArticle input, #addArticle label, #addArticle i').eq(i).addClass('opened');
 			},20*i+250);
 		});
 		setTimeout(function(){
-			$('#addarticle input').eq(0).focus();
+			$('#addArticle input').eq(0).focus();
 		},200);
-	}
-	static closeArticle(){
-		$('.add').addClass('closed');
-
-		$('#addarticle').css({'display':'', 'opacity':''});
-
-		$('.ms-Icon--ShoppingCartSolid').addClass('ms-Icon--ShoppingCart').removeClass('ms-Icon--ShoppingCartSolid');
-		$('#addarticle label, #addarticle input').removeClass('opened');
 	}
 	static addPreview(){
-		$('.add').removeClass('closed');
-		$('#addpreview').css({'display':'block', 'opacity':'1'});
+		$('#add').removeClass('closed');
+		
+		document.getElementById("forms").classList.add('opened','formPreview');
 
-		$('#addpreview div, #addpreview input, #addpreview label, #addpreview i').each(function(i){	
-			$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
+		$('#addPreview div, #addPreview input, #addPreview label, #addPreview i').each(function(i){	
 			setTimeout(function(){
-				$('#addpreview div, #addpreview input, #addpreview label, #addpreview i').eq(i).addClass('opened');
+				$('#addPreview div, #addPreview input, #addPreview label, #addPreview i').eq(i).addClass('opened');
 			},20*i+250);
 		});
 		setTimeout(function(){
-			$('#addpreview input').eq(0).focus();
+			$('#addPreview input').eq(0).focus();
 		},200);
 	}
-	static closePreview(){
-		$('.add').addClass('closed');
-
-		$('#addpreview').css({'display':'', 'opacity':''});
-
-		$('.ms-Icon--ShoppingCartSolid').addClass('ms-Icon--ShoppingCart').removeClass('ms-Icon--ShoppingCartSolid');
-		$('#addpreview label, #addpreview input').removeClass('opened');
-	}
 	static addCourse(){
-		$('#addCourse').css({'display':'block'});
+		document.getElementById("forms").classList.add('opened','course');
 
-		setTimeout(() => {
-			$('#addCourse').css({'opacity':'1', 'transform':'translateY(0)'});
-		},10);
 		$('#addCourse div, #addCourse input, #addCourse label, #addCourse i').each(function(i){	
 			setTimeout(function(){
 				$('#addCourse div, #addCourse input, #addCourse label, #addCourse i').eq(i).addClass('opened');
@@ -132,10 +119,6 @@ export default class UI {
 		setTimeout(function(){
 			$('#addCourse input').eq(0).focus();
 		},200);
-	}
-	static closeCourse(){
-		$('#addCourse').css({'display':'', 'opacity':'', 'transform':''});
-		$('#addCourse label, #addCourse input').removeClass('opened');
 	}
 	static openMenu(){
 		//$('.menu').css({'display':'block'});
@@ -158,11 +141,8 @@ export default class UI {
 		$('#params').removeClass('opened');
 	}
 	static openAddGroup(){
-		$('#addGroupe').css({'display':'block'});
+		document.getElementById("forms").classList.add('opened','groupe');
 
-		setTimeout(() => {
-			$('#addGroupe').css({'opacity':'1', 'transform':'translateY(0)'});
-		},10);
 		$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').each(function(i){	
 			setTimeout(function(){
 				$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').eq(i).addClass('opened');
@@ -179,7 +159,19 @@ export default class UI {
 	static remove(type, index){
 		let selector = "."+ type,
 			olds = new Array(),
-			news = new Array();
+			news = new Array(),
+			adder = type == "article" ? "#panier .adder" : "#liste .adder";
+
+			
+
+		// Fix .adder in place
+		$(adder).css({
+			"left": $(adder).position().left,
+			"top": $(adder).position().top
+		});
+		$(adder).css({'position':'absolute'});
+		$(adder).css({'transition':'all 100ms ease 300ms', 'transform':'translateY(-'+ $(selector).eq(index).outerHeight() +'px)'});
+	
 
 		// get all position data
 		$(selector).each(function(e){
@@ -232,6 +224,7 @@ export default class UI {
 			}
 		});
 		setTimeout(function(){
+			$(adder).css({'transition':'0s', 'transform':'', 'position':'','top':'','left':''});
 			$(selector).eq(index).remove();
 			$(selector).css({
 				'position':'',
@@ -244,13 +237,11 @@ export default class UI {
 			});
 		}, 310+(olds.length)*30);
 	}
-	static promptAddFriend(app){	
-		$('#invitation').css({'display':'block'});
+	static promptAddFriend(app){
 		$('#invitation span').html(app.usedGroupe.nom);
 
-		setTimeout(() => {
-			$('#invitation').css({'opacity':'1', 'transform':'translateY(0)'});
-		},10);
+		document.getElementById("forms").classList.add('opened','invite');
+
 		$('#invitation div, #invitation input, #invitation label, #invitation i').each(function(i){	
 			setTimeout(function(){
 				$('#invitation div, #invitation input, #invitation label, #invitation i').eq(i).addClass('opened');
@@ -289,6 +280,7 @@ export default class UI {
 		document.querySelector('#modal').className = '';
 	}
 	static offlineMsg(app, err, msg){
+		console.log(err);
 		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
 
 		UI.erreur("Pas de réseau", msg, [
@@ -306,10 +298,7 @@ export default class UI {
 		]);
 	}
 	static acc(app){
-		UI.closeCourse();
+		UI.closeForms();
 		app.closePrice();
-		UI.closeMenu();
-		UI.closeArticle();
-		UI.closePreview();
 	}
 }

@@ -1,7 +1,23 @@
-#addCourse
-{
+#forms{
 	z-index: 5;
 	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0,0,0,0);
+	visibility: collapse;
+	transition: all 150ms var(--ease-sortir);
+}
+
+#forms.opened{
+	visibility: visible;
+	background: rgba(0,0,0,0.3);
+	transition: all 400ms var(--ease-enter);
+}
+
+.fromContainer{
+	position: absolute;
 	top: 0;
 	left: 0;
 	right: 0;
@@ -10,8 +26,9 @@
 	padding-top: 50px;
 	opacity: 0;
 	transform: translateY(200px);
-	display: none;
-	transition: all 400ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+	visibility: hidden;
+	transition: all 100ms var(--ease-sortir);
+	box-sizing: border-box;
 }
 
 #addCourse h1, #addGroupe h1, #invitation h1
@@ -29,51 +46,58 @@
 	box-sizing: border-box;
 }
 
-#invitation article{
-	width: 90%;
-	margin: 5%;
-	font-size: 1.4rem;
+#forms.opened .fromContainer{
+	transition: all 400ms var(--ease-enter);
 }
 
-#addarticle, #addpreview, #prices, #addGroupe, #invitation
-{
-	z-index: 5;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: white;
-	padding-top: 60px;
-	opacity: 0;
-	display: none;
-	transition: 100ms all 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-}
-
-#addpreview{
+#forms.formPreview #addPreview{
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(0);
 	background: url('../images/melons.jpg');
 	background-size: cover;
-	background-position: 60%;
+	background-position: center;
 }
 
-#addarticle{
+#forms.formArticle #addArticle{
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(0);
 	background: url('../images/legumes.jpg');
 	background-size: cover;
-	background-position: 60%;
+	background-position: center;
 }
 
-#addCourse{
+#forms.course #addCourse{
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(0);
 	background: url('../images/etalage.jpg');
 	background-size: cover;
-	background-position: 60%;
+	background-position: center;
 }
 
-#addGroupe, #invitation, #prices{
+#forms.prices #prices{
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(0);
+	background: url('../images/buy.jpg');
+	background-size: cover;
+	background-position: center;
+}
+
+#forms.groupe #addGroupe, #forms.invite #invitation{
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(0);
+}
+
+#addGroupe, #invitation{
 	background: #a0aeb2;
 }
 
 .fromContainer > .blur{
-	z-index: -1;
+	z-index: 0;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -84,6 +108,14 @@
 
 }
 
+#invitation article{
+	position: relative;
+	z-index: 2;
+	width: 90%;
+	margin: 5%;
+	font-size: 1.4rem;
+}
+
 #prices
 {
 	overflow: auto;
@@ -91,7 +123,7 @@
 	align-items: center;
 }
 
-#addarticle i, #addCourse i, #addpreview i, #prices i, #addGroupe i, #invitation i{
+#forms i{
 	opacity: 0;
 	transform: all 100ms ease;
 	position: absolute;
@@ -106,12 +138,12 @@
 	left: 0;
 }
 
-#addarticle i.opened, #addCourse i.opened, #addpreview i.opened, #prices i, #addGroupe i.opened, #invitation i.opened
+#addArticle i.opened, #addCourse i.opened, #addPreview i.opened, #prices i, #addGroupe i.opened, #invitation i.opened
 {
 	opacity: 1;
 }
 
-#addarticle form, #addCourse form, #addpreview form, #prices form, #addGroupe form, #invitation form
+#forms form
 {
 	width: 90%;
 	margin: 30px auto 10px auto;
@@ -135,7 +167,7 @@
 	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 }
 
-#addarticle input, #addCourse input, #addpreview input, #prices input, #addGroupe input, #invitation input
+#addArticle input, #addCourse input, #addPreview input, #prices input, #addGroupe input, #invitation input
 {
 	outline: none;
 	font-size: 1.5rem;
@@ -153,8 +185,8 @@
 	transition: all 300ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 }
 
-#addarticle input:focus, #addCourse input:focus, 
-addpreview input:focus, #prices input:focus, #addGroupe input:focus, #invitation input:focus
+#addArticle input:focus, #addCourse input:focus, 
+addPreview input:focus, #prices input:focus, #addGroupe input:focus, #invitation input:focus
 {
 	box-shadow: 0 0 6px -4px rgba(0,0,0,0.5);
 }
@@ -166,15 +198,15 @@ input#prix, input#maxPrice, input#newPrice
 	flex: 1;
 }
 
-#addarticle input.submit, #addCourse input.submit,
-#addpreview input.submit, #prices input.submit,
+#addArticle input.submit, #addCourse input.submit,
+#addPreview input.submit, #prices input.submit,
 #addGroupe input.submit, #invitation input.submit{
 	width: 30%;
 	font-weight: 600;
-	background: rgba(200,200,200,0.2);
+	background: rgba(255,255,255,0.8);
 }
 
-#addarticle label, #addCourse label, #addpreview label, #prices label, #addGroupe label, #invitation label
+#addArticle label, #addCourse label, #addPreview label, #prices label, #addGroupe label, #invitation label
 {
 	font-weight: 700;
 	font-size: 1.6rem;
@@ -242,10 +274,10 @@ input#prix, input#maxPrice, input#newPrice
 	color: white;
 }
 
-#addarticle label.opened, #addarticle input.opened, 
+#addArticle label.opened, #addArticle input.opened, 
 #addCourse label.opened, #addCourse input.opened, 
-.prixFlex.opened, #addpreview label.opened, 
-#addpreview input.opened, 
+.prixFlex.opened, #addPreview label.opened, 
+#addPreview input.opened, 
 #prices label.opened, #prices input.opened,
 .setPrixFlex.opened, #prices ul.opened, .titrePrice.opened, 
 #addGroupe label.opened, #addGroupe input.opened,
@@ -253,4 +285,46 @@ input#prix, input#maxPrice, input#newPrice
 {
 	transform: translateY(0px);
 	opacity: 1;
+}
+
+@media screen and (min-width: 900px){
+	.fromContainer{
+		box-shadow: 0 0 0 0 rgba(0,0,0,0);
+		border-radius: 10px;
+		width: 400px;
+		height: 300px;
+		left: calc(50% - 200px);
+		top: calc(50% - 150px);
+		bottom: auto;
+		right: auto;
+		transform: scale(1.1);
+	}
+
+	#forms.opened .fromContainer{
+		box-shadow: 0 2px 10px 2px rgba(0,0,0,0.3);
+	}
+	
+	.fromContainer .blur{
+		border-radius: 10px;
+	}
+
+	#forms.course #addCourse{
+		transform: scale(1);
+	}
+
+	#invitation{
+		width: 400px;
+		height: 500px;
+		left: calc(50% - 200px);
+		top: calc(50% - 250px);
+	}
+
+	#prices{
+		height: 700px;
+		top: calc(50% - 350px);
+	}
+
+	.titrePrice{
+		width: 310px;
+	}
 }

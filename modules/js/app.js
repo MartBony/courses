@@ -17,10 +17,10 @@ class App{
 		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.state = 0;
 		this.setParameters();
+		this.pull("open");
 
 		//this.errors =  "Cette page est innaccessible pour l'instant";
 		
-		if(compte) this.pull("open")
 	}
 	setParameters(){
 		this.params = {
@@ -141,49 +141,46 @@ class App{
 		var titre = $(e.target).parent().children($('h2')).html();
 		$('#prices').css({'display':'block', 'opacity':'1'});
 		$('#prices').scrollTop(0);
-
-		$('#prices input, #prices label, #prices div, #prices i, #prices ul').each(function(i){
-			$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
-			setTimeout(function(){
-				$('#prices input, #prices label, #prices div, #prices i, #prices ul').eq(i).addClass('opened');
-			},14*i+150);
-		});
-
-
+		$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
 		$('.titrePrice').html('<i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i>'+ titre);
 
+		document.getElementById("forms").classList.add('opened','prices');
+
+		$('#prices div, #prices input, #prices label, #prices i, #prices ul').each(function(i){	
+			setTimeout(function(){
+				$('#prices div, #prices input, #prices label, #prices i, #prices ul').eq(i).addClass('opened');
+			},20*i+250);
+		});
 		setTimeout(function(){
 			$('#prices input').eq(0).focus();
 		},200);
 	}
 	closePrice(){
 		course.priceCursor = {};
-
-		$('#prices').css({'display':'', 'opacity':''});
-		$('#prices .opened').removeClass('opened');
+		UI.closeForms();
 	}
 	swipe(direction){
 		switch(direction){
 			case 'left':
-				$('.main').eq(1).css({'display':'block'});
+				$('.main#liste').css({'display':'block'});
 				$('header h1').html('Liste de course');
 				setTimeout(function(){
 					$('.list, .prevList').css({'transition':'', 'transform':''});
 					$('body').addClass('bodyPreview');
 					setTimeout(function(){
-						$('.main').eq(0).css({'display':'none'});
+						$('.main#panier').css({'display':'none'});
 					},310);
 				},10);
 				this.state = 1;
 				break;
 			case 'right':
-				$('.main').eq(0).css({'display':'block'});
+				$('.main#panier').css({'display':'block'});
 				$('header h1').html('Panier');
 				setTimeout(function(){
 					$('.list, .prevList').css({'transition':'', 'transform':''});
 					$('body').removeClass('bodyPreview');
 					setTimeout(function(){
-						$('.main').eq(1).css({'display':'none'});
+						$('.main#liste').css({'display':'none'});
 					},310);
 				},10);
 				this.state = 0;
@@ -191,9 +188,11 @@ class App{
 		}
 	}
 	setSwipe(side){
-		var binaryToLF = ['right', 'left'];
-		if (this.state == !side) {
-			this.swipe(binaryToLF[side]);
+		if(window.innerWidth < 900){
+			var binaryToLF = ['right', 'left'];
+			if (this.state == !side) {
+				this.swipe(binaryToLF[side]);
+			}
 		}
 	}
 	deleteCourse(id){
