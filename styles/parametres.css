@@ -31,11 +31,11 @@
 
 #params > section{
 	position: absolute;
-	top: 0;
+	top: 40px;
 	left: 0;
 	right: 0;
 	bottom: 5px;
-	padding: 50px var(--padding-param) 0 var(--padding-param);
+	padding: 20px var(--padding-param) 10px var(--padding-param);
 	border-radius: 10px;
 	overflow-y: auto;
 	display: flex;
@@ -258,7 +258,7 @@ div#idInvit h4{
 	font-size: 1.5rem;
 }
 
-div#idInvit button, #invitations > button, #application button{
+div#idInvit button, #invitations > button, #application button, #conn button{
 	outline: none;
 	border: none;
 	border-radius: 3px;
@@ -267,9 +267,20 @@ div#idInvit button, #invitations > button, #application button{
 	box-shadow: 0 0.3px 1px 1px rgba(0,0,0,0.1);
 }
 
-div#idInvit button:active, #invitations > button:active, #application button:active{
+div#idInvit button:active, #invitations > button:active, #application button:active, #conn button:active{
 	transform: scale(0.95);
 	box-shadow: 0 0.1px 0px 1px rgba(0,0,0,0.1);
+}
+
+/* Conn */
+article#conn{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+#conn button {
+	margin: 10px 0;
 }
 
 @media screen and (min-width: 900px){

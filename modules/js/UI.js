@@ -299,6 +299,8 @@ export default class UI {
 	}
 	static acc(app){
 		UI.closeForms();
+		UI.closeMenu();
+		UI.closeParams();
 		app.closePrice();
 	}
 }

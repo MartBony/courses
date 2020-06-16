@@ -31,22 +31,22 @@ function swipedetect(el, callback){
 		
 		$('header h1').css({'transform':'translateX('+ distX/20 +'px)'});
 		$('.add').css({'transform':'translateX('+ distX/20 +'px)', 'transition':'none'});
-		$('#refresh').css({'transform':'translateX('+ distX/40 +'px)', 'transition':'none'});
+		$('#refresh').css({'transform':'translateX('+ distX/40 +'px)', 'transition':'0s'});
 		if($('body').hasClass('bodyPreview')){
 			if (distX > 0) {
-				$('.prevList').css({'transform':'translateX('+ distX/2 +'px)'});
+				$('#liste ul').css({'transform':'translateX('+ distX/2 +'px)'});
 			}
 			else{
-				$('.prevList').css({'transform':'translateX('+ distX/15 +'px)'});
+				$('#liste ul').css({'transform':'translateX('+ distX/15 +'px)'});
 			}
 		}
 		else{
 			if (distX > 0) {
-				$('.list').css({'transform':'translateX('+ distX/15 +'px)'});
+				$('#panier ul').css({'transform':'translateX('+ distX/15 +'px)'});
 			}
 			else{
-				$('.list').css({'transform':'translateX('+ distX/2 +'px)'});
-				$('.calcul').css({'height': 80+Math.min(0,distX) +'px', 'transition':'none'});
+				$('#panier ul').css({'transform':'translateX('+ distX/2 +'px)'});
+				$('#calcul').css({'transform': 'translateY('+ Math.min(90,-distX/6) +'px)', 'transition':'0s'});
 			}
 		}
 		
@@ -84,7 +84,7 @@ function SwipeBtPanel(el, callback){
 		startY = touchobj.pageY;
 		startTime = new Date().getTime(); // record time when finger first makes contact with surface
 		e.preventDefault();
-		$('.calcul').css({'transition': 'none'});
+		$('#calcul').css({'transition': 'none'});
 	}, false);
 
 	touchsurface.addEventListener('touchmove', function(e){
@@ -92,7 +92,7 @@ function SwipeBtPanel(el, callback){
 		touchobj = e.changedTouches[0];
 		distY = touchobj.pageY - startY;
 
-		$('.calcul').css({'height': Math.min(80+Math.max(0, -distY), $(window).height()+20) +'px'});
+		$('#calcul').css({'height': Math.min(80+Math.max(0, -distY), $(window).height()+20) +'px'});
 		
 	}, false);
 
@@ -128,7 +128,7 @@ function SwipeBackPanel(el, callback){
 		startY = touchobj.pageY;
 		startTime = new Date().getTime(); // record time when finger first makes contact with surface
 		e.preventDefault();
-		$('.calcul').css({'transition': 'none'});
+		$('#calcul').css({'transition': 'none'});
 	}, false);
 
 	touchsurface.addEventListener('touchmove', function(e){
@@ -136,7 +136,7 @@ function SwipeBackPanel(el, callback){
 		touchobj = e.changedTouches[0];
 		distY = touchobj.pageY - startY;
 
-		$('.calcul').css({'height': Math.min(80+Math.max(0, $(window).height()+20-distY), $(window).height()+20) +'px'});
+		$('#calcul').css({'height': Math.min(80+Math.max(0, $(window).height()+20-distY), $(window).height()+20) +'px'});
 		
 	}, false);
 

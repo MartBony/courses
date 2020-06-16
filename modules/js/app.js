@@ -162,25 +162,25 @@ class App{
 	swipe(direction){
 		switch(direction){
 			case 'left':
-				$('.main#liste').css({'display':'block'});
+				$('.main#liste').css({'visibility':'visible'});
 				$('header h1').html('Liste de course');
 				setTimeout(function(){
-					$('.list, .prevList').css({'transition':'', 'transform':''});
+					$('.main > ul').css({'transition':'', 'transform':''});
 					$('body').addClass('bodyPreview');
 					setTimeout(function(){
-						$('.main#panier').css({'display':'none'});
+						$('.main#panier').css({'visibility':'collapse'});
 					},310);
 				},10);
 				this.state = 1;
 				break;
 			case 'right':
-				$('.main#panier').css({'display':'block'});
+				$('.main#panier').css({'visibility':'visible'});
 				$('header h1').html('Panier');
 				setTimeout(function(){
-					$('.list, .prevList').css({'transition':'', 'transform':''});
+					$('.main > ul').css({'transition':'', 'transform':''});
 					$('body').removeClass('bodyPreview');
 					setTimeout(function(){
-						$('.main#liste').css({'display':'none'});
+						$('.main#liste').css({'visibility':'collapse'});
 					},310);
 				},10);
 				this.state = 0;
@@ -399,7 +399,7 @@ class App{
 
 				if(target && target.coursesList && target.id && target.membres && target.nom){
 					UI.closeModal();
-					$('.add, .calcul').css({'visibility':''});
+					$('#add, #calcul').css({'visibility':''});
 					
 					return this.switchGroup(target, network);
 			
@@ -410,7 +410,7 @@ class App{
 				Storage.clear();
 				$('.loader').removeClass('opened');
 				$('.activate, .noCourse').remove();
-				$('.add, .calcul').css({'visibility':'hidden'});
+				$('#add, #calcul').css({'visibility':'hidden'});
 				UI.modal(this, 'noGroupe');
 			}
 			
@@ -426,7 +426,7 @@ class App{
 		$('.groupe').removeClass('opened');
 		$('.groupe.g'+ groupe.id).addClass('opened');
 	
-		$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
+		$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 		$('.noCourse').remove();
 		UI.closeModal();
 		
@@ -434,12 +434,12 @@ class App{
 		$('.menu .course').remove();
 		if(this.usedGroupe.coursesList && this.usedGroupe.coursesList.length != 0){ // Il y a une course
 			this.usedGroupe.coursesList.forEach((el) => {
-				$('.menu article').append(Generate.course(this, el.id, el.nom, el.id == Storage.getItem('usedCourse') || null));
+				$('.menu article').append(Generate.course(this, el.id, el.nom));
 			});
 		} else {
 			$('.activate, .noCourse').remove();
 			UI.closeModal();
-			$('.add, .calcul').css({'visibility':'hidden'});
+			$('#add, #calcul').css({'visibility':'hidden'});
 			$('.main ul').children().remove();
 			$('.main ul').prepend(Generate.noCourse());
 
@@ -456,7 +456,7 @@ class App{
 			if(data.course && data.course.id && data.course.nom && data.course.items){
 				$('.activate, .noCourse').remove();
 				UI.closeModal();
-				$('.add, .calcul').css({'visibility':''});
+				$('#add, #calcul').css({'visibility':''});
 
 				
 				if(!jsonEqual(this.usedCourse, data.course)){
@@ -482,13 +482,18 @@ class App{
 		Storage.setItem('usedCourse', data.id);
 		course.update(this, data);
 
-		$('.menu .course').removeClass('opened');
+		$('.course').removeClass('opened');
 		$('.activate, .noCourse').remove();
 		UI.closeModal();
-		$('.add, .calcul').removeClass('hidden').css({'display':'', 'visibility':''});
+		$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 		$('#btTouchSurf').css({'visibility':''});
 
-		$('.course.c'+ data.id).addClass('opened');
+		Array.from(document.getElementsByClassName('course')).forEach(el => {
+			if(el.getAttribute('dbindex') == data.id) el.classList.add('opened')
+		});
+
+
+
 
 		$('#refresh i, #headRefresh').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
 		setTimeout(function(){
@@ -496,14 +501,14 @@ class App{
 		},2000);
 
 		if (course.old) {
-			$('.add, .calcul').addClass('hidden');
+			$('#add, #calcul').addClass('hidden');
 			$('#btTouchSurf').css({'visibility':'hidden'});
-			$('.add').css({'display':'none'});
+			$('#add').css({'display':'none'});
 		}
 
 		if (data.dateStart == 0 && !course.old) {
 			$('.main ul').prepend(Generate.activate());
-			$('.add').addClass('hidden');
+			$('#add').addClass('hidden');
 
 			this.setSwipe(1)
 		}

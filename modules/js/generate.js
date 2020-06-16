@@ -2,27 +2,15 @@ import {$_GET} from "./tools.js";
 import UI from './UI.js';
 
 export default class Generate{
-	static course(app, id, nom, selected){
+	static course(app, id, nom){
 		let button = document.createElement('button'),
 			i = document.createElement('i');
 		button.classList.add("course");
-		button.classList.add("c"+ id);
-		if(selected) button.classList.add("opened");
+		button.setAttribute("dbIndex", id);
 		button.innerHTML = nom;
 		i.className = "ms-Icon ms-Icon--Delete";
 		i.setAttribute("aria-hidden","true");
 		button.appendChild(i);
-
-		$(button).on('click', e => {
-			if(e.target == e.currentTarget) {
-				app.pull("open", null, id, () => {
-					UI.acc(app);
-				});
-			}
-		});
-		$(i).on('click', e => {
-			app.deleteCourse(id);
-		});
 
 		return button;
 	}

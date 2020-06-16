@@ -46,11 +46,11 @@ export default class Course{
 				if (article.id != this.displayed.articles[iter].id){
 					if(items.articles.filter(el => el.id == this.displayed.articles[iter].id).length > 0){
 						this.displayed.articles.splice(iter, 0, article);
-						$('.list .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+						$('#panier ul .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
 						iter++;
 					} else {
 						this.displayed.articles.splice(iter, 1);
-						$('.list .article').eq(iter).remove();
+						$('#panier ul .article').eq(iter).remove();
 					}
 				} else {
 					iter++;
@@ -58,12 +58,12 @@ export default class Course{
 			}
 			else{
 				this.displayed.articles.splice(iter, 0, article);
-				$('.list').append(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+				$('#panier ul').append(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
 				iter++;
 			}
 
 		}
-		$('.list .article').slice(items.articles.length).remove();
+		$('#panier ul .article').slice(items.articles.length).remove();
 		this.displayed.articles = this.displayed.articles.slice(0, items.articles.length);
 		
 
@@ -75,11 +75,11 @@ export default class Course{
 				if (preview.id != this.displayed.previews[iter].id){
 					if(items.previews.filter(el => el.id == this.displayed.previews[iter].id).length > 0){
 						this.displayed.previews.splice(iter, 0, preview);
-						$('.prevList .preview').eq(iter).before(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+						$('#liste ul .preview').eq(iter).before(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
 						iter++;
 					} else {
 						this.displayed.previews.splice(iter, 1);
-						$('.prevList .preview').eq(iter).remove();
+						$('#liste ul .preview').eq(iter).remove();
 					}
 				} else {
 					iter++;
@@ -87,12 +87,12 @@ export default class Course{
 			}
 			else{
 				this.displayed.previews.splice(iter, 0, preview);
-				$('.prevList').append(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+				$('#liste ul').append(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
 				iter++;
 			}
 
 		}
-		$('.prevList .preview').slice(items.previews.length).remove();
+		$('#liste ul .preview').slice(items.previews.length).remove();
 		this.displayed.previews = this.displayed.previews.slice(0, items.previews.length);
 
 		

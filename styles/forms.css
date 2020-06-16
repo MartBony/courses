@@ -5,15 +5,40 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(0,0,0,0);
+	opacity: 0;
+	background: rgba(0,0,0,0.3);
 	visibility: collapse;
-	transition: all 150ms var(--ease-sortir);
+	transition: all 100ms var(--ease-sortir);
 }
 
 #forms.opened{
 	visibility: visible;
-	background: rgba(0,0,0,0.3);
+	opacity: 1;
 	transition: all 400ms var(--ease-enter);
+}
+
+#forms.opened .fromContainer{
+	transition: all 400ms var(--ease-enter);
+}
+
+#forms #addPreview{
+	background-image: url('../images/melons.jpg');
+}
+
+#forms #addArticle{
+	background-image: url('../images/legumes.jpg');
+}
+
+#forms #addCourse{
+	background-image: url('../images/etalage.jpg');
+}
+
+#forms #prices{
+	background-image: url('../images/buy.jpg');
+}
+
+#forms #addPreview{
+	background-image: url('../images/melons.jpg');
 }
 
 .fromContainer{
@@ -22,73 +47,19 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: white;
 	padding-top: 50px;
-	opacity: 0;
+	visibility: collapse;
+
 	transform: translateY(200px);
-	visibility: hidden;
 	transition: all 100ms var(--ease-sortir);
 	box-sizing: border-box;
-}
-
-#addCourse h1, #addGroupe h1, #invitation h1
-{
-	font-size: 2.5rem;
-	font-weight: bold;
-	text-transform: uppercase;
-	position: absolute;
-	width: 100%;
-	top: 0;
-	left: 0;
-	text-align: center;
-	padding: 8px 8px 8px 50px;
-	margin: 0;
-	box-sizing: border-box;
-}
-
-#forms.opened .fromContainer{
-	transition: all 400ms var(--ease-enter);
-}
-
-#forms.formPreview #addPreview{
-	visibility: visible;
-	opacity: 1;
-	transform: translateY(0);
-	background: url('../images/melons.jpg');
 	background-size: cover;
 	background-position: center;
 }
 
-#forms.formArticle #addArticle{
-	visibility: visible;
-	opacity: 1;
-	transform: translateY(0);
-	background: url('../images/legumes.jpg');
-	background-size: cover;
-	background-position: center;
-}
-
-#forms.course #addCourse{
-	visibility: visible;
-	opacity: 1;
-	transform: translateY(0);
-	background: url('../images/etalage.jpg');
-	background-size: cover;
-	background-position: center;
-}
-
-#forms.prices #prices{
-	visibility: visible;
-	opacity: 1;
-	transform: translateY(0);
-	background: url('../images/buy.jpg');
-	background-size: cover;
-	background-position: center;
-}
-
+#forms.formArticle #addArticle, #forms.formPreview #addPreview, #forms.course #addCourse, #forms.prices #prices,
 #forms.groupe #addGroupe, #forms.invite #invitation{
 	visibility: visible;
-	opacity: 1;
 	transform: translateY(0);
 }
 
@@ -106,6 +77,21 @@
 	backdrop-filter: blur(5px) saturate(180%);
 	background: linear-gradient(to top, rgba(250,250,250,0.7) 0%, rgba(250,250,250,1) 70%);
 
+}
+
+.fromContainer > h1
+{
+	font-size: 2.5rem;
+	font-weight: bold;
+	text-transform: uppercase;
+	position: absolute;
+	width: 100%;
+	top: 0;
+	left: 0;
+	text-align: center;
+	padding: 8px 8px 8px 50px;
+	margin: 0;
+	box-sizing: border-box;
 }
 
 #invitation article{
