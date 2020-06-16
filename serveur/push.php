@@ -8,7 +8,7 @@ header('Content-type: application/json');
 
 function pushCousesIndependent($user, PDO $bdd){
 	if(isset($_POST['newGroupe'])) {
-		if(isset($_POST['titre']) && strlen($_POST['titre']) < 15){
+		if(isset($_POST['titre']) && strlen($_POST['titre']) <= 20 && strlen($_POST['titre']) >= 2){
 			$_POST['titre'] = htmlspecialchars($_POST['titre']);
 
 			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (`nom`) VALUES (?)');
@@ -23,9 +23,7 @@ function pushCousesIndependent($user, PDO $bdd){
 
 			echo json_encode(array('status' => 200));
 
-		} else {
-			echo json_encode(array('status' => 403));
-		}
+		} else echo json_encode(array('status' => 400, 'err' => 'length'));
 
 		return true;
 	} else {

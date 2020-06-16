@@ -17,6 +17,7 @@ export default function initEvents(app, course){
 		}).then(data => {
 			$('.loader').removeClass('opened');
 			if(data.status == 200){
+				$('.adder').css({'display':''});
 				setTimeout(function(){
 					$('#add').removeClass('hidden');
 					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
@@ -243,8 +244,9 @@ export default function initEvents(app, course){
 					$('#addGroupe #titreG').val("");
 					Storage.clear();
 					UI.closeForms();
-					app.pull("refresh");
-					
+					app.pull("refresh"); 
+				}else if(data.status == 400 && data.err && data.err == 'length'){
+					alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
 				} else if (data.notAuthed){
 					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -276,7 +278,7 @@ export default function initEvents(app, course){
 						$('#invitation #nomInv').val('');
 						$('#invitation #keyInv').val('');
 						UI.closeForms();
-						UI.message('Réussit', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
+						UI.message('Réussi', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
 							{ texte:"C'est noté", action : () => UI.closeMessage()}
 						]);
 					} else if (data.notAuthed){
@@ -341,12 +343,12 @@ export default function initEvents(app, course){
 	SwipeBtPanel(btTouchSurface, dir => {
 		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			$('#calcul').addClass('opened');
+			UI.openMenus('calcul');
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'collapse'});
 		}
 		else if(dir == 'bottom'){
-			$('#calcul').removeClass('opened');
+			UI.closeMenus();
 			$('#backTouchSurf').css({'visibility':'collapse'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -356,12 +358,12 @@ export default function initEvents(app, course){
 	SwipeBackPanel(backTouchSurface, function(dir){
 		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			$('#calcul').addClass('opened');
+			UI.openMenus('calcul');
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
-			$('#calcul').removeClass('opened');
+			UI.closeMenus();
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -373,7 +375,10 @@ export default function initEvents(app, course){
 	// Parametres
 
 	document.getElementById('params').addEventListener('click', e => {
-		if(e.target.classList.contains('ms-Icon--Back')) UI.closeParams()
+		if(e.target.classList.contains('ms-Icon--Back')){
+			UI.closeMenus();
+			if(window.innerWidth < 900) UI.openMenus('mainMenu')
+		}
 		else if(e.target.id == "deconnect") {
 
 			$.ajax({
@@ -411,7 +416,7 @@ export default function initEvents(app, course){
 	});
 	
 	$('.menu i.ms-Icon--Settings').click(function(){
-		UI.openParams();
+		UI.openMenus('params');
 	});
 
 
@@ -420,8 +425,12 @@ export default function initEvents(app, course){
 	document.getElementById('modal').addEventListener('click', e => {
 		if(e.target.classList.contains("back")) UI.closeModal()
 		else if (e.target.classList.contains("leaveGrp")) app.leaveGrp()
-		else if (e.target.classList.contains("lienParams")) UI.openParams()
-		else if (e.target.classList.contains("supprConf")) app.deleteUser();
+		else if (e.target.classList.contains("lienParams")) UI.openMenus('params')
+		else if (e.target.classList.contains("supprConf")) app.deleteUser()
+		else if (e.target.classList.contains("supprConfCourse") && document.getElementById("deleteCourse").getAttribute("idCourse")){
+			app.deleteCourse(document.getElementById("deleteCourse").getAttribute("idCourse"));
+			document.getElementById('deleteCourse').removeAttribute("idCourse");
+		}
 	});
 
 
@@ -439,7 +448,7 @@ export default function initEvents(app, course){
 			if(e.target.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle()
 				else UI.addPreview()
-			} else if(e.target.classList.contains('noCourse')) UI.openMenu()
+			} else if(e.target.classList.contains('noCourse') || e.target.parentNode.classList.contains('noCourse')) UI.openMenus('mainMenu')
 			else if(e.target.classList.contains('ms-Icon--Delete')){
 				$('.article, .preview').removeClass('ready initSwitch');
 				e.target.parentNode.classList.add('ready');
@@ -457,11 +466,11 @@ export default function initEvents(app, course){
 	Array.from(document.getElementsByTagName('header')).forEach(el => {
 		el.addEventListener('click', e => {
 			if(el.classList.contains('phones')){
-				if(e.target.tagName == "I") UI.openMenu()
+				if(e.target.tagName == "I") UI.openMenus('mainMenu')
 			} else if(el.classList.contains('tablet')) {
-				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenu()
-				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openParams()
-				else if(e.target.classList.contains('ms-Icon--Calculator')) document.getElementById('calcul').classList.add('opened')
+				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenus('mainMenu')
+				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
+				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul')
 				else if(e.target.classList.contains('ms-Icon--BarChartVertical')){
 					let calcul = document.querySelector('#calcul');
 					if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
@@ -529,11 +538,10 @@ export default function initEvents(app, course){
 
 	document.getElementById('menus').addEventListener('click', e => {
 		if(e.target.classList.contains('ms-Icon--Settings')){}
-		else if(e.target.parentNode.classList.contains('menu') && e.target.tagName == "I") UI.closeMenu()
+		else if(e.target.parentNode.classList.contains('menu') && e.target.tagName == "I") UI.closeMenus()
 		else if(e.target.id == "newCourse") UI.addCourse()
-		else if(e.target.parentNode.id == "calcul" && e.target.tagName == "I"){
-			document.getElementById('calcul').classList.remove('opened')
-		} else if(e.target.classList.contains('course')) {
+		else if(e.target.parentNode.id == "calcul" && e.target.tagName == "I") UI.closeMenus()
+		else if(e.target.classList.contains('course')) {
 			let id = e.target.getAttribute("dbIndex");
 			if(id){
 				app.pull("open", null, id, () => {
@@ -542,8 +550,8 @@ export default function initEvents(app, course){
 			}
 		} else if(e.target.parentNode.classList.contains('course') && e.target.tagName == "I") {
 			let id = e.target.parentNode.getAttribute("dbIndex");
-			if(id) app.deleteCourse(id)
-		}
+			if(id) UI.modal(this, 'deleteCourse', id);
+		} else if (e.target.id == "menus") UI.closeMenus()
 	});
 
 

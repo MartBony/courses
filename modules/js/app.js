@@ -340,7 +340,7 @@ class App{
 					this.setSwipe(0);
 					setTimeout(() => {
 						UI.acc(this);
-						$('.list').prepend(Generate.article(this, data.id, data.titre, data.prix));
+						$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.prix));
 						$('#prices #newPrice').val('');
 						this.totalPP(data.prix);
 						$('.prices #titreA, .prices #prix').val('');
@@ -400,6 +400,7 @@ class App{
 				if(target && target.coursesList && target.id && target.membres && target.nom){
 					UI.closeModal();
 					$('#add, #calcul').css({'visibility':''});
+					$('.adder').css({'display': ''});
 					
 					return this.switchGroup(target, network);
 			
@@ -411,6 +412,8 @@ class App{
 				$('.loader').removeClass('opened');
 				$('.activate, .noCourse').remove();
 				$('#add, #calcul').css({'visibility':'hidden'});
+				$('.adder').css({'display': 'none'});
+				$('.main ul').children().remove();
 				UI.modal(this, 'noGroupe');
 			}
 			
@@ -425,7 +428,7 @@ class App{
 		// UPD UI parametres
 		$('.groupe').removeClass('opened');
 		$('.groupe.g'+ groupe.id).addClass('opened');
-	
+		$('.adder').css({'display': ''});
 		$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 		$('.noCourse').remove();
 		UI.closeModal();
@@ -441,6 +444,7 @@ class App{
 			UI.closeModal();
 			$('#add, #calcul').css({'visibility':'hidden'});
 			$('.main ul').children().remove();
+			$('.adder').css({'display': 'none'});
 			$('.main ul').prepend(Generate.noCourse());
 
 			return false;
@@ -509,6 +513,7 @@ class App{
 		if (data.dateStart == 0 && !course.old) {
 			$('.main ul').prepend(Generate.activate());
 			$('#add').addClass('hidden');
+			$('.adder').eq(0).css({'display':'none'});
 
 			this.setSwipe(1)
 		}

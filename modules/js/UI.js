@@ -62,6 +62,65 @@ export default class UI {
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
+	static openMenus(type){
+		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "hidden");
+		document.getElementById('menus').classList.remove('calcul', 'params');
+		document.getElementById('menus').classList.add('opened', type);
+	}
+	static closeMenus(){
+		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "");
+		document.getElementById('menus').className = "";
+	}
+	static modal(app, id, data){
+		document.querySelector('#modal').classList.add('opened', id || '');
+		if(id == "leaveGroupe"){
+
+			let h4 = document.createElement('h4'),
+				ul = document.createElement('ul'),
+				childrens = [h4, ul];
+
+			$('#leaveGroupe div').children().remove();
+
+			h4.innerHTML = app.usedGroupe.nom;
+			app.usedGroupe.membres.forEach(membre => {
+				let li = document.createElement('li');
+				li.innerHTML = membre;
+				ul.appendChild(li);
+			});
+
+			childrens.forEach(child => {
+				$('#leaveGroupe div')[0].appendChild(child);
+			});
+
+		} else if (id == "deleteCourse" && data) document.getElementById('deleteCourse').setAttribute("idCourse", data);
+		
+	}
+	static closeModal(){
+		document.querySelector('#modal').className = '';
+	}
+	static offlineMsg(app, err, msg){
+		console.log(err);
+		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
+
+		UI.erreur("Pas de réseau", msg, [
+			{ texte: "Me notifier", class:'errorGradient',
+				action: () => {
+					app.notificationHandler(function(){
+						navigator.serviceWorker.ready.then(function(swRegistration) {
+							return swRegistration.sync.register('pushOnline');
+						});	
+					});
+					UI.closeMessage();
+				} 
+			},
+			{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
+		]);
+	}
+	static acc(app){
+		UI.closeForms();
+		UI.closeMenus();
+		app.closePrice();
+	}
 	static showInstall(delay){
 		setTimeout(function(){
 			$('.install').css({'display':'flex'});
@@ -126,19 +185,11 @@ export default class UI {
 			$('.menu').addClass('opened');
 		},10);
 	}
-	static closeMenu(){
-		//$('.menu').css({'display':'none'});
-		$('.menu').removeClass('opened');
-	}
 	static openParams(){
 		//$('#params').css({'display':'block'});
 		setTimeout(function(){
 			$('#params').addClass('opened');
 		},10);
-	}
-	static closeParams(){
-		//$('#params').css({'display':'none'});
-		$('#params').removeClass('opened');
 	}
 	static openAddGroup(){
 		document.getElementById("forms").classList.add('opened','groupe');
@@ -160,9 +211,11 @@ export default class UI {
 		let selector = "."+ type,
 			olds = new Array(),
 			news = new Array(),
+			//containers = new Array(2),
 			adder = type == "article" ? "#panier .adder" : "#liste .adder";
 
 			
+		Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = el.clientHeight +'px');
 
 		// Fix .adder in place
 		$(adder).css({
@@ -170,8 +223,8 @@ export default class UI {
 			"top": $(adder).position().top
 		});
 		$(adder).css({'position':'absolute'});
-		$(adder).css({'transition':'all 100ms ease 300ms', 'transform':'translateY(-'+ $(selector).eq(index).outerHeight() +'px)'});
-	
+		
+
 
 		// get all position data
 		$(selector).each(function(e){
@@ -223,7 +276,10 @@ export default class UI {
 				}, e*30+100);
 			}
 		});
-		setTimeout(function(){
+		setTimeout(function(){	
+
+			Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = 'auto');
+
 			$(adder).css({'transition':'0s', 'transform':'', 'position':'','top':'','left':''});
 			$(selector).eq(index).remove();
 			$(selector).css({
@@ -235,7 +291,9 @@ export default class UI {
 				'width':'',
 				'height':''
 			});
-		}, 310+(olds.length)*30);
+
+
+		}, 400+(olds.length)*32);
 	}
 	static promptAddFriend(app){
 		$('#invitation span').html(app.usedGroupe.nom);
@@ -255,52 +313,5 @@ export default class UI {
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
 	}
-	static modal(app, id){
-		document.querySelector('#modal').classList.add('opened', id || '');
-		if(id == "leaveGroupe"){
-			let h4 = document.createElement('h4'),
-				ul = document.createElement('ul'),
-				childrens = [h4, ul];
-
-			$('#leaveGroupe div').children().remove();
-
-			h4.innerHTML = app.usedGroupe.nom;
-			app.usedGroupe.membres.forEach(membre => {
-				let li = document.createElement('li');
-				li.innerHTML = membre;
-				ul.appendChild(li);
-			});
-
-			childrens.forEach(child => {
-				$('#leaveGroupe div')[0].appendChild(child);
-			});
-		}
-	}
-	static closeModal(){
-		document.querySelector('#modal').className = '';
-	}
-	static offlineMsg(app, err, msg){
-		console.log(err);
-		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
-
-		UI.erreur("Pas de réseau", msg, [
-			{ texte: "Me notifier", class:'errorGradient',
-				action: () => {
-					app.notificationHandler(function(){
-						navigator.serviceWorker.ready.then(function(swRegistration) {
-							return swRegistration.sync.register('pushOnline');
-						});	
-					});
-					UI.closeMessage();
-				} 
-			},
-			{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
-		]);
-	}
-	static acc(app){
-		UI.closeForms();
-		UI.closeMenu();
-		UI.closeParams();
-		app.closePrice();
-	}
+	
 }

@@ -58,7 +58,7 @@
 		<form>
 			<p>Nombre de groupe maximum: 5</p>
 			<label for="titreG">Titre du groupe</label>
-			<input maxlength="20" id="titreG" type="text" name="titreG" required />
+			<input minlength="2" maxlength="20" id="titreG" type="text" name="titreG" required />
 			<input class="submit" type="submit" name="submitGroupe" id="submitGroupe" value="Créer">
 		</form>
 	</section>

@@ -623,7 +623,8 @@ body > h1
 		display: block;
 	}
 
-	.main, .main#liste{
+	.main#panier, .main#liste{
+		visibility: visible;
 		position: relative;
 		top: 0;
 		left: 0;
@@ -631,12 +632,9 @@ body > h1
 		display: flex;
 	}
 
-	.main > ul{
+	#panier ul, #liste ul{
 		grid-template-columns: 1fr;
-	}
-
-	#liste ul{
-		width: auto;
+		width: 100%;
 		opacity: 1;
 		transform: none;
 	}

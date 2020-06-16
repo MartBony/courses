@@ -39,6 +39,14 @@
 			<button class="lienParams">Aller aux paramètres</button>
 		</footer>
 	</article>
+	<article id="deleteCourse">
+		<h2>Confirmez pour supprimer la course</h2>
+		<p>Tous les articles de la course seront supprimées. Les calculs ne prendrons plus en compte les dépenses liées à cette course</p>
+		<footer>
+			<button class="supprConfCourse">Confirmer</button>
+			<button class="back">Annuler</button>
+		</footer>
+	</article>
 	<article id="deleteAll">
 		<h2>Confirmez pour supprimer le compte</h2>
 		<p>Les groupes dont vous étiez le dernier participant seront supprimés avec leurs courses et articles. <br>
