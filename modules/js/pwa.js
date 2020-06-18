@@ -4,6 +4,13 @@ import UI from './UI.js';
 let deferredPrompt,
 	newWorker;
 
+if ('serviceWorker' in navigator) {
+	navigator.serviceWorker.register('./../sw.js')
+	.then((reg) => {
+		console.log('Registration Successful');
+	}).catch((err) => console.log('Failed Registering Service Worker', err));
+}
+
 function addSiteCache(nom, src){
 	caches.open(nom).then(function(cache) { // Cache static parts of site
 		fetch(src).then(function(response) {

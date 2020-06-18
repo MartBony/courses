@@ -243,7 +243,7 @@ button.adder{
 	border-radius: 5px;
 	padding: 10px;
 	margin: 20px;
-	visibility: hidden;
+	display: none;
 
 	font-size: 2rem;
 	text-align: center;
@@ -407,7 +407,7 @@ section#calcul
 	}
 
 	button.adder{
-		visibility: visible;
+		display: block;
 	}
 
 	div#add.closed, #refresh{

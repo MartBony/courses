@@ -14,8 +14,8 @@
 <head>
 	<title>Faire ses courses</title>
 	<meta charset="utf-8">
-	<link rel="stylesheet" type="text/css" href="styles/style.css">
-	<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
+	<link type="text/css" href="styles/style.css" rel="preload" as="style" onload="this.rel='stylesheet'" />
+	<link type="text/css" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" rel="preload" as="style" onload="this.rel='stylesheet'" />
 	<?php include("cssfavicone.html"); ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="manifest" href="manifest.json"></link>

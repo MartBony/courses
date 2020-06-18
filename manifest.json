@@ -1,7 +1,7 @@
 {
-	"name" : "Faire ses courses",
+	"name" : "Courses - Organiser de chez soi",
 	"short_name" : "Courses",
-	"start_url" : "index.php",
+	"start_url" : "/courses/index.php",
 	"display" : "standalone",
 	"background_color" : "#fffcfa",
 	"theme_color" : "#f5f9ff",
@@ -44,7 +44,7 @@
 	"dir" : "ltr",
 	"lang" : "French",
 	"scope" : "/",
-	"description" : "Les projets créatifs de Mprojects",
+	"description" : "Organiser ses courses en listes. Partager les listes avec les groupes pour collaborer sur une course.",
 	"url" : "https://mprojects.fr",
 	"screenshots" : [],
 	"generated" : ""

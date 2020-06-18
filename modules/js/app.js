@@ -1,4 +1,5 @@
 import UI from './UI.js';
+import storage from './indexedDb.js';
 import Course from './course.js';
 import Storage from './storage.js';
 import {jsonEqual} from './tools.js';

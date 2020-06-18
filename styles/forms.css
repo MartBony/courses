@@ -28,23 +28,23 @@
 }
 
 #forms #addPreview{
-	background-image: url('../images/melons.jpg');
+	background-image: url('../images/melons.webp');
 }
 
 #forms #addArticle{
-	background-image: url('../images/legumes.jpg');
+	background-image: url('../images/legumes.webp');
 }
 
 #forms #addCourse{
-	background-image: url('../images/etalage.jpg');
+	background-image: url('../images/etalage.webp');
 }
 
 #forms #prices{
-	background-image: url('../images/buy.jpg');
+	background-image: url('../images/buy.webp');
 }
 
 #forms #addPreview{
-	background-image: url('../images/melons.jpg');
+	background-image: url('../images/melons.webp');
 }
 
 .fromContainer{
