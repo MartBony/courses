@@ -1,31 +1,39 @@
 import UI from './UI.js';
 
 class Pull{
-	static course(app, idCourse, hasCached, callback){
-		callback = callback || function(){};
+	static structure(app){
+		return $.ajax({
+			method: 'POST',
+			url: 'serveur/structure.php'
+		}).then(data => {
+			if(data.status == 200 && data.structure) return data.structure
+		}).catch(err => {
+			if(!app.pullState.structure) UI.offlineMsg(app, err)	
+		 	else UI.offlineMsg(app, err, "Vous êtes déconnectés. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
+		});
+	}
+	static groupe(app, idGroupe){
+		return $.ajax({
+			method: 'POST',
+			url: 'serveur/groupe.php',
+			data: {groupe: idGroupe}
+		}).then(data => {
+			if(data.status == 200 && data.groupe) return data.groupe
+		}).catch(err => {
+			if(!app.pullState.groupe) UI.offlineMsg(app, err)	
+		 	else UI.offlineMsg(app, err, "Vous êtes déconnectés. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
+		});
+	}
+	static course(app, idCourse){
 		return $.ajax({
 			method: 'POST',
 			url: 'serveur/pull.php',
-			data: {id: idCourse}
+			data: {course: idCourse}
 		}).then(data => {
-			data = JSON.parse(data);
-			console.log('Network items fetched:', data);
-			app.updateCourse(data, true);
-			callback();
+			if(data.status == 200 && data.course) return data.course
 		}).catch(err => {
-			if (!hasCached) UI.offlineMsg(app, err)
-			else {UI.offlineMsg(app, err, "Vous êtes déconnectés, la page est en lecture seule et certains éléments peuvent ne pas être à jour"); callback();}
-		});
-	}
-	static groupes(app, idGroupe, hasCached){
-		return fetch('serveur/groupes.php').then(function(res) {
-			return res.json();
-		}).then(function(data) {
-			console.log('Network groups fetched:', data);
-			return app.updateGroups(data, idGroupe);
-		}).catch(err => {
-			if(!hasCached) UI.offlineMsg(app, err)	
-		 	else UI.offlineMsg(app, err, "Vous êtes déconnectés, la page ne peut pas être actualisée")
+			if (!app.pullState.course) UI.offlineMsg(app, err)
+			else UI.offlineMsg(app, err, "Vous êtes déconnecté. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
 		});
 	}
 	static invitations(app){

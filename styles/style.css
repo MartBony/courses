@@ -26,6 +26,12 @@ body
   	min-height: -webkit-fill-available;
 }
 
+#preload{
+	visibility: hidden;
+	opacity: 0;
+	transition: 300ms all 1s ease;
+}
+
 .bodyPreview{
 	background: #fbf9f9;
 	transition: all 300ms ease;

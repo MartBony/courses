@@ -14,6 +14,7 @@
 <head>
 	<title>Faire ses courses</title>
 	<meta charset="utf-8">
+	<link type="text/css" href="styles/preload.css" rel="stylesheet"/>
 	<link type="text/css" href="styles/style.css" rel="preload" as="style" onload="this.rel='stylesheet'" />
 	<link type="text/css" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" rel="preload" as="style" onload="this.rel='stylesheet'" />
 	<?php include("cssfavicone.html"); ?>
@@ -21,6 +22,7 @@
 	<link rel="manifest" href="manifest.json"></link>
 </head>
 <body>
+	<?php require('modules/php/preload.php'); ?>
 	<?php require('modules/php/popups.php'); ?>
 	<?php require('modules/php/menus.php'); ?>
 	<?php require('modules/php/forms.php'); ?>

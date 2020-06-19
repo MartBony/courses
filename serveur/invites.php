@@ -183,7 +183,7 @@ function pushGroupeDependent($user, $groupe, PDO $bdd){
 	}
 }
 
-login($bdd, function($user, $bdd){
+login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($user, $bdd)){
 		checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
 			pushGroupeDependent($user, $groupe, $bdd);

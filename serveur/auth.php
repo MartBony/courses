@@ -100,7 +100,7 @@ function connect(PDO $bdd, $mail, $pass){
 			if($user['activated']){
 				setcookie("email", $user['mail'], time() + 31*24*3600, '/', null, false, true);
 				setcookie("pass", $pass, time() + 31*24*3600, '/', null, false, true);
-				echo json_encode(array('status' => 200, 'mail' => $mail, 'nom' => $user['nom']));
+				echo json_encode(array('status' => 200, 'id' => $user['id'], 'mail' => $mail, 'nom' => $user['nom']));
 			} else {
 				$clef = generateRandomString(30);
 

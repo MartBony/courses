@@ -2,6 +2,8 @@
 require('../dbConnect.php');
 require_once('checkers/login.php');
 
+header("Content-Type: application/json");
+
 function groupes($user, PDO $bdd) {
 	$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC');
 	$groupsInfo = array();
@@ -71,11 +73,7 @@ function groupes($user, PDO $bdd) {
 				array_push($groupsInfo, array(
 					'id' => $groupe['id'],
 					'nom' => $groupe['nom'],
-					'coursesList' => $coursesList,
-					'membres' => $membresGp,
-					'monthCost' => $monthCost,
-					'coef' => $coef,
-					'error' => $error
+					'membres' => $membresGp
 				));
 
 			}
@@ -90,12 +88,15 @@ function groupes($user, PDO $bdd) {
 
 	echo json_encode(array(
 		'status' => 200,
-		'groupes' => $groupsInfo,
-		'nom' => $user['nom']
+		'structure' => array(
+			'groupes' => $groupsInfo,
+			'nom' => $user['nom'],
+			'id' => $user['id']
+		)
 	));
 }
 
-login($bdd, function($user, $bdd){
+login($bdd, function($user) use ($bdd){
 	groupes($user, $bdd);
 });
 

@@ -3,7 +3,9 @@ require_once('../dbConnect.php');
 require_once('checkers/login.php');
 require_once('checkers/checkCourse.php');
 
-function pull($user, $usedCourse, $bdd){
+header("Content-Type: application/json");
+
+function pull($bdd, $user, $course){
 	$articles = array();
 	$previews = array();
 
@@ -11,7 +13,7 @@ function pull($user, $usedCourse, $bdd){
 	$reqColor = $bdd->prepare('SELECT `hueColor` FROM `users` WHERE id = ?');
 
 	$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ? ORDER BY id DESC');
-	$reqItems->execute(array($_POST['id']));
+	$reqItems->execute(array($course['id']));
 
 	while($article = $reqItems->fetch()){
 		if($article['preview'] == 1){
@@ -36,12 +38,12 @@ function pull($user, $usedCourse, $bdd){
 	echo json_encode(array(
 		'status' => 200,
 		'course' => array(
-			'id' => $usedCourse['id'],
-			'nom' => $usedCourse['nom'],
-			'maxPrice' => $usedCourse['maxPrice'],
-			'total' => $usedCourse['total'],
-			'dateStart' => $usedCourse['dateStart'],
-			'groupe' => $usedCourse['groupe'],
+			'id' => $course['id'],
+			'nom' => $course['nom'],
+			'maxPrice' => $course['maxPrice'],
+			'total' => $course['total'],
+			'dateStart' => $course['dateStart'],
+			'groupe' => $course['groupe'],
 			'items' => array(
 				'articles' => $articles,
 				'previews' => $previews
@@ -51,9 +53,9 @@ function pull($user, $usedCourse, $bdd){
 				
 }
 
-login($bdd, function($user, $bdd){
-	checkCourse($user, $bdd, function($user ,$usedCourse , $bdd){
-		pull($user ,$usedCourse, $bdd);
+login($bdd, function($user) use($bdd){
+	checkCourse($user, $bdd, function($user, $course) use($bdd){
+		pull($bdd, $user, $course);
 	});
 });
 

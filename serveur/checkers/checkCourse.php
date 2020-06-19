@@ -1,14 +1,14 @@
 <?php
 
 function checkCourse($user, PDO $bdd, $callback) {
-	if(isset($_POST['id']) && !empty($_POST['id'])){
-		$reqUsedCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = ?');
-		$reqUsedCourse->execute(array($_POST['id']));
-		if($reqUsedCourse->rowCount() == 1){
-			$usedCourse = $reqUsedCourse->fetch();
-			if(strpos($user['groupe'], "[". $usedCourse['groupe'] ."]") !== false){
+	if(isset($_POST['course']) && !empty($_POST['course'])){
+		$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = ?');
+		$reqCourse->execute(array($_POST['course']));
+		if($reqCourse->rowCount() == 1){
+			$course = $reqCourse->fetch();
+			if(strpos($user['groupe'], "[". $course['groupe'] ."]") !== false){
 
-				call_user_func($callback, $user, $usedCourse, $bdd);
+				call_user_func($callback, $user, $course);
 				
 			} else {
 				echo json_encode(array('status' => 403));

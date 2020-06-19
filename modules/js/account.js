@@ -1,4 +1,5 @@
 import UI from './UI.js';
+import Storage from './storage.js';
 
 export default class Account{
 	static auth(){
@@ -8,14 +9,15 @@ export default class Account{
 			data: { tryCookiesAuth: true }
 		}).then(data => {
 			if (data && data.status == 200){
-				return true;
+				return data.id;
 			} else {
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 				]);
 			}
 		}).catch(err => {
-			console.log(err);
+			if(Storage.getItem('userId')) return Storage.getItem('userId');
+			else console.log(err);
 		});
 	}
 }

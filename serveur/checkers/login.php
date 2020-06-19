@@ -18,7 +18,7 @@ function login( PDO $bdd, $callback){
 			if ($reqUser->rowCount() == 1) {
 				$user = $reqUser->fetch();
 				if($user['activated']){
-					call_user_func($callback, $user, $bdd);
+					call_user_func($callback, $user);
 				} else echo json_encode(array('status' => 403, 'notAuthed' => true, 'err' => 'authNonActivated','sent' => $send));
 			} else echo json_encode(array('status' => 401, 'notAuthed' => true, 'err' => 'authCredential'));
 			$reqUser->closeCursor();

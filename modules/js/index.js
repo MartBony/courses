@@ -9,17 +9,15 @@ let app, compte;
 window.addEventListener('load', () => {
 	
 	// Authenticate
-	compte = Account.auth().then(isAuth => {
-		if(isAuth){
+	compte = Account.auth().then(id => {
+		if(id){
 			// Initialise on read
 			addSiteCache('site-course', 'coursesCache.json');
 			initPwaEvents();
 
-
-			app = new App();
+			app = new App(id);
 			initEvents(app, course);
 			
-
 		}
 	});
 });
