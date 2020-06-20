@@ -19,7 +19,7 @@ class Storage{
 		};
 
 	}
-	add(objStore, obj){
+	put(objStore, obj){
 		return new Promise((resolve, reject) => {
 			let request = this.db.transaction([objStore], "readwrite").objectStore(objStore).put(obj);
 			request.onsuccess = event => resolve();

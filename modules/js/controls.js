@@ -31,15 +31,12 @@ export default function initEvents(app, course){
 					},200);
 				}
 
-				var storage = Storage.getItem('courses');				
-				storage.forEach((el, i) => {
-					if(el.id == course.id){
-						storage[i].dateStart = data.time;
-					}
-				});
+				idbStorage.get("courses", course.id)
+					.then(storage => {
+						storage.dateStart = data.time;
+					});
 				course.started = true;
 
-				Storage.setItem('courses', storage);
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -80,19 +77,16 @@ export default function initEvents(app, course){
 								$('.article').removeClass('animateSlideIn');
 							},300);
 
-							console.log(data)
 
-							var storage = Storage.getItem('courses') || new Array();
-							storage.forEach((el, i) => {
-								if(el.id == course.id){
-									storage[i].total = course.total;
-									storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-								}
-							});
+							idbStorage.get("courses", course.id)
+								.then(storage => {
+									storage.total = course.total;
+									storage.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+									
+									app.usedCourse = storage;
+									course.displayed.articles = storage.items.articles;
+								});
 
-							course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-
-							Storage.setItem('courses', storage);
 						} else if (data.notAuthed){
 							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -142,15 +136,14 @@ export default function initEvents(app, course){
 					},300);
 
 
-					var storage = Storage.getItem('courses');				
-					storage.forEach((el, i) => {
-						if(el.id == course.id){
-							storage[i].items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
-						}
-					});
-					course.displayed.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+					idbStorage.get("courses", course.id)
+						.then(storage => {
+							storage.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
 
-					Storage.setItem('courses', storage);
+							app.usedCourse = storage;
+							course.displayed.previews = storage.items.previews;
+						});
+						
 				} else if (data.notAuthed){
 					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -491,7 +484,7 @@ export default function initEvents(app, course){
 			else UI.closeForms()
 		} else if(document.getElementById('prices').contains(e.target)) {
 			if(e.target.tagName == "LI") buyLi(e)
-		}
+		} else if (e.target.id == "forms") UI.closeForms()
 	});
 
 	document.getElementById('forms').addEventListener('submit', e => {

@@ -1,11 +1,11 @@
 import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
+import idbStorage from './indexedDb.js';
 import Storage from './storage.js';
 import {jsonEqual} from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
-import idbStorage from './indexedDb.js';
 
 let course;
 
@@ -56,115 +56,57 @@ class App{
 		});
 	}
 	pull(action, idGroupe, idCourse){// Rank as index of array
-		switch(action){
-			case "open":
-				console.log("-- OPENING --");
-				this.pullState = { // Network state in pulling
-					structure: false,
-					groupe: false,
-					course: false
-				};
-				$('.loader').addClass('opened');
-			
-				// Load from network
-				Pull.invitations(this);
-				Pull.structure(this).then(pStructure => {
-					$('.loader').removeClass('opened');
-					if(pStructure){
-						// Update app
-						this.pullState.structure = true;
-						console.log('Network structure fetched:', pStructure);
-						let update = this.updateApp(pStructure, true);
-						if(update){
-							idGroupe = idGroupe || Storage.getItem('usedGroupe') || this.groupes[0].id;
-							// Pull further
-							Pull.groupe(this, idGroupe).then(pGroupe => {
-								if(pGroupe){
-									// Update Group
-									this.pullState.groupe = true;
-									console.log('Network groupe fetched:', pGroupe);
-									update = this.updateGroupe(pGroupe, true);
-									if(update){
-										idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
-										// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
-									
-										Pull.course(this, idCourse).then(pCourse => {
-											if(pCourse){
-												this.pullState.course = true;
-												console.log('Network course fetched:', pCourse);
-												update = this.updateCourse(pCourse, true);
-											}
-										});
-									}
-								}
-							});
-						}
-					}
-				});
+		// console.log("-- PULLING --");
+		let update;
+		this.pullState = { // Network state in pulling
+			structure: action != "open",
+			groupe: action != "open",
+			course: action != "open"
+		};
 
-				// Load from indexedDB	
-				Offline.structure(this.userId).then(pStructure => {
-					if(!this.pullState.structure && pStructure){ // If data hasn't been loaded via the network
-						console.log('Local structure fetched:', pStructure);
-						this.pullState.structure = "idb";
-						let update = this.updateApp(pStructure);
-						if(update){
-							idGroupe = idGroupe || Storage.getItem('usedGroupe') || this.groupes[0].id;
-							Offline.groupe(idGroupe).then(pGroupe => {
-								if(!this.pullState.groupe && pGroupe){
-									console.log('Local groupe fetched:', pGroupe);
-									this.pullState.groupe = "idb";
-									update = this.updateGroupe(pGroupe);
-									if(update){
-										idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
-										// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
-										Offline.course(idCourse).then(pCourse => {
-											if(!this.pullState.course && pCourse){
-												console.log('Local course fetched:', pCourse);
-												this.pullState.course = "idb";
-												update = this.updateCourse(pCourse, true);
-											}
-										});
-									}
-								}
-							});
-						}
+		if(action === "open") $('.loader').addClass('opened')
+	
+		// Load from network
+		Pull.invitations(this);
+		Pull.structure(this)
+			.then(data => {
+				$('.loader').removeClass('opened');
+				if(data){
+					// Update app
+					this.pullState.structure = true;
+					// console.log('Network structure fetched:', data);
+					update = this.updateApp(data, true);
+					if(update){
+						idGroupe = idGroupe || Storage.getItem('usedGroupe') || this.groupes[0].id;
+						// Pull further
+						return Pull.groupe(this, idGroupe);
 					}
-				});
+				}
+			})
+			.then(data => {
+				if(data){
+					// Update Group
+					this.pullState.groupe = true;
+					// console.log('Network groupe fetched:', data);
+					update = this.updateGroupe(data, true);
+					if(update){
+						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
+						// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
+						return Pull.course(this, idCourse);
+					}
+				}
+			})
+			.then(data => {
+				if(data){
+					this.pullState.course = true;
+					// console.log('Network course fetched:', data);
+					update = this.updateCourse(data, true);
+				}
+			});
 
-				break;
-			case "refresh":
-				console.log("-- REFRESHING --");
-				$('.loader').addClass('opened');
-				Pull.invitations(this);
-				Pull.structure(this).then(pStructure => {
-					$('.loader').removeClass('opened');
-					if(pStructure){
-						console.log('Network structure fetched:', pStructure);
-						let update = this.updateApp(pStructure, true);
-						if(update){
-							idGroupe = idGroupe || Storage.getItem('usedGroupe') || this.groupes[0].id;
-							Pull.groupe(this, idGroupe).then(pGroupe => {
-								if(pGroupe){
-									console.log('Network groupe fetched:', pGroupe);
-									update = this.updateGroupe(pGroupe, true);
-									if(update){
-										idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
-										// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
-										Pull.course(this, idCourse).then(pCourse => {
-											if(pCourse){
-												console.log('Network course fetched:', pCourse);
-												update = this.updateCourse(pCourse, true);
-											}
-										});
-									}
-								}
-							});
-						}
-					}
-				});
-				break;
-		}
+		// Load from indexedDB
+		if(action == "open") Offline.pull(this, idGroupe, idCourse)
+
 	}
 	notificationHandler(callback){
 		if (!("Notification" in window)) {
@@ -252,11 +194,7 @@ class App{
 			$('.loader').removeClass('opened');
 			if (data.status == 200) {
 
-				var storage = Storage.getItem('courses');				
-				storage = storage.filter((el, i) => el.id != id);
-				Storage.setItem('courses', storage);
-
-				Storage.setItem('usedCourse', null);
+				idbStorage.delete("courses", id);
 
 				this.pull("open");
 
@@ -285,15 +223,15 @@ class App{
 				this.totalPP(-data.prix);
 				UI.remove("article", displayedIndex);
 
-				let storage = Storage.getItem('courses');				
-				storage.forEach((el, i) => {
-					if(el.id == course.id){
-						storage[i].items.articles = storage[i].items.articles.filter(el => el.id != index);
-					}
-				});
-				Storage.setItem('courses', storage);
+				idbStorage.get("courses", course.id)
+					.then(storage => {
+						storage.items.articles = storage.items.articles.filter(el => el.id != index);
+						idbStorage.put("courses", storage);
+						
+						this.usedCourse = storage;
+						course.displayed.articles = course.displayed.articles.filter(el => el.id != index);
+					});
 
-				course.displayed.articles = course.displayed.articles.filter(el => el.id != index);
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -319,15 +257,15 @@ class App{
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
 
-				let storage = Storage.getItem('courses');				
-				storage.forEach((el, i) => {
-					if(el.course == course.id){
-						storage[i].items.previews = storage[i].items.previews.filter(el => el.id != index);
-					}
-				});
-				Storage.setItem('courses', storage);
+				idbStorage.get("courses", course.id)
+					.then(storage => {
+						storage.items.previews = storage.items.previews.filter(el => el.id != index);
+						idbStorage.put("courses", storage);
 
-				course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
+						this.usedCourse = storage;
+						course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
+					});
+				
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -349,7 +287,8 @@ class App{
 				$('.loader').removeClass('opened');
 				if(data.status == 200){
 					UI.closeModal();
-					Storage.clear();
+					this.usedGroupe.coursesList.forEach(el => idbStorage.delete("courses", el.id));
+					idbStorage.delete("groupes", this.usedGroupe.id);
 					this.pull("refresh");
 				} else if (data.notAuthed){
 					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -397,18 +336,18 @@ class App{
 						},300);
 					}, 150);
 				}, timer);
-		
-				var storage = Storage.getItem('courses');				
-				storage.forEach((el, i) => {
-					if(el.id == course.id){
-						storage[i].items.previews = storage[i].items.previews.filter((obj) => (obj.id != data.id));
-						storage[i].items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-					}
-				});
-				Storage.setItem('courses', storage);
-		
-				course.displayed.previews = course.displayed.previews.filter((obj) => (obj.id != data.id));
-				course.displayed.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+
+				idbStorage.get("courses", course.id)
+					.then(storage => {
+						storage.items.previews = storage.items.previews.filter((obj) => (obj.id != data.id));
+						storage.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+						idbStorage.put("courses", storage);		
+
+						this.usedCourse = storage;
+						course.displayed.previews = storage.items.previews;
+						course.displayed.articles = storage.items.articles;
+					});	
+				
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -424,7 +363,7 @@ class App{
 			$('#compte em').html(data.nom);
 			if(data.groupes){
 				// Save in IDB in structure objectStore
-				if(save) idbStorage.add("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
+				if(save) idbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
 
 				// Display UI
 				if(data.groupes.length != 0){
@@ -450,7 +389,7 @@ class App{
 	updateGroupe(groupe, save){
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
 			// Save in IDB in structure objectStore
-			if(save) idbStorage.add("groupes", groupe)
+			if(save) idbStorage.put("groupes", groupe)
 
 			if(this.usedGroupe && groupe.id != this.usedGroupe.id) Storage.setItem('usedCourse', null)
 
@@ -493,7 +432,7 @@ class App{
 
 			if(!jsonEqual(this.usedCourse, data)){
 
-				if(save) idbStorage.add("courses", data)
+				if(save) idbStorage.put("courses", data)
 
 				Storage.setItem('usedCourse', data.id);
 				course.update(this, data);
@@ -666,37 +605,7 @@ class App{
 			$('.loader').removeClass('opened');
 			UI.offlineMsg(this, err);
 		});
-	}/* 
-	async openOffline(groupe, course){
-		let groupData = {
-				status: 200,
-				groupes: await idbStorage.getGroupe(groupe)
-			},
-			initGroupes = this.updateApp(groupData, groupe, false);
-		if(typeof initGroupes !== 'undefined'){ // Si les groupes ont étés chargés
-			$('.loader').removeClass('opened');
-
-			console.log('Storage groupes fetched:', groupData);
-			hasCached.groupes = true;
-
-			if(initGroupes){ // Si il existe des courses
-				course = course || this.usedGroupe.coursesList[0].id;
-				if(Storage.getItem('courses') && Storage.getItem('courses').filter(el => el.id == course).length == 1){
-					let courseData = {
-							status: 200,
-							course: Storage.getItem('courses').filter(el => el.id == course)[0]
-						},
-						initCourse = this.updateCourse(courseData, false);
-					if(initCourse) {
-						console.log('Storage items fetched:', courseData);
-						hasCached.course = true;
-					}
-				}
-			}
-			
-
-		}
-	} */
+	}
 }
 
 export default App;

@@ -22,6 +22,8 @@
 	<link rel="manifest" href="manifest.json"></link>
 </head>
 <body>
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script type="module" src="./modules/js/index.js" async></script>
 	<?php require('modules/php/preload.php'); ?>
 	<?php require('modules/php/popups.php'); ?>
 	<?php require('modules/php/menus.php'); ?>
@@ -51,7 +53,5 @@
 	
 	<div id="add" class="add closed noselect"><i class="ms-Icon ms-Icon--ShoppingCart" aria-hidden="true"></i> Ajouter un article</div>
 	<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-	<script type="module" src="./modules/js/index.js"></script>
 </body>
 </html>

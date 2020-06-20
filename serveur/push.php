@@ -212,9 +212,9 @@ function push($user, $usedCourse, PDO $bdd){
 	}
 }
 
-login($bdd, function($user, $bdd){
+login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($user, $bdd)){
-		getCourse($user, $bdd, function($user, $usedCourse, $bdd){
+		getLatestCourse($user, $bdd, function($user, $usedCourse, $bdd){
 			push($user, $usedCourse, $bdd);
 		});
 	}

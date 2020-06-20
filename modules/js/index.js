@@ -6,18 +6,15 @@ import Account from './account.js';
 
 let app, compte;
 
-window.addEventListener('load', () => {
-	
-	// Authenticate
-	compte = Account.auth().then(id => {
-		if(id){
-			// Initialise on read
-			addSiteCache('site-course', 'coursesCache.json');
-			initPwaEvents();
+// Authenticate
+compte = Account.auth().then(id => {
+	if(id){
+		// Initialise on read
+		addSiteCache('site-course', 'coursesCache.json');
+		initPwaEvents();
 
-			app = new App(id);
-			initEvents(app, course);
-			
-		}
-	});
+		app = new App(id);
+		initEvents(app, course);
+		
+	}
 });
