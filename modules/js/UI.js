@@ -1,5 +1,3 @@
-import mod from './math.js';
-
 export default class UI {
 	static message(titre, texte, buttons){
 		document.querySelector('#message').classList.add('opened');

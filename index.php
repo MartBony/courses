@@ -10,10 +10,11 @@
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 	<title>Faire ses courses</title>
 	<meta charset="utf-8">
+	<meta name="Description" content="Une application pour rassembler, organiser et partager ses courses">
 	<link type="text/css" href="styles/preload.css" rel="stylesheet"/>
 	<link type="text/css" href="styles/style.css" rel="preload" as="style" onload="this.rel='stylesheet'" />
 	<link type="text/css" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" rel="preload" as="style" onload="this.rel='stylesheet'" />

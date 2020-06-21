@@ -1,3 +1,10 @@
+/* Fonctionnalité de détection */
+var passiveSupported = false;
+
+try {
+  window.addEventListener("test", null, Object.defineProperty({}, "passive", { get: function() { passiveSupported = true; } }));
+} catch(err) {}
+
 function swipedetect(el, callback){
 
 	var touchsurface = el,
@@ -22,7 +29,7 @@ function swipedetect(el, callback){
 		startY = touchobj.pageY;
 		startTime = new Date().getTime();
 		e.preventDefault();
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchmove', function(e){
 		e.preventDefault(); // prevent scrolling when inside DIV
@@ -50,7 +57,7 @@ function swipedetect(el, callback){
 			}
 		}
 		
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchend', function(e){
 		var touchobj = e.changedTouches[0]
@@ -64,7 +71,7 @@ function swipedetect(el, callback){
 		}
 		handleswipe(swipedir);
 		e.preventDefault();
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 }
 
 function SwipeBtPanel(el, callback){
@@ -85,7 +92,7 @@ function SwipeBtPanel(el, callback){
 		startTime = new Date().getTime(); // record time when finger first makes contact with surface
 		e.preventDefault();
 		$('#calcul').css({'transition': 'none'});
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchmove', function(e){
 		e.preventDefault(); // prevent scrolling when inside DIV
@@ -94,7 +101,7 @@ function SwipeBtPanel(el, callback){
 
 		$('#calcul').css({'height': Math.min(80+Math.max(0, -distY), $(window).height()+20) +'px'});
 		
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchend', function(e){
 		touchobj = e.changedTouches[0]; // get horizontal dist traveled by finger while in contact with surface
@@ -108,7 +115,7 @@ function SwipeBtPanel(el, callback){
 		}
 	
 		e.preventDefault();
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 }
 
 function SwipeBackPanel(el, callback){
@@ -129,7 +136,7 @@ function SwipeBackPanel(el, callback){
 		startTime = new Date().getTime(); // record time when finger first makes contact with surface
 		e.preventDefault();
 		$('#calcul').css({'transition': 'none'});
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchmove', function(e){
 		e.preventDefault(); // prevent scrolling when inside DIV
@@ -138,7 +145,7 @@ function SwipeBackPanel(el, callback){
 
 		$('#calcul').css({'height': Math.min(80+Math.max(0, $(window).height()+20-distY), $(window).height()+20) +'px'});
 		
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 
 	touchsurface.addEventListener('touchend', function(e){
 		touchobj = e.changedTouches[0]; // get horizontal dist traveled by finger while in contact with surface
@@ -152,7 +159,7 @@ function SwipeBackPanel(el, callback){
 		}
 	
 		e.preventDefault();
-	}, false);
+	}, passiveSupported ? { passive: false } : false);
 }
 
 export { swipedetect, SwipeBackPanel, SwipeBtPanel };

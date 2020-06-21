@@ -1,17 +1,31 @@
+:root {
+    font-size: 10px;
+    font-family: "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+img{
+	width: 0;
+	height: 0;
+}
+
 #preload{
-	z-index: 10;
+	z-index: 7;
 	position: fixed;
 	top: 0;
 	left: 0;
-	right: 0;
-	bottom: 0;
+	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-
-	font-family: "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
 	background: white;
+}
+
+#preload.close{
+	visibility: hidden;
+	opacity: 0;
+	transition: 300ms all ease;
 }
 
 #preload h1{
@@ -52,6 +66,7 @@
 {
 	position: absolute;
 	width: 100%;
+	height: auto;
 }
 
 img:nth-child(1)

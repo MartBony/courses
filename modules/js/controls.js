@@ -1,13 +1,40 @@
 import Pull from './requests.js';
 import UI from './UI.js';
-import Storage from './storage.js';
+import { LocalStorage, idbStorage } from './storage.js';
 import Generate from './generate.js';
 import { swipedetect, SwipeBackPanel, SwipeBtPanel } from './touch.js';
 
 
 export default function initEvents(app, course){
 
-	let activate = () => {
+	let refresh = (callback) => {
+		callback = callback || function(){};
+		document.querySelector('.loader').classList.add('opened');
+		if(!app.pending){
+			app.pull("refresh").then(callback);
+		} else {
+			let loop = setInterval(() => {
+				if(!app.pending){
+					document.querySelector('.loader').classList.add('opened');
+					app.pull("refresh").then(callback);
+					clearInterval(loop);
+				}
+			}, 1000);
+		}
+	},
+	noLoaderRefresh = () => {
+		if(!app.pending){
+			app.pull("refresh");
+		} else {
+			let loop = setInterval(() => {
+				if(!app.pending){
+					app.pull("refresh");
+					clearInterval(loop);
+				}
+			}, 1000);
+		}
+	},
+	activate = () => {
 		$('.loader').addClass('opened');
 		$('.activate').css({'opacity':'0.8'});
 		$.ajax({
@@ -192,10 +219,19 @@ export default function initEvents(app, course){
 							history.replaceState({key:'createCourse'}, '','index.php');
 							$('#addCourse #titreC, #addCourse #maxPrice').val('');
 
-							Storage.setItem('usedCourse', null);
-							app.pull("refresh", null, null, () => {
-								UI.acc(app);
-							});
+							LocalStorage.setItem('usedCourse', null);
+							document.querySelector('.loader').classList.add('opened');
+							if(!app.pending){
+								app.pull("refresh").then(() => UI.acc(app));
+							} else {
+								let loop = setInterval(() => {
+									if(!app.pending){
+										document.querySelector('.loader').classList.add('opened');
+										app.pull("refresh").then(() => UI.acc(app));
+										clearInterval(loop);
+									}
+								}, 1000);
+							}
 						} else if (data.notAuthed){
 							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -235,9 +271,10 @@ export default function initEvents(app, course){
 				$('.loader').removeClass('opened');
 				if(data.status == 200){
 					$('#addGroupe #titreG').val("");
-					Storage.clear();
+					LocalStorage.clear();
 					UI.closeForms();
-					app.pull("refresh"); 
+					document.querySelector('.loader').classList.add('opened');
+					refresh();
 				}else if(data.status == 400 && data.err && data.err == 'length'){
 					alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
 				} else if (data.notAuthed){
@@ -338,11 +375,11 @@ export default function initEvents(app, course){
 		if (dir == 'top') {
 			UI.openMenus('calcul');
 			$('#backTouchSurf').css({'visibility':'visible'});
-			$('#btTouchSurf').css({'visibility':'collapse'});
+			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
 			UI.closeMenus();
-			$('#backTouchSurf').css({'visibility':'collapse'});
+			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
 	});
@@ -380,6 +417,7 @@ export default function initEvents(app, course){
 				data: { deconnect: true }
 			}).then(data => {
 				if(data.status == 200){
+					LocalStorage.clear();
 					window.location = "/";
 				} else {
 					UI.erreur("Erreur","Il y a eu un problème inattendu lors de la tentative de déconnection");
@@ -400,10 +438,10 @@ export default function initEvents(app, course){
 	});
 
 	document.querySelector('#params input').addEventListener('change', () => {
-		if(Storage.getItem('currency')){
-			Storage.setItem('currency',"");
+		if(LocalStorage.getItem('currency')){
+			LocalStorage.setItem('currency',"");
 		} else {
-			Storage.setItem('currency',"$");
+			LocalStorage.setItem('currency',"$");
 		}
 		app.setParameters();
 	});
@@ -468,7 +506,9 @@ export default function initEvents(app, course){
 					let calcul = document.querySelector('#calcul');
 					if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
 					else calcul.classList.add('opened');
-				} else if(e.target.id == 'headRefresh') app.pull("refresh")
+				} else if(e.target.id == 'headRefresh') {
+					refresh();
+				}
 			}
 		});
 	});
@@ -537,9 +577,7 @@ export default function initEvents(app, course){
 		else if(e.target.classList.contains('course')) {
 			let id = e.target.getAttribute("dbIndex");
 			if(id){
-				app.pull("open", null, id, () => {
-					UI.acc(app);
-				});
+				refresh(() => UI.acc(app));
 			}
 		} else if(e.target.parentNode.classList.contains('course') && e.target.tagName == "I") {
 			let id = e.target.parentNode.getAttribute("dbIndex");
@@ -551,7 +589,24 @@ export default function initEvents(app, course){
 
 	// Others
 
-	document.getElementById('refresh').onclick = () => app.pull("refresh");
+	document.getElementById('refresh').onclick = e => {
+		let i = e.currentTarget.children[0];
+		document.querySelector('.loader').classList.add('opened');
+		if(!app.pending){
+			document.querySelector('.loader').classList.remove('opened');
+			i.classList.add('rotate');
+			app.pull("refresh").then(() => i.classList.remove('rotate'));
+		} else {
+			let loop = setInterval(() => {
+				if(!app.pending){
+					document.querySelector('.loader').classList.remove('opened');
+					i.classList.add('rotate');
+					app.pull("refresh").then(() => i.classList.remove('rotate'));
+					clearInterval(loop);
+				}
+			}, 1000);
+		}
+	};
 
 	$('.install i').click(function(){
 		UI.hideInstall();
@@ -562,8 +617,8 @@ export default function initEvents(app, course){
 
 	// Context Events
 	document.addEventListener("visibilitychange", ()=>{
-		if (document.visibilityState == "visible") app.pull("refresh")
+		if (document.visibilityState == "visible") noLoaderRefresh()
 	});
-	window.addEventListener('online', () => app.pull("refresh"));
+	window.addEventListener('online', () => noLoaderRefresh());
 
 }

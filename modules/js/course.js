@@ -1,4 +1,3 @@
-import App from './app.js';
 import Generate from './generate.js';
 
 export default class Course{

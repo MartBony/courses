@@ -1,8 +1,7 @@
 import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
-import idbStorage from './indexedDb.js';
-import Storage from './storage.js';
+import { LocalStorage, idbStorage } from './storage.js';
 import {jsonEqual} from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
@@ -11,11 +10,17 @@ let course;
 
 class App{
 	constructor(id){
+		document.getElementById('preload').classList.add('close');
 		course = new Course();
 
-		Storage.setItem('userId', id);
+		if(window.innerWidth < 900){
+			document.getElementById('liste').style.visibility = "hidden";
+			document.getElementById('liste').style.height = "0";
+		}
+		LocalStorage.setItem('userId', id);
 		this.userId = id;
 		this.pullState;
+		this.pending; // Avoid collisions
 		this.groupes;
 		this.usedGroupe;
 		this.usedCourse;
@@ -34,7 +39,7 @@ class App{
 		let toChange = document.querySelectorAll('.prixFlex, .setPrixFlex, .article h3, .preview h3, .calcul p');
 		
 
-		if(Storage.getItem("currency")){
+		if(LocalStorage.getItem("currency")){
 			this.params.currency = "$";
 			document.querySelector("#params input").checked = true;
 		}
@@ -55,57 +60,73 @@ class App{
 			item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency);
 		});
 	}
-	pull(action, idGroupe, idCourse){// Rank as index of array
-		// console.log("-- PULLING --");
-		let update;
+	async pull(action, idGroupe, idCourse){// Rank as index of array
+		console.log("-- PULLING --");
+		let update,
+			anim = () => {
+				$('#refresh i, #headRefresh').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
+				setTimeout(function(){
+					$('#refresh i, #headRefresh').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
+				},2000);
+			};
+		this.pending = true;
 		this.pullState = { // Network state in pulling
 			structure: action != "open",
 			groupe: action != "open",
 			course: action != "open"
 		};
-
-		if(action === "open") $('.loader').addClass('opened')
 	
 		// Load from network
 		Pull.invitations(this);
-		Pull.structure(this)
+		let pull = Pull.structure(this)
 			.then(data => {
-				$('.loader').removeClass('opened');
 				if(data){
 					// Update app
 					this.pullState.structure = true;
-					// console.log('Network structure fetched:', data);
+					console.log('Network structure fetched:', data);
 					update = this.updateApp(data, true);
 					if(update){
-						idGroupe = idGroupe || Storage.getItem('usedGroupe') || this.groupes[0].id;
+						idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || this.groupes[0].id;
 						// Pull further
 						return Pull.groupe(this, idGroupe);
 					}
+					$('.loader').removeClass('opened');
+					this.pending = false;
+					anim();
 				}
 			})
 			.then(data => {
 				if(data){
 					// Update Group
 					this.pullState.groupe = true;
-					// console.log('Network groupe fetched:', data);
+					console.log('Network groupe fetched:', data);
 					update = this.updateGroupe(data, true);
 					if(update){
-						idCourse = idCourse || Storage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
+						idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
 						// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
 						return Pull.course(this, idCourse);
 					}
+					$('.loader').removeClass('opened');
+					this.pending = false;
+					anim();
 				}
 			})
 			.then(data => {
 				if(data){
 					this.pullState.course = true;
-					// console.log('Network course fetched:', data);
+					console.log('Network course fetched:', data);
 					update = this.updateCourse(data, true);
 				}
+				$('.loader').removeClass('opened');
+				this.pending = false;
+				anim();
+				return;
 			});
 
 		// Load from indexedDB
 		if(action == "open") Offline.pull(this, idGroupe, idCourse)
+
+		return pull;
 
 	}
 	notificationHandler(callback){
@@ -151,25 +172,25 @@ class App{
 	swipe(direction){
 		switch(direction){
 			case 'left':
-				$('.main#liste').css({'visibility':'visible'});
+				$('.main#liste').css({'visibility':'visible', 'height':'auto'});
 				$('header h1').html('Liste de course');
 				setTimeout(function(){
 					$('.main > ul').css({'transition':'', 'transform':''});
 					$('body').addClass('bodyPreview');
 					setTimeout(function(){
-						$('.main#panier').css({'visibility':'collapse'});
+						$('.main#panier').css({'visibility':'hidden', 'height':'0'});
 					},310);
 				},10);
 				this.state = 1;
 				break;
 			case 'right':
-				$('.main#panier').css({'visibility':'visible'});
+				$('.main#panier').css({'visibility':'visible', 'height':'auto'});
 				$('header h1').html('Panier');
 				setTimeout(function(){
 					$('.main > ul').css({'transition':'', 'transform':''});
 					$('body').removeClass('bodyPreview');
 					setTimeout(function(){
-						$('.main#liste').css({'visibility':'collapse'});
+						$('.main#liste').css({'visibility':'hidden', 'height':'0'});
 					},310);
 				},10);
 				this.state = 0;
@@ -195,7 +216,7 @@ class App{
 			if (data.status == 200) {
 
 				idbStorage.delete("courses", id);
-
+				LocalStorage.removeItem("usedCourse");
 				this.pull("open");
 
 			} else if (data.notAuthed){
@@ -368,12 +389,13 @@ class App{
 				// Display UI
 				if(data.groupes.length != 0){
 					UI.closeModal();
-
-					$('.groupe').remove();
-					data.groupes.forEach(grp => {
-						$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
-					});
-					this.groupes = data.groupes;
+					if(!jsonEqual(this.groupes, data.groupes)){
+						$('.groupe').remove();
+						data.groupes.forEach(grp => {
+							$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
+						});
+						this.groupes = data.groupes;
+					}
 
 					return true;
 				} else {
@@ -391,10 +413,9 @@ class App{
 			// Save in IDB in structure objectStore
 			if(save) idbStorage.put("groupes", groupe)
 
-			if(this.usedGroupe && groupe.id != this.usedGroupe.id) Storage.setItem('usedCourse', null)
+			if(this.usedGroupe && groupe.id != this.usedGroupe.id) LocalStorage.setItem('usedCourse', null)
 
-			this.usedGroupe = groupe;
-			Storage.setItem('usedGroup', groupe.id);
+			LocalStorage.setItem('usedGroupe', groupe.id);
 	
 			// UPD UI parametres
 			$('.groupe').removeClass('opened');
@@ -405,12 +426,16 @@ class App{
 			UI.closeModal();
 			
 			// UPD CourseList
-			$('.menu .course').remove();
-			if(this.usedGroupe.coursesList && this.usedGroupe.coursesList.length != 0){ // Il y a une course
-				this.usedGroupe.coursesList.forEach((el) => {
-					$('.menu article').append(Generate.course(this, el.id, el.nom));
-				});
+			if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
+				if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
+					$('.menu .course').remove();
+					groupe.coursesList.forEach((el) => {
+						$('.menu article').append(Generate.course(this, el.id, el.nom));
+					});
+				}
+				this.usedGroupe = groupe;
 			} else {
+				$('.menu .course').remove();
 				$('.activate, .noCourse').remove();
 				UI.closeModal();
 				$('#add, #calcul').css({'visibility':'hidden'});
@@ -418,6 +443,7 @@ class App{
 				$('.adder').css({'display': 'none'});
 				$('.main ul').prepend(Generate.noCourse());
 	
+				this.usedGroupe = groupe;
 				return false;
 			}
 	
@@ -434,7 +460,7 @@ class App{
 
 				if(save) idbStorage.put("courses", data)
 
-				Storage.setItem('usedCourse', data.id);
+				LocalStorage.setItem('usedCourse', data.id);
 				course.update(this, data);
 
 				$('.course').removeClass('opened');
@@ -446,12 +472,6 @@ class App{
 				Array.from(document.getElementsByClassName('course')).forEach(el => {
 					if(el.getAttribute('dbindex') == data.id) el.classList.add('opened')
 				});
-
-
-				$('#refresh i, #headRefresh').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
-				setTimeout(function(){
-					$('#refresh i, #headRefresh').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
-				},2000);
 
 				if (course.old) {
 					$('#add, #calcul').addClass('hidden');
@@ -552,6 +572,7 @@ class App{
 			data: { deleteUser: true }
 		}).then(data => {
 			if(data.status == 200){
+				LocalStorage.clear();
 				alert("Compte supprimé avec succès");
 				window.location = "/";
 			}

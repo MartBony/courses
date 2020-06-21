@@ -24,9 +24,9 @@ if(isset($_POST['inscript'])){
 		$nom = htmlspecialchars($_POST['nom']);
 
 		if(preg_match("/^[a-z0-9._-]+@[a-z0-9._-]{2,}\.[a-z]{2,4}$/", $mail)){
-			if(strlen($pass) > 6){
+			if(strlen($pass) >= 6){
 				if($pass == $passConf){
-					if(preg_match("/^[a-zA-Z0-9._-]{2,20}$/", $nom)){
+					if(preg_match("/^[a-zA-Z0-9._-áàäâéèëêòôóöîïûúùü]{2,20}$/", $nom)){
 						inscrire($bdd, $mail, $pass, $nom);
 					} else echo json_encode(array('status' => 400, 'err' => 'nom'));
 				} else echo json_encode(array('status' => 400, 'err' => 'diff'));

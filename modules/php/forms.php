@@ -4,9 +4,9 @@
 		<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>
 		<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 		<form>				
-			<label for="aprix">Prix de l'article</label>
+			<label for="newPrice">Prix de l'article</label>
 			<div class="setPrixFlex">
-				<input id="newPrice" type="double" name="aprix" required />
+				<input id="newPrice" type="double" name="newPrice" required />
 				€
 			</div>
 			<input class="submit" type="submit" name="submit" id="setPrice" value="Ajouter">
@@ -17,8 +17,8 @@
 		<div class="blur"></div>
 		<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 		<form>
-			<label for="titre">Titre de l'article</label>
-			<input maxlength="50" id="titreA" type="text" name="titre" required />
+			<label for="titreA">Titre de l'article</label>
+			<input maxlength="50" id="titreA" type="text" name="titreA" required />
 			<label for="prix">Prix de l'article</label>
 			<div class="prixFlex">
 				<input id="prix" type="double" name="prix" required />

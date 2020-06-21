@@ -26,10 +26,9 @@ body
   	min-height: -webkit-fill-available;
 }
 
-#preload{
-	visibility: hidden;
-	opacity: 0;
-	transition: 300ms all 1s ease;
+img{
+	width: auto;
+	height: auto;
 }
 
 .bodyPreview{
@@ -372,7 +371,7 @@ body > h1
 }
 
 .main#liste{
-	visibility: collapse;
+	padding-bottom: 80px;
 }
 
 .main ul{
@@ -404,7 +403,6 @@ body > h1
 	transform: translateX(100vw);
 	left: 0;
 	top: 60px;
-	width: 100vw;
 	display: grid;
 	grid-template-columns: 1fr;
 	grid-gap: 5px;

@@ -22,8 +22,6 @@
 	"/courses/modules/js/storage.js",
 	"/courses/modules/js/touch.js",
 	"/courses/modules/js/UI.js",
-	"/courses/modules/js/account.js",
-	"/courses/modules/js/indexedDb.js",
 	"/courses/modules/js/offline.js",
 	"/courses/images/logo72.png",
 	"/courses/images/logo128.png",

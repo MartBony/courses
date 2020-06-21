@@ -1,6 +1,3 @@
-import {$_GET} from "./tools.js";
-import UI from './UI.js';
-
 export default class Generate{
 	static course(app, id, nom){
 		let button = document.createElement('button'),
@@ -40,7 +37,18 @@ export default class Generate{
 
 		$(button).on('click', e => {
 			if(e.target.tagName !== "I"){
-				app.pull("open", id);
+				document.querySelector('.loader').classList.add('opened');
+				if(!app.pending){
+					app.pull("open", id);
+				} else {
+					let loop = setInterval(() => {
+						if(!app.pending){
+							document.querySelector('.loader').classList.add('opened');
+							app.pull("open", id);
+							clearInterval(loop);
+						}
+					}, 1000);
+				}
 			}
 		});
 

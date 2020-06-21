@@ -1,4 +1,3 @@
-import App from './app.js';
 import UI from './UI.js';
 
 let deferredPrompt,
