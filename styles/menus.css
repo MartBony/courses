@@ -32,12 +32,12 @@
 	opacity: 0;
 	transform-origin: 97% 3%;
 	transform: scale(0);
-	background: white;
+	background: var(--colorLight);
+	color: var(--colorText);
 	z-index: 5;
 	border-radius: var(--menu-radius);
 	transition: all 50ms var(--ease-sortir);
-	box-shadow: 0 0 5px 3px rgba(0,0,0,0.05);
-	transition: all 250ms var(--ease-enter);
+	box-shadow: var(--shadow2);
 }
 
 #menus.mainMenu .menu
@@ -74,10 +74,10 @@
 {
 	position: relative;
 	font-size: 1.6rem;
-	color: black;
+	color: var(--colorText);
 	text-transform: uppercase;
 	font-weight: bold;
-	background: #eee;
+	background: var(--colorMainLight2);
 	border: none;
 	box-shadow: none;
 	padding: 5px;
@@ -88,7 +88,7 @@
 .menu .course.opened
 {
 	border-bottom: 1px solid #EF6950;
-	background: #fdebe8;
+	background: var(--colorCourse);
 	box-shadow: 0px 2px 3px -1px rgba(0,0,0,0.2);
 }
 
@@ -301,8 +301,9 @@ section#calcul
 	z-index: 3;
 	overflow: hidden;
 
-	background: white;
-	box-shadow: 0px -5px 10px -8px rgba(0,0,0,0.3);
+	background: var(--colorLight);
+	color: var(--colorText);
+	box-shadow: var(--shadow2);
 	border-radius: var(--menu-radius) var(--menu-radius) 0px 0px;
 	transition: all 100ms cubic-bezier(.12,.71,.41,1.14);
 	box-sizing: border-box;
@@ -371,7 +372,7 @@ section#calcul
 	margin: 5px auto;
 	height: 4px;
 	border-radius: 5px;
-	background: #ccc;
+	background: var(--colorTextLight2);
 }
 
 #calcul h2
@@ -400,7 +401,7 @@ section#calcul
 	margin-top: 0;
 	margin-left: 10px;
 	margin-bottom: 10px;
-	color: black;
+	color: var(--colorTextLight);
 }
 
 

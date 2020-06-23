@@ -84,12 +84,13 @@
 	bottom: 0;
 	backdrop-filter: blur(5px) saturate(180%);
 	border-radius: var(--form-radius);
-	background: linear-gradient(to top, rgba(250,250,250,0.7) 0%, rgba(250,250,250,1) 70%);
+	background: var(--colorBlur);
 
 }
 
 .fromContainer > h1
 {
+	color: var(--colorText);
 	font-size: 2.5rem;
 	font-weight: bold;
 	text-transform: uppercase;
@@ -104,6 +105,7 @@
 }
 
 #invitation article{
+	color: var(--colorText);
 	position: relative;
 	z-index: 2;
 	width: 90%;
@@ -119,6 +121,7 @@
 }
 
 #forms i{
+	color: var(--colorText);
 	opacity: 0;
 	transform: all 100ms ease;
 	position: absolute;
@@ -148,8 +151,8 @@
 	box-sizing: border-box;
 }
 
-.prixFlex, .setPrixFlex
-{
+.prixFlex, .setPrixFlex{
+	color: var(--colorText);
 	display: flex;
 	align-items: center;
 	font-size: 1.5rem;
@@ -164,6 +167,8 @@
 
 #addArticle input, #addCourse input, #addPreview input, #prices input, #addGroupe input, #invitation input
 {
+	background: var(--colorMainLight);
+	color: var(--colorText);
 	outline: none;
 	font-size: 1.5rem;
 	margin: 0 0 15px 0;
@@ -181,7 +186,7 @@
 }
 
 #addArticle input:focus, #addCourse input:focus, 
-addPreview input:focus, #prices input:focus, #addGroupe input:focus, #invitation input:focus
+#addPreview input:focus, #prices input:focus, #addGroupe input:focus, #invitation input:focus
 {
 	box-shadow: 0 0 6px -4px rgba(0,0,0,0.5);
 }
@@ -198,11 +203,12 @@ input#prix, input#maxPrice, input#newPrice
 #addGroupe input.submit, #invitation input.submit{
 	width: 30%;
 	font-weight: 600;
-	background: rgba(255,255,255,0.8);
+	background: var(--colorMainLight2);
 }
 
 #addArticle label, #addCourse label, #addPreview label, #prices label, #addGroupe label, #invitation label
 {
+	color: var(--colorText);
 	font-weight: 700;
 	font-size: 1.6rem;
 	box-sizing: border-box;

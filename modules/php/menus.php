@@ -14,12 +14,12 @@
 		<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 		<h2>Paramètres</h2>
 		<section>
-			<article>
+			<article id="interfaceSwitches">
 				<h3>Interface</h3>
-				<div class="switch">
+				<span class="switch">
 					<input type="checkbox" name="currency" id="currency">
 					<span class="slider"></span>
-				</div>
+				</span>
 				<label for="currency">Utiliser le dollar américain</label>
 			</article>
 			<article id="groupes">

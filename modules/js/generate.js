@@ -100,11 +100,11 @@ export default class Generate{
 			childrens = [h2, buy, del, cancel, security, div],
 			iTags = [ buy, del, cancel, security ];
 		li.className = `preview ${animation} ${addClass}`;
-		li.style = `background: hsl(${couleur}, 100%, 95%);`;
+		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		h2.innerHTML = titre;
 		buy.className = "ms-Icon ms-Icon--Shop buy";
 		del.className = "ms-Icon ms-Icon--Delete";
-		del.style = `background: hsl(${couleur}, 100%, 95%);`;
+		del.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		cancel.className = "ms-Icon ms-Icon--Cancel noDelete";
 		security.className = "ms-Icon ms-Icon--Delete Security";
 		div.className = "bgCards";

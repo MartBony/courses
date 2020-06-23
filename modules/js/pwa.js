@@ -26,7 +26,7 @@ function initPwaEvents(){
 		e.preventDefault();
 		deferredPrompt = e;
 		if(window.innerWidth < 900){
-			UI.showInstall(500);
+			//UI.showInstall(500);
 		}
 	});
 	

@@ -7,16 +7,16 @@ import { swipedetect, SwipeBackPanel, SwipeBtPanel } from './touch.js';
 
 export default function initEvents(app, course){
 
-	let refresh = (callback) => {
+	let refresh = (callback, idGroupe, idCourse) => {
 		callback = callback || function(){};
 		document.querySelector('.loader').classList.add('opened');
 		if(!app.pending){
-			app.pull("refresh").then(callback);
+			app.pull("refresh", idGroupe, idCourse).then(callback);
 		} else {
 			let loop = setInterval(() => {
 				if(!app.pending){
 					document.querySelector('.loader').classList.add('opened');
-					app.pull("refresh").then(callback);
+					app.pull("refresh", idGroupe, idCourse).then(callback);
 					clearInterval(loop);
 				}
 			}, 1000);
@@ -577,7 +577,7 @@ export default function initEvents(app, course){
 		else if(e.target.classList.contains('course')) {
 			let id = e.target.getAttribute("dbIndex");
 			if(id){
-				refresh(() => UI.acc(app));
+				refresh(() => UI.acc(app), null, id);
 			}
 		} else if(e.target.parentNode.classList.contains('course') && e.target.tagName == "I") {
 			let id = e.target.parentNode.getAttribute("dbIndex");
