@@ -79,63 +79,52 @@ export default function initEvents(app, course){
 	},
 	addArticle = e => {
 		e.preventDefault();
-		if ($('#addArticle #titreA').val() && $('#addArticle #titreA').val() != '') {
-			if ($('#addArticle #prix').val() && $('#addArticle #prix').val() != '') {
-				if (!isNaN(parseFloat($('#addArticle #prix').val().replace(',','.')))) {
-					$('.loader').addClass('opened');
-					$.ajax({
-						method: "POST",
-						url: "serveur/push.php",
-						data: { submitArticle: true, titre: $('#addArticle #titreA').val(), prix: $('#addArticle #prix').val().replace(',','.'), groupe: app.usedGroupe.id }
-					}).then(data => {
-						$('.loader').removeClass('opened');
-						if(data.status == 200){
-							UI.acc(app);
-
-							if (!course.started) $('.activate').click();
-
-							$('html, body').animate({scrollTop: 0}, 30);
-							$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.prix));
-					
-							app.totalPP(data.prix);
-							$('#addArticle #titreA, #addArticle #prix').val('');
-
-							setTimeout(function(){
-								$('.article').removeClass('animateSlideIn');
-							},300);
-
-
-							idbStorage.get("courses", course.id)
-								.then(storage => {
-									storage.total = course.total;
-									storage.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-									
-									app.usedCourse = storage;
-									course.displayed.articles = storage.items.articles;
-								});
-
-						} else if (data.notAuthed){
-							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-							]);
-						}
-					})
-					.catch(err => {
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, err);
-					});
+		if (!isNaN(parseFloat($('#addArticle #prix').val().replace(',','.')))) {
+			$('.loader').addClass('opened');
+			$.ajax({
+				method: "POST",
+				url: "serveur/push.php",
+				data: {
+					submitArticle: true,
+					titre: $('#addArticle #titreA').val(),
+					prix: $('#addArticle #prix').val().replace(',','.'),
+					groupe: app.usedGroupe.id
 				}
-				else{
-					alert('Prix de l\'article non conforme');
+			}).then(data => {
+				$('.loader').removeClass('opened');
+				if(data.status == 200){
+					UI.acc(app);
+
+					if (!course.started) $('.activate').click();
+
+					$('html, body').animate({scrollTop: 0}, 30);
+					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.prix));
+			
+					app.totalPP(data.prix);
+					$('#addArticle #titreA, #addArticle #prix').val('');
+
+					setTimeout(function(){
+						$('.article').removeClass('animateSlideIn');
+					},300);
+
+
+					course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+					idbStorage.put("courses", course.export());
+	
+
+				} else if (data.notAuthed){
+					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+					]);
 				}
-			}
-			else{
-				alert('Prix de l\'article non spécifié');
-			}
+			})
+			.catch(err => {
+				$('.loader').removeClass('opened');
+				UI.offlineMsg(app, err);
+			});
 		}
-		else
-		{
-			alert('Nom de l\'article non spécifié');
+		else{
+			alert('Prix de l\'article non conforme');
 		}
 	},
 	addPreview = e => {
@@ -163,14 +152,9 @@ export default function initEvents(app, course){
 					},300);
 
 
-					idbStorage.get("courses", course.id)
-						.then(storage => {
-							storage.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
-
-							app.usedCourse = storage;
-							course.displayed.previews = storage.items.previews;
-						});
-						
+					course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+					idbStorage.put("courses", course.export());
+					
 				} else if (data.notAuthed){
 					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -205,58 +189,51 @@ export default function initEvents(app, course){
 	},
 	addCourse = e => {
 		e.preventDefault();
-		if ($('#addCourse #titreC').val() && $('#addCourse #titreC').val() != '') {
-			if ($('#addCourse #maxPrice').val() && $('#addCourse #maxPrice').val() != '') {
-				if (!isNaN(parseFloat( $('#addCourse #maxPrice').val().replace(',','.')))) {
-					$('.loader').addClass('opened');
-					$.ajax({
-						method: "POST",
-						url: "serveur/push.php",
-						data: { submitCourse: true, titre: $('#addCourse #titreC').val(), maxPrice: $('#addCourse #maxPrice').val().replace(',','.'), groupe: app.usedGroupe.id }
-					}).then(function(data){
-						$('.loader').removeClass('opened');
-						if(data.status == 200){
-							history.replaceState({key:'createCourse'}, '','index.php');
-							$('#addCourse #titreC, #addCourse #maxPrice').val('');
+		if (!isNaN(parseFloat( $('#addCourse #maxPrice').val().replace(',','.')))) {
+			$('.loader').addClass('opened');
+			$.ajax({
+				method: "POST",
+				url: "serveur/push.php",
+				data: {
+					submitCourse: true,
+					titre: $('#addCourse #titreC').val(),
+					maxPrice: $('#addCourse #maxPrice').val().replace(',','.'),
+					taxes: $('#addCourse #cTaxes').val().replace(',','.'),
+					groupe: app.usedGroupe.id
+				}
+			}).then(function(data){
+				$('.loader').removeClass('opened');
+				if(data.status == 200){
+					history.replaceState({key:'createCourse'}, '','index.php');
+					$('#addCourse #titreC, #addCourse #maxPrice').val('');
 
-							LocalStorage.setItem('usedCourse', null);
-							document.querySelector('.loader').classList.add('opened');
+					LocalStorage.setItem('usedCourse', null);
+					document.querySelector('.loader').classList.add('opened');
+					if(!app.pending){
+						app.pull("refresh").then(() => UI.acc(app));
+					} else {
+						let loop = setInterval(() => {
 							if(!app.pending){
+								document.querySelector('.loader').classList.add('opened');
 								app.pull("refresh").then(() => UI.acc(app));
-							} else {
-								let loop = setInterval(() => {
-									if(!app.pending){
-										document.querySelector('.loader').classList.add('opened');
-										app.pull("refresh").then(() => UI.acc(app));
-										clearInterval(loop);
-									}
-								}, 1000);
+								clearInterval(loop);
 							}
-						} else if (data.notAuthed){
-							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-							]);
-						} else if (data.status == 403){
-							UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
-						}
-					}).catch(function(err){
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, err);
-					});
+						}, 1000);
+					}
+				} else if (data.notAuthed){
+					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+					]);
+				} else if (data.status == 403){
+					UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
+				}
+			}).catch(function(err){
+				$('.loader').removeClass('opened');
+				UI.offlineMsg(app, err);
+			});
 
-				}
-				else
-				{
-					alert('Prix de l\'article non conforme');
-				}
-			}
-			else{
-				alert('Ca ne fonctionne jamais sans limite 😉');
-			}
-		}
-		else
-		{
-			alert('Il faut donner un nom à la course 😑');
+		} else {
+			alert('Prix de l\'article non conforme');
 		}
 	},
 	addGroupe = e => {
@@ -437,13 +414,17 @@ export default function initEvents(app, course){
 		}
 	});
 
-	document.querySelector('#params input').addEventListener('change', () => {
-		if(LocalStorage.getItem('currency')){
-			LocalStorage.setItem('currency',"");
-		} else {
-			LocalStorage.setItem('currency',"$");
+	document.querySelector('#params').addEventListener('change', e => {
+		if(e.target.id === 'currency'){
+			if(LocalStorage.getItem('currency')){
+				LocalStorage.setItem('currency',"");
+			} else {
+				LocalStorage.setItem('currency',"$");
+			}
+			app.setParameters();
+		} else if (e.target.id === 'theme') {
+			UI.toggleTheme();
 		}
-		app.setParameters();
 	});
 	
 	$('.menu i.ms-Icon--Settings').click(function(){

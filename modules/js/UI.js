@@ -311,5 +311,15 @@ export default class UI {
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
 	}
-	
+	static setTheme(themeName) {
+		localStorage.setItem('theme', themeName);
+		document.documentElement.className = themeName;
+	}
+	static toggleTheme() {
+		if (localStorage.getItem('theme') === 'theme-dark') {
+			UI.setTheme('theme-light');
+		} else {
+			UI.setTheme('theme-dark');
+		}
+	}
 }

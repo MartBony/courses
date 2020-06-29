@@ -12,7 +12,7 @@ class Offline{
 					app.pullState.structure = "idb";
 					update = app.updateApp(data);
 					if(update){
-						idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || app.groupes[0].id;
+						idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
 						return idbStorage.get("groupes", idGroupe);
 					}
 				}

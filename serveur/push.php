@@ -30,16 +30,17 @@ function pushCousesIndependent($user, PDO $bdd){
 
 		return checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
 	
-			if(isset($_POST['submitCourse']) && isset($_POST['titre']) && isset($_POST['maxPrice'])) {
+			if(isset($_POST['submitCourse']) && isset($_POST['titre']) && isset($_POST['maxPrice']) && isset($_POST['taxes'])) {
 				$titre = htmlspecialchars($_POST['titre']);
-				$maxPrice = (float)  $_POST['maxPrice'];
+				$maxPrice = (float) $_POST['maxPrice'];
+				$taxes = ((float) $_POST['taxes'])/100;
 		
 				$insert = $bdd->prepare(
 					'INSERT INTO `courses`
-					(`nom`, `maxPrice`, `total`, `dateStart`, `groupe`)
-					VALUES (?,?,0,0,?)'
+					(`nom`, `maxPrice`, `total`, `dateStart`, `groupe`, `taxes`)
+					VALUES (?,?,0,0,?,?)'
 				);
-				$insert->execute(array($titre, $maxPrice, $groupe['id']));
+				$insert->execute(array($titre, $maxPrice, $groupe['id'], $taxes));
 		
 				echo json_encode(array('status' => 200));
 				return true;

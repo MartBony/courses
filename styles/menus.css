@@ -395,6 +395,10 @@ section#calcul
 	font-size: 2rem;
 }
 
+#calcul .card h3{
+	margin: 0;
+}
+
 #calcul p
 {
 	font-size: 1.8rem;

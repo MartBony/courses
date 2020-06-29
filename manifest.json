@@ -1,5 +1,5 @@
 {
-	"name" : "Courses - Organiser de chez soi",
+	"name" : "Courses",
 	"short_name" : "Courses",
 	"start_url" : "/courses/index.php",
 	"display" : "standalone",

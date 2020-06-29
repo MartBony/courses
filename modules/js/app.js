@@ -8,6 +8,8 @@ import Generate from './generate.js';
 
 let course;
 
+
+
 class App{
 	constructor(id){
 		document.getElementById('preload').classList.add('close');
@@ -21,9 +23,7 @@ class App{
 		this.userId = id;
 		this.pullState;
 		this.pending; // Avoid collisions
-		this.groupes;
 		this.usedGroupe;
-		this.usedCourse;
 		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.state = 0;
 		this.setParameters();
@@ -33,15 +33,22 @@ class App{
 		
 	}
 	setParameters(){
+		let toChange = document.querySelectorAll('.prixFlex, .setPrixFlex, .article h3, .preview h3, #calcul p');
+		
 		this.params = {
 			currency: "€"
 		};
-		let toChange = document.querySelectorAll('.prixFlex, .setPrixFlex, .article h3, .preview h3, .calcul p');
 		
+		if (localStorage.getItem('theme') === 'theme-dark') {
+			UI.setTheme('theme-dark');
+			document.querySelector("#theme").checked = true;
+		} else {
+			UI.setTheme('theme-light');
+		}
 
 		if(LocalStorage.getItem("currency")){
 			this.params.currency = "$";
-			document.querySelector("#params input").checked = true;
+			document.querySelector("#currency").checked = true;
 		}
 
 
@@ -56,9 +63,7 @@ class App{
 			$('#prices li').eq(i).css({'filter':'grayscale('+ (i+1)/numLi*50 +'%)'});
 		});
 
-		toChange.forEach(item => {
-			item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency);
-		});
+		toChange.forEach(item => item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency));
 	}
 	async pull(action, idGroupe, idCourse){// Rank as index of array
 		console.log("-- PULLING --");
@@ -86,7 +91,7 @@ class App{
 					console.log('Network structure fetched:', data);
 					update = this.updateApp(data, true);
 					if(update){
-						idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || this.groupes[0].id;
+						idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
 						// Pull further
 						return Pull.groupe(this, idGroupe);
 					}
@@ -102,7 +107,7 @@ class App{
 					console.log('Network groupe fetched:', data);
 					update = this.updateGroupe(data, true);
 					if(update){
-						idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.usedGroupe.coursesList[0].id;
+						idCourse = idCourse || LocalStorage.getItem('usedCourse') || data.coursesList[0].id;
 						// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
 						return Pull.course(this, idCourse);
 					}
@@ -244,14 +249,8 @@ class App{
 				this.totalPP(-data.prix);
 				UI.remove("article", displayedIndex);
 
-				idbStorage.get("courses", course.id)
-					.then(storage => {
-						storage.items.articles = storage.items.articles.filter(el => el.id != index);
-						idbStorage.put("courses", storage);
-						
-						this.usedCourse = storage;
-						course.displayed.articles = course.displayed.articles.filter(el => el.id != index);
-					});
+				course.items.articles = course.items.articles.filter(el => el.id != index);
+				idbStorage.put("courses", course.export());
 
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -278,15 +277,9 @@ class App{
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
 
-				idbStorage.get("courses", course.id)
-					.then(storage => {
-						storage.items.previews = storage.items.previews.filter(el => el.id != index);
-						idbStorage.put("courses", storage);
+				course.items.previews = course.items.previews.filter(el => el.id != index);
+				idbStorage.put("courses", course.export());
 
-						this.usedCourse = storage;
-						course.displayed.previews = course.displayed.previews.filter(el => el.id != index);
-					});
-				
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -358,16 +351,9 @@ class App{
 					}, 150);
 				}, timer);
 
-				idbStorage.get("courses", course.id)
-					.then(storage => {
-						storage.items.previews = storage.items.previews.filter((obj) => (obj.id != data.id));
-						storage.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-						idbStorage.put("courses", storage);		
-
-						this.usedCourse = storage;
-						course.displayed.previews = storage.items.previews;
-						course.displayed.articles = storage.items.articles;
-					});	
+				course.items.previews = course.items.previews.filter((obj) => (obj.id != data.id));
+				course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+				idbStorage.put("courses", course.export());
 				
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -383,18 +369,18 @@ class App{
 		if(data && data.nom && data.id && data.groupes){
 			$('#compte em').html(data.nom);
 			if(data.groupes){
+				let oldStructure = idbStorage.get("structures", data.id);
 				// Save in IDB in structure objectStore
 				if(save) idbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
 
 				// Display UI
 				if(data.groupes.length != 0){
 					UI.closeModal();
-					if(!jsonEqual(this.groupes, data.groupes)){
+					if(!jsonEqual(oldStructure.groupes, data.groupes)){
 						$('.groupe').remove();
 						data.groupes.forEach(grp => {
 							$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
 						});
-						this.groupes = data.groupes;
 					}
 
 					return true;
@@ -440,6 +426,7 @@ class App{
 				UI.closeModal();
 				$('#add, #calcul').css({'visibility':'hidden'});
 				$('.main ul').children().remove();
+				course = new Course();
 				$('.adder').css({'display': 'none'});
 				$('.main ul').prepend(Generate.noCourse());
 	
@@ -452,15 +439,14 @@ class App{
 	}
 	updateCourse(data, save){
 		if(data && data.id && data.nom && data.items){
-			$('.activate, .noCourse').remove();
-			UI.closeModal();
-			$('#add, #calcul').css({'visibility':''});
-
-			if(!jsonEqual(this.usedCourse, data)){
+			if(!jsonEqual(course.export(), data)){
+				$('.activate, .noCourse').remove();
+				UI.closeModal();
+				$('#add, #calcul').css({'visibility':''});
 
 				if(save) idbStorage.put("courses", data)
 
-				LocalStorage.setItem('usedCourse', data.id);
+				document.getElementById('cTaxes').value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
 				course.update(this, data);
 
 				$('.course').removeClass('opened');
@@ -474,10 +460,11 @@ class App{
 				});
 
 				if (course.old) {
+					LocalStorage.setItem('usedCourse', data.id);
 					$('#add, #calcul').addClass('hidden');
 					$('#btTouchSurf').css({'visibility':'hidden'});
 					$('#add').css({'display':'none'});
-				}
+				} else LocalStorage.removeItem('usedCourse');
 
 				if (data.dateStart == 0 && !course.old) {
 					$('.main ul').prepend(Generate.activate());
@@ -488,7 +475,6 @@ class App{
 				}
 				
 			}
-
 			return true;
 
 		} else UI.offlineMsg(this, "Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
@@ -579,32 +565,22 @@ class App{
 		});
 	}
 	totalPP(constante, reset = false){
-		if(reset){
-			$('#totalDep').html(Number(course.total).toFixed(2) + this.params.currency);
-			$('#moiDep').html(Number(course.monthCost).toFixed(2) + this.params.currency);
-			$('#moiPrev').html(Number(course.total * course.coef).toFixed(2) + this.params.currency);
-			$('#anPrev').html(Number(course.total * course.coef * 12).toFixed(2) + this.params.currency);
-			if(course.maxPrice < course.total){
-				$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
-			}
-			else{
-				$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
-			}
+		let total = Number((course.total + Number(constante)).toFixed(2)),
+			totalTax = Number((total*(1+course.taxes)).toFixed(2));
+		if(!reset){
+			course.total = total;
+			course.monthCost += Number(constante);
+		}
+		$('#totalDep').html(total.toFixed(2) + this.params.currency);
+		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
+		$('#moiDep').html(this.usedGroupe.monthCost.toFixed(2) + this.params.currency);
+		$('#moiPrev').html((totalTax * this.usedGroupe.coef).toFixed(2) + this.params.currency);
+		$('#anPrev').html((totalTax * this.usedGroupe.coef * 12).toFixed(2) + this.params.currency);
+		if(course.maxPrice < totalTax){
+			$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
 		}
 		else{
-			constante = parseFloat(constante);
-			course.total += constante;
-			course.monthCost += constante;
-			$('#totalDep').html(Number(course.total).toFixed(2) + this.params.currency);
-			$('#moiDep').html(Number(course.monthCost).toFixed(2) + this.params.currency);
-			$('#moiPrev').html(Number(course.total * course.coef).toFixed(2) + this.params.currency);
-			$('#anPrev').html(Number(course.total * course.coef * 12).toFixed(2) + this.params.currency);
-			if(course.maxPrice < course.total){
-				$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
-			}
-			else{
-				$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
-			}
+			$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
 		}
 	}
 	generateInviteKey(){

@@ -3,14 +3,17 @@ import Generate from './generate.js';
 export default class Course{
 	constructor(){
 		this.id;
-		this.total;
+		this.nom;
 		this.maxPrice;
-		this.coef;
-		this.displayed = {
+		this.total;
+		this.dateStart;
+		this.groupe;
+		this.taxes;
+		this.items = {
 			articles: new Array,
 			previews: new Array
 		};
-		this.monthCost;
+
 		this.started;
 		this.old;
 
@@ -20,35 +23,34 @@ export default class Course{
 		};
 	}
 	update(app, data){
-
-		let items = data.items,
-			attribute = "";
 		
-		this.id = data.id;
+		this.id = parseInt(data.id);
+		this.nom = data.nom;
+		this.maxPrice = Number(data.maxPrice);
 		this.total = Number(data.total);
-		this.maxPrice = data.maxPrice;
-		$('#maxprice').html(this.maxPrice + app.params.currency);
-		this.monthCost = app.usedGroupe.monthCost;
-		this.coef = Number(app.usedGroupe.coef);
+		this.dateStart = data.dateStart;
+		this.groupe = Number(data.groupe);
+		this.taxes = Number(data.taxes);
+
 		this.old = data.id != app.usedGroupe.coursesList[0].id;
 
 		app.totalPP(0, true);
+		$('#maxprice').html(this.maxPrice + app.params.currency);
 
-		if (this.old) {
-			attribute = "disabled";
-		}
+		let items = data.items,
+			attribute = this.old ? "disabled" : "";
 
 		let iter = 0;
 		while(iter < items.articles.length){
 			let article = items.articles[iter];
-			if (this.displayed.articles[iter]) {
-				if (article.id != this.displayed.articles[iter].id){
-					if(items.articles.filter(el => el.id == this.displayed.articles[iter].id).length > 0){
-						this.displayed.articles.splice(iter, 0, article);
+			if (this.items.articles[iter]) {
+				if (article.id != this.items.articles[iter].id){
+					if(items.articles.filter(el => el.id == this.items.articles[iter].id).length > 0){
+						this.items.articles.splice(iter, 0, article);
 						$('#panier ul .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
 						iter++;
 					} else {
-						this.displayed.articles.splice(iter, 1);
+						this.items.articles.splice(iter, 1);
 						$('#panier ul .article').eq(iter).remove();
 					}
 				} else {
@@ -56,28 +58,28 @@ export default class Course{
 				}
 			}
 			else{
-				this.displayed.articles.splice(iter, 0, article);
+				this.items.articles.splice(iter, 0, article);
 				$('#panier ul').append(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
 				iter++;
 			}
 
 		}
 		$('#panier ul .article').slice(items.articles.length).remove();
-		this.displayed.articles = this.displayed.articles.slice(0, items.articles.length);
+		this.items.articles = this.items.articles.slice(0, items.articles.length);
 		
 
 
 		iter = 0;
 		while(iter < items.previews.length){
 			let preview = items.previews[iter];
-			if (this.displayed.previews[iter]) {
-				if (preview.id != this.displayed.previews[iter].id){
-					if(items.previews.filter(el => el.id == this.displayed.previews[iter].id).length > 0){
-						this.displayed.previews.splice(iter, 0, preview);
+			if (this.items.previews[iter]) {
+				if (preview.id != this.items.previews[iter].id){
+					if(items.previews.filter(el => el.id == this.items.previews[iter].id).length > 0){
+						this.items.previews.splice(iter, 0, preview);
 						$('#liste ul .preview').eq(iter).before(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
 						iter++;
 					} else {
-						this.displayed.previews.splice(iter, 1);
+						this.items.previews.splice(iter, 1);
 						$('#liste ul .preview').eq(iter).remove();
 					}
 				} else {
@@ -85,14 +87,14 @@ export default class Course{
 				}
 			}
 			else{
-				this.displayed.previews.splice(iter, 0, preview);
+				this.items.previews.splice(iter, 0, preview);
 				$('#liste ul').append(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
 				iter++;
 			}
 
 		}
 		$('#liste ul .preview').slice(items.previews.length).remove();
-		this.displayed.previews = this.displayed.previews.slice(0, items.previews.length);
+		this.items.previews = this.items.previews.slice(0, items.previews.length);
 
 		
 		setTimeout(function(){
@@ -101,5 +103,17 @@ export default class Course{
 
 		this.started = data.dateStart != 0;
 
+	}
+	export(){
+		return {
+			'id': this.id,
+			'nom': this.nom,
+			'maxPrice': this.maxPrice,
+			'total': this.total,
+			'dateStart': this.dateStart,
+			'groupe': this.groupe,
+			'taxes': this.taxes,
+			'items': this.items
+		};
 	}
 }

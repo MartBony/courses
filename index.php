@@ -10,7 +10,7 @@
 
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="theme-light">
 <head>
 	<title>Faire ses courses</title>
 	<meta charset="utf-8">

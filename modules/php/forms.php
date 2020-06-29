@@ -43,10 +43,15 @@
 		<form>
 			<label for="titreC">Titre de la course</label>
 			<input maxlength="15" id="titreC" type="text" name="titreC" required />
-			<label for="maxPrice">Prix à ne pas dépasser</label>
+			<label for="maxPrice">Budget</label>
 			<div class="prixFlex">
 				<input id="maxPrice" type="double" name="maxPrice" required />
 				€
+			</div>
+			<label for="cTaxes">Taxes</label>
+			<div class="prixFlex">
+				<input id="cTaxes" type="double" name="cTaxes" value="0" required />
+				%
 			</div>
 			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 		</form>

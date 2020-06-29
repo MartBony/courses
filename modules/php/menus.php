@@ -16,11 +16,20 @@
 		<section>
 			<article id="interfaceSwitches">
 				<h3>Interface</h3>
-				<span class="switch">
-					<input type="checkbox" name="currency" id="currency">
-					<span class="slider"></span>
-				</span>
-				<label for="currency">Utiliser le dollar américain</label>
+				<div class="ticket">
+					<span class="switch">
+						<input type="checkbox" name="currency" id="currency">
+						<span class="slider"></span>
+					</span>
+					<label for="currency">Utiliser le dollar américain</label>
+				</div>
+				<div class="ticket">
+					<span class="switch">
+						<input type="checkbox" name="theme" id="theme">
+						<span class="slider"></span>
+					</span>
+					<label for="theme">Thème sombre</label>
+				</div>
 			</article>
 			<article id="groupes">
 				<h3>Mes groupes</h3>
@@ -55,8 +64,16 @@
 		<h2 class="noselect">Calculer</h2>
 		<h3 class="maxim">Limite envisagée :</h3>
 		<p id="maxprice"></p>
-		<h3>Total :</h3>
-		<p id="totalDep"></p>
+		<div class="flex">
+			<div class="card">
+				<h3>Total sans taxes</h3>
+				<p id="totalDep"></p>
+			</div>
+			<div class="card">
+				<h3>Total avec taxes</h3>
+				<p id="totalTaxDep"></p>
+			</div>
+		</div>
 		<h3>Dépenses du dernier mois:</h3>
 		<p id="moiDep"></p>
 		<h3>Dépenses par mois envisagées:</h3>
