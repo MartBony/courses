@@ -19,7 +19,8 @@ export default class Generate{
 			invite = document.createElement('i'),
 			childrens = [h4, ul, invite, remv];
 
-		button.className = "groupe g"+id;
+		button.className = "groupe";
+		button.setAttribute("key", id);
 		h4.innerHTML = nom;
 		remv.className = "ms-Icon ms-Icon--Leave";
 		remv.setAttribute("aria-hidden","true");
@@ -58,57 +59,25 @@ export default class Generate{
 		let li = document.createElement('li'),
 			h2 = document.createElement('h2'),
 			h3 = document.createElement('h3'),
-			del = document.createElement('i'),
-			cancel = document.createElement('i'),
-			security = document.createElement('i'),
-			div = document.createElement('div'),
-			childrens = [h2, h3, del, cancel, security, div],
-			iTags = [ del, cancel, security ];
+			childrens = [h2, h3];
 		li.className = `article ${animation} ${addClass}`;
+		li.setAttribute("idItem", id);
 		h2.innerHTML = titre;
-		h3.innerHTML = prix + app.params.currency;
-		del.className = "ms-Icon ms-Icon--Delete";
-		cancel.className = "ms-Icon ms-Icon--Cancel noDelete";
-		security.className = "ms-Icon ms-Icon--Delete Security";
-		div.className = "bgCards";
-		$(security).on('click', e => {
-			app.deleteArticle(e, id, prix);
-		});
-		iTags.forEach(i => {
-			i.setAttribute("aria-hidden","true");
-		});
+		h3.innerHTML = (Number(prix)*(1+app.course.taxes)).toFixed(2) + app.params.currency;
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});
 		return li;
-		/* return `<li class="article ${animation} ${addClass}">
-			<h2>${titre}</h2><h3>${prix + app.params.currency}</h3>
-			<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
-			<i class="ms-Icon ms-Icon--Cancel noDelete" aria-hidden="true"></i>
-			<i class="ms-Icon ms-Icon--Delete Security" aria-hidden="true" onclick="course.initDelete(${id},this,${prix})"></i>
-			<div class="bgCards"></div>
-		</li>`; */
 	}
-	static preview(app ,id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
+	static preview(app, id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
 			h2 = document.createElement('h2'),
-			del = document.createElement('i'),
-			buy = document.createElement('i'),
-			cancel = document.createElement('i'),
-			security = document.createElement('i'),
-			div = document.createElement('div'),
-			childrens = [h2, buy, del, cancel, security, div],
-			iTags = [ buy, del, cancel, security ];
+			childrens = [h2];
 		li.className = `preview ${animation} ${addClass}`;
 		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
+		li.setAttribute("idItem", id);
 		h2.innerHTML = titre;
-		buy.className = "ms-Icon ms-Icon--Shop buy";
-		del.className = "ms-Icon ms-Icon--Delete";
-		del.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
-		cancel.className = "ms-Icon ms-Icon--Cancel noDelete";
-		security.className = "ms-Icon ms-Icon--Delete Security";
-		div.className = "bgCards";
-		$(buy).on('click', e => {
+		/* $(buy).on('click', e => {
 			app.addPrice(e, id);
 		});
 		$(security).on('click', e => {
@@ -116,7 +85,7 @@ export default class Generate{
 		});
 		iTags.forEach(i => {
 			i.setAttribute("aria-hidden","true");
-		});
+		}); */
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});

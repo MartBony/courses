@@ -91,7 +91,7 @@ function groupes($user, PDO $bdd) {
 		'structure' => array(
 			'groupes' => $groupsInfo,
 			'nom' => $user['nom'],
-			'id' => $user['id']
+			'id' => (int) $user['id']
 		)
 	));
 }

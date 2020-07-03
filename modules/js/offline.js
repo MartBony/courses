@@ -24,6 +24,7 @@ class Offline{
 					update = app.updateGroupe(data);
 					if(update){
 						idCourse = idCourse || LocalStorage.getItem('usedCourse') || app.usedGroupe.coursesList[0].id;
+						idCourse = Number(idCourse);
 						// if(!idCourse) idCourse = app.usedGroupe.coursesList.length != 0 ? app.usedGroupe.coursesList[0].id : null;
 						return idbStorage.get("courses", idCourse);
 					}

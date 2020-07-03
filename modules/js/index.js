@@ -1,4 +1,4 @@
-import App, { course } from './app.js';
+import App from './app.js';
 import UI from './UI.js';
 import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
@@ -29,7 +29,7 @@ $.ajax({
 			initPwaEvents();
 
 			app = new App(id);
-			initEvents(app, course);
+			initEvents(app);
 		} else throw "Require auth";
 	})
 	.catch(err => {

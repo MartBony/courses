@@ -59,12 +59,12 @@ login($bdd, function($user) use ($bdd){
 		echo json_encode(array(
 			'status' => 200,
 			'groupe' => array(
-				'id' => $groupe['id'],
+				'id' => (int) $groupe['id'],
 				'nom' => $groupe['nom'],
 				'coursesList' => $coursesList,
 				'membres' => $membresGp,
-				'monthCost' => $monthCost,
-				'coef' => $coef,
+				'monthCost' => (float) $monthCost,
+				'coef' => (float) $coef,
 				'error' => $error
 			)
 		));

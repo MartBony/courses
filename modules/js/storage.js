@@ -21,7 +21,6 @@ class LocalStorage{
 
 class IndexedDbStorage{
 	constructor(dbVer = 1, dbName = "offlineDb"){
-		let objectStoreGroupes;
 		this.request = indexedDB.open(dbName, dbVer);
 
 		this.request.onerror = function(event) {
@@ -33,9 +32,9 @@ class IndexedDbStorage{
 		this.request.onupgradeneeded = function(event) {
 			this.db = event.target.result;
 
-			objectStoreGroupes = this.db.createObjectStore("structures", { keyPath: "id" });
-			objectStoreGroupes = this.db.createObjectStore("groupes", { keyPath: "id" });
-			objectStoreGroupes = this.db.createObjectStore("courses", { keyPath: "id" });
+			this.db.createObjectStore("structures", { keyPath: "id" });
+			this.db.createObjectStore("groupes", { keyPath: "id" });
+			this.db.createObjectStore("courses", { keyPath: "id" });
 
 		};
 
@@ -65,6 +64,21 @@ class IndexedDbStorage{
 				request.onsuccess = event => resolve(event.target.result);
 				request.onerror = event => reject("Transaction failed");
 			} else reject("Database not defined yet");
+		});
+	}
+	deleteDb(){
+		return new Promise((resolve, reject) => {
+			let request = indexedDB.deleteDatabase("offlineDb");
+			request.onblocked = function(event) {
+				reject("Error message: Database in blocked state. ");
+			};
+			request.onerror = function(event) {
+				reject("Error deleting database.");
+			};
+
+			request.onsuccess = function(event) {
+				resolve(request.result)
+			};
 		});
 	}
 }

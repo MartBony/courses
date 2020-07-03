@@ -1,3 +1,61 @@
+.options{
+	visibility: hidden;
+	opacity: 0;
+
+	position: absolute;
+	display: grid;
+	top: 30px;
+	left: 0;
+	grid-template-columns: repeat(4, 1fr);
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-size: 2.5rem;
+	padding: 10px;
+	grid-gap: 10px;
+	width: 94%;
+	height: 50px;
+	background: white;
+	box-shadow: 0 0 15px 6px rgba(0,0,0,0.07);
+	border-radius: 8px;
+	transition-property: opacity, transform, visibility;
+	transition-duration: 50ms;
+	transition-timing-function: var(--ease-sortir);
+	transform: scale(0.8);
+	box-sizing: border-box;
+}
+
+#liste .options{
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.options.opened{
+	visibility: visible;
+	opacity: 1;
+	transition-property: opacity, transform, visibility;
+	transition-duration: 300ms;
+	transition-timing-function: var(--ease-enter);
+	transform: none;
+}
+
+.options > i, .options > h4 {
+	width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.options > i{
+	background-color: rgba(0,0,0,0.02);
+	border-radius: 8px;
+}
+
+.options h4{
+	font-size: 1.7rem;
+	margin: 0;
+}
+
 .activate, .noCourse
 {
 	display: flex;

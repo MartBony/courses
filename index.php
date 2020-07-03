@@ -46,10 +46,21 @@
 	<section id="panier" class="main">
 		<ul></ul>
 		<button class="adder">Ajouter au panier</button>
+		<article class="options">
+			<h4>4€ HT</h4>
+			<h4>4.1€</h4>
+			<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
+			<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
+		</article>
 	</section>
 	<section id="liste" class="main">
 		<ul></ul>
 		<button class="adder">Ajouter à la liste</button>
+		<article class="options">
+			<i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i>
+			<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
+			<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
+		</article>
 	</section>
 	
 	<div id="add" class="add closed noselect"><i class="ms-Icon ms-Icon--ShoppingCart" aria-hidden="true"></i> Ajouter un article</div>

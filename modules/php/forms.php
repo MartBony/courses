@@ -4,11 +4,13 @@
 		<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>
 		<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
 		<form>				
-			<label for="newPrice">Prix de l'article</label>
+			<label for="newPrice">Prix hors taxes (unitaire)</label>
 			<div class="setPrixFlex">
 				<input id="newPrice" type="double" name="newPrice" required />
 				€
 			</div>
+			<label for="quantP">Quantité</label>
+			<input id="quantP" type="number" name="quantP" required value="1" />
 			<input class="submit" type="submit" name="submit" id="setPrice" value="Ajouter">
 		</form>
 		<ul></ul>
@@ -19,11 +21,13 @@
 		<form>
 			<label for="titreA">Titre de l'article</label>
 			<input maxlength="50" id="titreA" type="text" name="titreA" required />
-			<label for="prix">Prix de l'article</label>
+			<label for="prix">Prix hors taxes (unitaire)</label>
 			<div class="prixFlex">
 				<input id="prix" type="double" name="prix" required />
 				€
 			</div>
+			<label for="quantA">Quantité</label>
+			<input id="quantA" type="number" name="quantA" required value="1" />
 			<input class="submit" type="submit" name="submit" id="submitArticle" value="Ajouter">
 		</form>
 	</section>

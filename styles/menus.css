@@ -425,12 +425,17 @@ section#calcul
 	}
 
 	#add{
+		opacity: 1;
 		width: 310px;
 		height: 50px;
 		top: calc(50% - 140px);
 		left: calc(50% - 120px);
 		transform: translateY(0px);
 		transition-delay: 200ms;
+	}
+
+	#add[key=article]{
+		top: calc(50% - 190px);
 	}
 
 	button.adder{

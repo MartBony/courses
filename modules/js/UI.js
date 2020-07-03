@@ -52,6 +52,7 @@ export default class UI {
 	}
 	static closeForms(){
 		$('#add').addClass('closed');
+		document.getElementById("add").removeAttribute("key");
 		document.querySelector('#forms').className = "";
 		Array.from(document.querySelectorAll('#forms div, #forms input, #forms label, #forms i, #forms ul')).forEach(el => {
 			el.classList.remove('opened');
@@ -117,7 +118,8 @@ export default class UI {
 	static acc(app){
 		UI.closeForms();
 		UI.closeMenus();
-		app.closePrice();
+		UI.closePrice();
+		UI.hideOptions();
 	}
 	static showInstall(delay){
 		setTimeout(function(){
@@ -141,6 +143,7 @@ export default class UI {
 	static addArticle(){
 		$('#add').removeClass('closed');
 		document.getElementById("forms").classList.add('opened','formArticle');
+		document.getElementById("add").setAttribute("key","article");
 
 		$('#addArticle div, #addArticle input, #addArticle label, #addArticle i').each(function(i){	
 			setTimeout(function(){
@@ -164,6 +167,29 @@ export default class UI {
 		setTimeout(function(){
 			$('#addPreview input').eq(0).focus();
 		},200);
+	}
+	static addPrice(app, id){
+		let item = app.course.items.previews.filter(item => item.id == id)[0];
+
+		document.getElementById("prices").setAttribute("key", id);
+		$('#prices').css({'display':'block', 'opacity':'1'});
+		$('#prices').scrollTop(0);
+		$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
+		$('.titrePrice').html('<i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i>'+ item.titre);
+
+		document.getElementById("forms").classList.add('opened','prices');
+
+		$('#prices div, #prices input, #prices label, #prices i, #prices ul').each(function(i){	
+			setTimeout(function(){
+				$('#prices div, #prices input, #prices label, #prices i, #prices ul').eq(i).addClass('opened');
+			},20*i+250);
+		});
+		setTimeout(function(){
+			$('#prices input').eq(0).focus();
+		},200);
+	}
+	static closePrice(){
+		UI.closeForms();
 	}
 	static addCourse(){
 		document.getElementById("forms").classList.add('opened','course');
@@ -310,6 +336,53 @@ export default class UI {
 	static closeInvite(){
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
+	}
+	static showOptions(app, type, el){
+		let options,
+			childrens,
+			id,
+			rect,
+			padding;
+			
+		switch(type){
+			case "article":
+				options = Array.from(document.getElementsByClassName('options'))[0];
+				childrens = Array.from(options.children);
+				id = el.getAttribute('idItem');
+				rect = el.getBoundingClientRect();
+				padding = 5;
+				
+				let articleData = app.course.items.articles.filter(article => article.id == id)[0];
+
+				options.classList.add('opened');
+				options.style.top = (el.offsetTop + padding) + "px";
+				options.style.left = (el.offsetLeft + padding) + "px";
+				options.style.width = (rect.width - 2*padding) +"px";
+				options.style.height = (rect.height - 2*padding) +"px";
+				options.setAttribute("key", id);
+				childrens[0].innerHTML = articleData.prix + app.params.currency +" HT";
+				childrens[1].innerHTML = (articleData.prix * (1+app.course.taxes)).toFixed(2) + app.params.currency;
+				break;
+			case "preview":
+				options = Array.from(document.getElementsByClassName('options'))[1];
+				childrens = Array.from(options.children);
+				id = el.getAttribute('idItem');
+				rect = el.getBoundingClientRect();
+				padding = 5;
+
+				options.classList.add('opened');
+				options.style.top = (el.offsetTop + padding) + "px";
+				options.style.left = (el.offsetLeft + padding) + "px";
+				options.style.width = (rect.width - 2*padding) +"px";
+				options.style.height = (rect.height - 2*padding) +"px";
+				options.setAttribute("key", id);
+				break;
+		}
+	}
+	static hideOptions(){
+		Array.from(document.getElementsByClassName('options')).forEach(option => {
+			option.classList.remove('opened');
+		});
 	}
 	static setTheme(themeName) {
 		localStorage.setItem('theme', themeName);

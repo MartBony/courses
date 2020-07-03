@@ -17,10 +17,7 @@ export default class Course{
 		this.started;
 		this.old;
 
-		this.priceCursor = {
-			index: null,
-			el: null
-		};
+		$('.main ul').children().remove();
 	}
 	update(app, data){
 		

@@ -6,30 +6,27 @@ import {jsonEqual} from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
 
-let course;
-
-
 
 class App{
 	constructor(id){
 		document.getElementById('preload').classList.add('close');
-		course = new Course();
 
 		if(window.innerWidth < 900){
 			document.getElementById('liste').style.visibility = "hidden";
 			document.getElementById('liste').style.height = "0";
 		}
+
 		LocalStorage.setItem('userId', id);
+		this.structure;
+		this.usedGroupe;
+		this.course = new Course();
 		this.userId = id;
 		this.pullState;
 		this.pending; // Avoid collisions
-		this.usedGroupe;
 		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
-		this.state = 0;
+		this.swipeBinaryState = 0;
 		this.setParameters();
 		this.pull("open");
-
-		//this.errors =  "Cette page est innaccessible pour l'instant";
 		
 	}
 	setParameters(){
@@ -151,62 +148,35 @@ class App{
 			});
 		}
 	}
-	addPrice(e, SQLindex){
-		course.priceCursor = {index: SQLindex, el: e.target};
-		var titre = $(e.target).parent().children($('h2')).html();
-		$('#prices').css({'display':'block', 'opacity':'1'});
-		$('#prices').scrollTop(0);
-		$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
-		$('.titrePrice').html('<i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i>'+ titre);
-
-		document.getElementById("forms").classList.add('opened','prices');
-
-		$('#prices div, #prices input, #prices label, #prices i, #prices ul').each(function(i){	
-			setTimeout(function(){
-				$('#prices div, #prices input, #prices label, #prices i, #prices ul').eq(i).addClass('opened');
-			},20*i+250);
-		});
-		setTimeout(function(){
-			$('#prices input').eq(0).focus();
-		},200);
-	}
-	closePrice(){
-		course.priceCursor = {};
-		UI.closeForms();
-	}
-	swipe(direction){
-		switch(direction){
-			case 'left':
-				$('.main#liste').css({'visibility':'visible', 'height':'auto'});
-				$('header h1').html('Liste de course');
-				setTimeout(function(){
-					$('.main > ul').css({'transition':'', 'transform':''});
-					$('body').addClass('bodyPreview');
-					setTimeout(function(){
-						$('.main#panier').css({'visibility':'hidden', 'height':'0'});
-					},310);
-				},10);
-				this.state = 1;
-				break;
-			case 'right':
-				$('.main#panier').css({'visibility':'visible', 'height':'auto'});
-				$('header h1').html('Panier');
-				setTimeout(function(){
-					$('.main > ul').css({'transition':'', 'transform':''});
-					$('body').removeClass('bodyPreview');
-					setTimeout(function(){
-						$('.main#liste').css({'visibility':'hidden', 'height':'0'});
-					},310);
-				},10);
-				this.state = 0;
-				break;
-		}
-	}
-	setSwipe(side){
+	setSwipe(swipeBinary){
 		if(window.innerWidth < 900){
-			var binaryToLF = ['right', 'left'];
-			if (this.state == !side) {
-				this.swipe(binaryToLF[side]);
+			if (this.swipeBinaryState == !swipeBinary) {
+				switch(swipeBinary){
+					case 1:
+						$('.main#liste').css({'visibility':'visible', 'height':'auto'});
+						$('header h1').html('Liste de course');
+						setTimeout(function(){
+							$('.main > ul').css({'transition':'', 'transform':''});
+							$('body').addClass('bodyPreview');
+							setTimeout(function(){
+								$('.main#panier').css({'visibility':'hidden', 'height':'0'});
+							},310);
+						},10);
+						this.swipeBinaryState = 1;
+						break;
+					case 0:
+						$('.main#panier').css({'visibility':'visible', 'height':'auto'});
+						$('header h1').html('Panier');
+						setTimeout(function(){
+							$('.main > ul').css({'transition':'', 'transform':''});
+							$('body').removeClass('bodyPreview');
+							setTimeout(function(){
+								$('.main#liste').css({'visibility':'hidden', 'height':'0'});
+							},310);
+						},10);
+						this.swipeBinaryState = 0;
+						break;
+				}
 			}
 		}
 	}
@@ -223,6 +193,7 @@ class App{
 				idbStorage.delete("courses", id);
 				LocalStorage.removeItem("usedCourse");
 				this.pull("open");
+				UI.hideOptions();
 
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -234,7 +205,8 @@ class App{
 			UI.offlineMsg(this, err);
 		});
 	}
-	deleteArticle(e, index, prix){
+	deleteArticle(index){
+		let item = this.course.items.articles.filter(item => item.id == index)[0];
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
@@ -243,14 +215,13 @@ class App{
 		}).then(data => {
 			$('.loader').removeClass('opened');
 			if (data.status == 200) {
-				let displayedIndex = $(e.target).parent().prevAll('li').length;
-
+				let displayedIndex = this.course.items.articles.indexOf(item);
 
 				this.totalPP(-data.prix);
 				UI.remove("article", displayedIndex);
 
-				course.items.articles = course.items.articles.filter(el => el.id != index);
-				idbStorage.put("courses", course.export());
+				this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
+				idbStorage.put("courses", this.course.export());
 
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -263,7 +234,8 @@ class App{
 		});
 		
 	}
-	deletePreview(e, index){
+	deletePreview(index){
+		let item = this.course.items.previews.filter(item => item.id == index)[0];
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
@@ -272,13 +244,13 @@ class App{
 		}).then(data => {
 			$('.loader').removeClass('opened');
 			if (data.status == 200) {
-				let displayedIndex = $(e.target).parent().prevAll('li').length;
+				let displayedIndex = this.course.items.previews.indexOf(item);
 
 				$('.article, .preview').removeClass('ready');
 				UI.remove("preview", displayedIndex);
 
-				course.items.previews = course.items.previews.filter(el => el.id != index);
-				idbStorage.put("courses", course.export());
+				this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
+				idbStorage.put("courses", this.course.export());
 
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -317,24 +289,29 @@ class App{
 			});
 		}
 	}
-	buy(id, prix){
+	buy(idPreview, prix){
 		$('.loader').addClass('opened');
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { buyPreview: 'true', id: id, prix: prix, groupe: this.usedGroupe.id }
+			data: {
+				buyPreview: 'true',
+				id: idPreview,
+				prix: prix,
+				groupe: this.usedGroupe.id
+			}
 		}).then(data => {
 			$('.loader').removeClass('opened');
 			if(data.status == 200){
 				let timer = 600,
-					displayedIndex = $(course.priceCursor.el).parent().prevAll('li').length;
+					displayedIndex = $(`.preview[id=${idPreview}]`).parent().prevAll('li').length;
 		
-				if (!course.started) {
+				if (!this.course.started) {
 					$('.activate').click();
 					timer = 1000;
 				}
 		
-				this.closePrice();
+				UI.closePrice();
 				UI.remove("preview", displayedIndex);
 				setTimeout(() => {
 					this.setSwipe(0);
@@ -351,9 +328,9 @@ class App{
 					}, 150);
 				}, timer);
 
-				course.items.previews = course.items.previews.filter((obj) => (obj.id != data.id));
-				course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-				idbStorage.put("courses", course.export());
+				this.course.items.previews = this.course.items.previews.filter((obj) => (obj.id != data.id));
+				this.course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+				idbStorage.put("courses", this.course.export());
 				
 			} else if (data.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -367,112 +344,121 @@ class App{
 	}
 	updateApp(data, save){
 		if(data && data.nom && data.id && data.groupes){
-			$('#compte em').html(data.nom);
-			if(data.groupes){
-				let oldStructure = idbStorage.get("structures", data.id);
-				// Save in IDB in structure objectStore
-				if(save) idbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
+			if(!this.structure || !jsonEqual(this.structure, groupe)){
+				$('#compte em').html(data.nom);
+				if(data.groupes){
 
-				// Display UI
-				if(data.groupes.length != 0){
-					UI.closeModal();
-					if(!jsonEqual(oldStructure.groupes, data.groupes)){
+					// Save in IDB in structure objectStore
+					if(save) idbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
+
+					// Display UI
+					if(data.groupes.length != 0){
+						UI.closeModal();
+						if(!this.structure || !jsonEqual(this.structure.groupes, data.groupes)){
+							$('.groupe').remove();
+							data.groupes.forEach(grp => {
+								$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
+							});
+
+							if(this.usedGroupe && this.usedGroupe.id) $(`.groupe[key=${this.usedGroupe.id}]`).addClass('opened');
+						}
+
+						return true;
+					} else {
 						$('.groupe').remove();
-						data.groupes.forEach(grp => {
-							$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
-						});
-					}
+						this.course = new Course();
+						$('#add, #calcul').css({'visibility':'hidden'});
+						$('.adder').css({'display': 'none'});
+						UI.modal(this, 'noGroupe');
 
-					return true;
-				} else {
-					$('.groupe').remove();
-					$('.activate, .noCourse, .article, .preview').remove();
-					$('#add, #calcul').css({'visibility':'hidden'});
-					$('.adder').css({'display': 'none'});
-					UI.modal(this, 'noGroupe');
+						this.structure = data;
+						return false;
+					}
 				}
-			}
+			} else return data.groupes.length != 0;
 		}
 	}
 	updateGroupe(groupe, save){
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
-			// Save in IDB in structure objectStore
-			if(save) idbStorage.put("groupes", groupe)
+			if(!jsonEqual(this.usedGroupe, groupe)){
 
-			if(this.usedGroupe && groupe.id != this.usedGroupe.id) LocalStorage.setItem('usedCourse', null)
+				// Save in IDB in structure objectStore
+				if(save) idbStorage.put("groupes", groupe)
 
-			LocalStorage.setItem('usedGroupe', groupe.id);
-	
-			// UPD UI parametres
-			$('.groupe').removeClass('opened');
-			$('.groupe.g'+ groupe.id).addClass('opened');
-			$('.adder').css({'display': ''});
-			$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
-			$('.noCourse').remove();
-			UI.closeModal();
-			
-			// UPD CourseList
-			if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
-				if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
-					$('.menu .course').remove();
-					groupe.coursesList.forEach((el) => {
-						$('.menu article').append(Generate.course(this, el.id, el.nom));
-					});
-				}
-				this.usedGroupe = groupe;
-			} else {
-				$('.menu .course').remove();
-				$('.activate, .noCourse').remove();
+				if(this.usedGroupe && groupe.id != this.usedGroupe.id) LocalStorage.setItem('usedCourse', null)
+
+				LocalStorage.setItem('usedGroupe', groupe.id);
+		
+				// UPD UI parametres
+				$('.groupe').removeClass('opened');
+				$(`.groupe[key=${groupe.id}]`).addClass('opened');
+				$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
+				$('.adder').css({'display': ''});
+				$('.noCourse').remove();
+				this.course = new Course();
 				UI.closeModal();
-				$('#add, #calcul').css({'visibility':'hidden'});
-				$('.main ul').children().remove();
-				course = new Course();
-				$('.adder').css({'display': 'none'});
-				$('.main ul').prepend(Generate.noCourse());
-	
-				this.usedGroupe = groupe;
-				return false;
+				
+				// UPD CourseList
+				if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
+					if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
+						$('.menu .course').remove();
+						groupe.coursesList.forEach((el) => {
+							$('.menu article').append(Generate.course(this, el.id, el.nom));
+						});
+					}
+					this.usedGroupe = groupe;
+					return true;
+				} else {
+					$('.menu .course').remove();
+					$('#add, #calcul').css({'visibility':'hidden'});
+					$('.adder').css({'display': 'none'});
+					$('.main ul').prepend(Generate.noCourse());
+		
+					this.usedGroupe = groupe;
+					return false;
+				}
+
 			}
-	
-			return true;
+			
+			return (groupe.coursesList && groupe.coursesList.length != 0);
+
 		} else UI.offlineMsg(this, "Contenu de groupe incomplet", "Le groupe demandé est indisponible pour l'instant")
 	}
 	updateCourse(data, save){
 		if(data && data.id && data.nom && data.items){
-			if(!jsonEqual(course.export(), data)){
-				$('.activate, .noCourse').remove();
+			if(!jsonEqual(this.course.export(), data)){
+				this.course = new Course();
 				UI.closeModal();
-				$('#add, #calcul').css({'visibility':''});
+				$('.course').removeClass('opened');
+				$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
+				$('#btTouchSurf').css({'visibility':''});
 
 				if(save) idbStorage.put("courses", data)
 
 				document.getElementById('cTaxes').value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
-				course.update(this, data);
+				this.course.update(this, data);
 
-				$('.course').removeClass('opened');
-				$('.activate, .noCourse').remove();
-				UI.closeModal();
-				$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
-				$('#btTouchSurf').css({'visibility':''});
 
 				Array.from(document.getElementsByClassName('course')).forEach(el => {
 					if(el.getAttribute('dbindex') == data.id) el.classList.add('opened')
 				});
 
-				if (course.old) {
+				if (this.course.old) {
 					LocalStorage.setItem('usedCourse', data.id);
 					$('#add, #calcul').addClass('hidden');
 					$('#btTouchSurf').css({'visibility':'hidden'});
-					$('#add').css({'display':'none'});
-				} else LocalStorage.removeItem('usedCourse');
+					$('#add, .adder').css({'display':'none'});
+				} else{
+					LocalStorage.removeItem('usedCourse');
 
-				if (data.dateStart == 0 && !course.old) {
-					$('.main ul').prepend(Generate.activate());
-					$('#add').addClass('hidden');
-					$('.adder').eq(0).css({'display':'none'});
+					if (data.dateStart == 0) {
+						$('.main ul').prepend(Generate.activate());
+						$('#add').addClass('hidden');
+						$('.adder').eq(0).css({'display':'none'});
 
-					this.setSwipe(1)
-				}
+						this.setSwipe(1);
+					}
+				} 
 				
 			}
 			return true;
@@ -559,24 +545,32 @@ class App{
 		}).then(data => {
 			if(data.status == 200){
 				LocalStorage.clear();
-				alert("Compte supprimé avec succès");
-				window.location = "/";
+				idbStorage.deleteDb()
+					.then(() => {
+						alert("Compte supprimé avec succès");
+						window.location = "/";
+					})
+					.catch(err => {
+						console.log(err);
+						alert("Vous avez étés supprimées de nos bases de données mais des données locales n'ont pas pu être supprimées. Ceci peut être fait en supprimant les données de site dans les paramêtres de votre navigateur");
+						window.location = "/";
+					});
 			}
 		});
 	}
 	totalPP(constante, reset = false){
-		let total = Number((course.total + Number(constante)).toFixed(2)),
-			totalTax = Number((total*(1+course.taxes)).toFixed(2));
+		let total = Number((this.course.total + Number(constante)).toFixed(2)),
+			totalTax = Number((total*(1+this.course.taxes)).toFixed(2));
 		if(!reset){
-			course.total = total;
-			course.monthCost += Number(constante);
+			this.course.total = total;
+			this.course.monthCost += Number(constante);
 		}
 		$('#totalDep').html(total.toFixed(2) + this.params.currency);
 		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
 		$('#moiDep').html(this.usedGroupe.monthCost.toFixed(2) + this.params.currency);
 		$('#moiPrev').html((totalTax * this.usedGroupe.coef).toFixed(2) + this.params.currency);
 		$('#anPrev').html((totalTax * this.usedGroupe.coef * 12).toFixed(2) + this.params.currency);
-		if(course.maxPrice < totalTax){
+		if(this.course.maxPrice < totalTax){
 			$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
 		}
 		else{
@@ -606,4 +600,3 @@ class App{
 }
 
 export default App;
-export { course };
