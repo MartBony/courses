@@ -1,6 +1,10 @@
 # courses
 Courses app - Make buying simple
 
+## Official website
+Access to the official website of the project 
+https://mprojects.fr/courses/
+
 ## Requirements
 Require PHP, MySQL, Apache installed (use tools like Wamp or Mamp)
 Require specific sql database structure (template provided in bdd.sql)
