@@ -304,7 +304,8 @@ class App{
 			$('.loader').removeClass('opened');
 			if(data.status == 200){
 				let timer = 600,
-					displayedIndex = $(`.preview[id=${idPreview}]`).parent().prevAll('li').length;
+					displayedIndex = $(`.preview[iditem=${idPreview}]`).prevAll('li').length;
+
 		
 				if (!this.course.started) {
 					$('.activate').click();
