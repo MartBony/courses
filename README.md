@@ -1,5 +1,4 @@
-# courses
-[logo]: https://mprojects.fr/courses/images/logo128.png
+# ![Logo](images/logo128.png) courses
 Courses app - Make buying simple
 
 ## Official website
