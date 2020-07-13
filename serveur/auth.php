@@ -135,7 +135,7 @@ function connect(PDO $bdd, $mail, $pass){
 					$send = false;
 				} */
 		
-				echo json_encode(array('status' => 403, 'err' => 'nonActivated','sent' => $send));
+				echo json_encode(array('status' => 403, 'err' => 'nonActivated','sent' => $send)); // ATTENTION remove URL
 			}
 		} else echo json_encode(array('status' => 401, 'err' => 'credential'));
 		$reqUser->closeCursor();

@@ -1,0 +1,90 @@
+#authContainer{
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	right: 5px;
+	bottom: 5px;
+	z-index: 8;
+
+	visibility: collapse;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 15fr;
+	gap: 20px;
+	padding: 30px 20px 20px 20px;
+	transform: scale(0.9);
+	background: #fafafa;
+	border-radius: 4px;
+}
+
+#authContainer.opened{
+	visibility: visible;
+	opacity: 1;
+	transform: scale(1);
+	transition: all 200ms var(--ease-enter) 10ms;
+}
+
+#authContainer i{
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 10px;
+	font-size: 2rem;
+}
+
+#authContainer h1{
+	border-bottom: 2px solid rgba(0,0,0,0);
+	border-bottom: 2px solid black;
+	padding-left: 10px;
+	font-size: 2rem;
+	font-weight: 700;
+	height: auto;
+	margin: 0;
+}
+
+#authContainer form{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	background: white;
+	border-radius: 5px;
+	padding: 15px;
+	overflow-y: auto;
+}
+
+#authContainer label{
+	font-size: 1.8rem;
+	font-weight: 600;
+	margin: 10px 0 0 10px;
+}
+
+#authContainer input{
+	margin: 5px 0 20px 0;
+	width: 80%;
+	font-size: 1.6rem;
+	padding: 3px 8px;
+	border: none;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+	box-sizing: border-box;
+}
+
+#authContainer input:focus{
+	box-shadow: 0 0 0 2px rgba(0, 45, 192, 0.1);
+}
+
+#authContainer button.submit{
+	background: rgb(250, 251, 255);
+	margin: 10px 20px;
+	padding: 5px 10px;
+	font-size: 1.6rem;
+	border: none;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+}
+
+input#iColor{
+	width: 30px;
+	padding: 1px;
+	box-shadow: none;
+}

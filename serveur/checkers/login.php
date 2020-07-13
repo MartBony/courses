@@ -20,10 +20,10 @@ function login( PDO $bdd, $callback){
 				if($user['activated']){
 					call_user_func($callback, $user);
 				} else echo json_encode(array('status' => 403, 'notAuthed' => true, 'err' => 'authNonActivated','sent' => $send));
-			} else echo json_encode(array('status' => 401, 'notAuthed' => true, 'err' => 'authCredential'));
+			} else echo json_encode(array('status' => 401, 'err' => 'authCredential'));
 			$reqUser->closeCursor();
 
-		} else echo json_encode(array('status' => 401, 'notAuthed' => true, 'err' => 'authNoEmail'));
+		} else echo json_encode(array('status' => 401, 'err' => 'authNoEmail'));
 		$reqPreUser->closeCursor();
 		
 	} else echo json_encode(array('status' => 204, 'notAuthed' => true, 'err' => 'authCookies'));

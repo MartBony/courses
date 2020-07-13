@@ -7,6 +7,11 @@ class Pull{
 			url: 'serveur/structure.php'
 		}).then(data => {
 			if(data.status == 200 && data.structure) return data.structure
+			else if (data.status == 401) {
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+				]);
+			}
 		}).catch(err => {
 			if(!app.pullState.structure) UI.offlineMsg(app, err)	
 		 	else UI.offlineMsg(app, err, "Vous êtes déconnectés. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")

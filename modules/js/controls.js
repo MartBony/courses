@@ -395,7 +395,6 @@ export default function initEvents(app){
 
 
 
-
 	// Parametres
 
 	document.getElementById('params').addEventListener('click', e => {

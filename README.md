@@ -1,4 +1,4 @@
-# ![Logo](images/logo128.png) courses
+# ![Logo](images/logo72.png) courses
 Courses app - Make buying simple
 
 ## Official website
