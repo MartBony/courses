@@ -88,3 +88,37 @@ input#iColor{
 	padding: 1px;
 	box-shadow: none;
 }
+
+@media screen and (max-width: 800px){
+	#authCourses{
+		border-radius: 12px;
+		grid-template-rows: 0.8fr 6.5fr 0.8fr 10.5fr;
+		height: auto;
+		bottom: auto;
+		grid-template-columns: 1fr;
+	}
+
+	#authCourses input{
+		width: 100%;
+	}
+
+	#authCourses form{
+		border-radius: 10px;
+	}
+
+	#authCourses .inscipt{
+		grid-row: 4/5;
+	}
+
+	#authCourses .connect{
+		grid-row: 2/3;
+	}
+
+	#authCourses h1{
+		grid-row: 1/2;
+	}
+
+	#authCourses h1:nth-child(2){
+		grid-row: 3/4;
+	}
+}
