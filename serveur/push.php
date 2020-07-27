@@ -91,7 +91,7 @@ function pushCousesIndependent($user, PDO $bdd){
 	}
 }
 
-function push($user, $usedCourse, PDO $bdd){
+function push($user, $latestCourse, PDO $bdd){
 
 	if (isset($_POST['submitArticle']) && isset($_POST['titre']) && isset($_POST['prix'])) {
 		$titre = htmlspecialchars($_POST['titre']);
@@ -102,13 +102,13 @@ function push($user, $usedCourse, PDO $bdd){
 			(`titre`, `prix`, `course`, `preview`, `idAuteur`)
 			VALUES (?,?,?,0,?)'
 		);
-		$insertArt->execute(array($titre, $prix, $usedCourse['id'], $user['id']));
+		$insertArt->execute(array($titre, $prix, $latestCourse['id'], $user['id']));
 
 		$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
-		$updCourse->execute(array($usedCourse['total'] + $prix, $usedCourse['id']));
+		$updCourse->execute(array($latestCourse['total'] + $prix, $latestCourse['id']));
 
 		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
-		$reqIdInserted->execute(array($usedCourse['id']));
+		$reqIdInserted->execute(array($latestCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
 		echo json_encode([
 			'status' => 200,
@@ -127,10 +127,10 @@ function push($user, $usedCourse, PDO $bdd){
 			(`titre`, `prix`, `course`, `preview`, `idAuteur`)
 			VALUES (?,0,?,1,?)'
 		);
-		$insertArt->execute(array($titre, $usedCourse['id'], $user['id']));
+		$insertArt->execute(array($titre, $latestCourse['id'], $user['id']));
 
 		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
-		$reqIdInserted->execute(array($usedCourse['id']));
+		$reqIdInserted->execute(array($latestCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
 		echo json_encode([
 			'status' => 200,
@@ -144,38 +144,49 @@ function push($user, $usedCourse, PDO $bdd){
 	elseif (isset($_POST['deleteCourse']) && $_POST['id']) {
 
 		$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
-		$reqDelete->bindParam(':index', $usedCourse['id'], PDO::PARAM_INT);
+		$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
 		$reqDelete->execute();
 		
 		$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
-		$delArticles->execute(array($usedCourse['id']));
+		$delArticles->execute(array($_POST['id']));
 
 		echo json_encode(array('status' => 200));
 		return true;
 	}
 	elseif (isset($_POST['deleteArticle']) && isset($_POST['id'])) {
 
-		$reqDeleted = $bdd->prepare('SELECT `id`, `prix` FROM `articles` WHERE `id` = ?');
+		$reqDeleted = $bdd->prepare('SELECT `id`, `prix`, `course` FROM `articles` WHERE `id` = ?');
 		$reqDeleted->execute(array($_POST['id']));
 		$deleted = $reqDeleted->fetch();
 
-		$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
-		$reqDelete->bindParam(':index', $deleted['id'], PDO::PARAM_INT);
-		$reqDelete->execute();
+		if($deleted['course'] == $latestCourse['id']){ // Si l'id correspond à la course utilisée
+			$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
+			$reqDelete->bindParam(':index', $deleted['id'], PDO::PARAM_INT);
+			$reqDelete->execute();
 
-		$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
-		$updCourse->execute(array($usedCourse['total'] - $deleted['prix'], $usedCourse['id']));
+			$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
+			$updCourse->execute(array($latestCourse['total'] - $deleted['prix'], $latestCourse['id']));
 
-		echo json_encode(array('status' => 200, 'prix' => $deleted['prix']));
-		
+			echo json_encode(array('status' => 200, 'prix' => $deleted['prix']));
+
+		} else echo json_encode(array('status' => 403));
+
 		return true;
 	}
 	elseif (isset($_POST['deletePreview']) && isset($_POST['id'])) {
-		$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
-		$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
-		$reqDelete->execute();
+		$reqDeleted = $bdd->prepare('SELECT `id`, `course` FROM `articles` WHERE `id` = ?');
+		$reqDeleted->execute(array($_POST['id']));
+		$deleted = $reqDeleted->fetch();
 
-		echo json_encode(array('status' => 200));
+		if($deleted['course'] == $latestCourse['id']){ // Si l'id correspond à la course utilisée
+		
+			$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
+			$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
+			$reqDelete->execute();
+	
+			echo json_encode(array('status' => 200));
+
+		} else echo json_encode(array('status' => 403));
 		
 		return true;
 	}
@@ -184,7 +195,7 @@ function push($user, $usedCourse, PDO $bdd){
 		$updCourse->execute(array($_POST['prix'], $_POST['id']));
 
 		$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
-		$updCourse->execute(array($usedCourse['total'] + $_POST['prix'], $usedCourse['id']));
+		$updCourse->execute(array($latestCourse['total'] + $_POST['prix'], $latestCourse['id']));
 
 		$reqIdInserted = $bdd->prepare('SELECT * FROM articles WHERE id=?');
 		$reqIdInserted->execute(array($_POST['id']));
@@ -202,7 +213,7 @@ function push($user, $usedCourse, PDO $bdd){
 	elseif(isset($_POST['activate'])) {
 		$time = time();
 		$updCourse = $bdd->prepare('UPDATE courses SET dateStart=? WHERE id=?');
-		$updCourse->execute(array($time, $usedCourse['id']));
+		$updCourse->execute(array($time, $latestCourse['id']));
 
 		echo json_encode([
 			"status" => 200,
@@ -215,8 +226,8 @@ function push($user, $usedCourse, PDO $bdd){
 
 login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($user, $bdd)){
-		getLatestCourse($user, $bdd, function($user, $usedCourse, $bdd){
-			push($user, $usedCourse, $bdd);
+		getLatestCourse($user, $bdd, function($user, $latestCourse, $bdd){
+			push($user, $latestCourse, $bdd);
 		});
 	}
 	
