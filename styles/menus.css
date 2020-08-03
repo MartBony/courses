@@ -161,7 +161,6 @@
 	font-weight: bold;
 	padding: 10px;
 	background: rgb(0,195,154);
-	background: linear-gradient(14deg, rgba(0,110,20,1), rgba(0,195,154,1));
 	border-radius: 5px;
 	cursor: pointer;
 	box-sizing: border-box;
