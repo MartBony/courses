@@ -74,12 +74,13 @@
 				<p id="totalTaxDep"></p>
 			</div>
 		</div>
-		<h3>Dépenses du dernier mois:</h3>
+		<!-- <h3>Dépenses du dernier mois:</h3>
 		<p id="moiDep"></p>
 		<h3>Dépenses par mois envisagées:</h3>
 		<p id="moiPrev"></p>
 		<h3>Dépenses par an envisagées:</h3>
-		<p id="anPrev"></p>
+		<p id="anPrev"></p> -->
+		<canvas id="depensesChart" width="400" height="400"></canvas>
 	</section>
 </div>
 <section id="backTouchSurf"></section>

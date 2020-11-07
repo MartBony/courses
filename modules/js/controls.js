@@ -7,7 +7,7 @@ import { swipedetect, SwipeBackPanel, SwipeBtPanel } from './touch.js';
 
 export default function initEvents(app){
 
-	let refresh = (callback, idGroupe, idCourse) => {
+	const refresh = (callback, idGroupe, idCourse) => {
 		callback = callback || function(){};
 		document.querySelector('.loader').classList.add('opened');
 		if(!app.pending){
@@ -324,6 +324,34 @@ export default function initEvents(app){
 			{
 				alert('Renseignez le nom de l\'utilisateur');
 			}
+		},
+		openChart = () => {
+			document.getElementById('depensesChart').style.opacity = "1";
+			const labels = Array(app.chartContent.length).fill("");
+			labels[labels.length-1] = "Mois Actuel";
+			const ctx = document.getElementById('depensesChart').getContext('2d'),
+			myChart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Consomation',
+						data: app.chartContent,
+						backgroundColor: 'rgba(54, 162, 235, 0.2)',
+						borderColor: 'rgba(54, 162, 235, 1)',
+						borderWidth: 1
+					}]
+				},
+				options: {
+					scales: {
+						yAxes: [{
+							ticks: {
+								beginAtZero: true
+							}
+						}]
+					}
+				}
+			});
 		};
 
 
@@ -365,11 +393,13 @@ export default function initEvents(app){
 		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
 			UI.openMenus('calcul');
+			openChart();
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
 			UI.closeMenus();
+			document.getElementById('depensesChart').style.opacity = "0";
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -385,6 +415,7 @@ export default function initEvents(app){
 		}
 		else if(dir == 'bottom'){
 			UI.closeMenus();
+			document.getElementById('depensesChart').style.opacity = "0";
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}

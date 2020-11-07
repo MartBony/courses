@@ -407,6 +407,11 @@ section#calcul
 	color: var(--colorTextLight);
 }
 
+#calcul canvas{
+	margin-top: 20px;
+	transition: opacity 500ms ease;
+}
+
 
 
 

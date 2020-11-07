@@ -41,7 +41,9 @@ login($bdd, function($user) use ($bdd){
 
 			array_push($coursesList, array(
 				'id' => $resCoursesGp['id'],
-				'nom' => $resCoursesGp['nom']
+				'nom' => $resCoursesGp['nom'],
+				'prix' => $resCoursesGp['total'],
+				'date' => $resCoursesGp['dateStart']
 			));
 		}
 		$reqAllCourses->closeCursor();

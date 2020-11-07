@@ -19,6 +19,7 @@ class App{
 		LocalStorage.setItem('userId', id);
 		this.structure;
 		this.usedGroupe;
+		this.chartContent;
 		this.course = new Course();
 		this.userId = id;
 		this.pullState;
@@ -405,9 +406,17 @@ class App{
 				if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
 					if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
 						$('.menu .course').remove();
+						const chartLen = 6,
+							monthStamp = 60*60*24*30,
+							timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
+						this.chartContent = new Array(chartLen).fill(0);
 						groupe.coursesList.forEach((el) => {
+							for (let i = 0; i < chartLen; i++) {
+								if(el.date > timeMarker-(monthStamp*(i+2)) && el.date < timeMarker-(monthStamp*(i+1)))  this.chartContent[chartLen-i-1] += parseFloat(el.prix)
+							}
 							$('.menu article').append(Generate.course(this, el.id, el.nom));
 						});
+						console.log(this.chartContent);
 					}
 					this.usedGroupe = groupe;
 					return true;
