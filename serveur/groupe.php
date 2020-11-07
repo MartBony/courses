@@ -17,7 +17,7 @@ login($bdd, function($user) use ($bdd){
 		// Pulling membres for specified group
 		$reqAllUsers->execute();
 		while($scanedUser = $reqAllUsers->fetch()){
-			if (strpos($scanedUser['groupe'], $groupe['id']) !== false) {
+			if (strpos($scanedUser['groupe'], '['. $groupe['id'] .']') !== false) {
 				array_push($membresGp, $scanedUser['nom']);
 			}
 		}
@@ -56,17 +56,15 @@ login($bdd, function($user) use ($bdd){
 			$error = 204;
 		}
 
+		http_response_code(200);
 		echo json_encode(array(
-			'status' => 200,
-			'groupe' => array(
-				'id' => (int) $groupe['id'],
-				'nom' => $groupe['nom'],
-				'coursesList' => $coursesList,
-				'membres' => $membresGp,
-				'monthCost' => (float) $monthCost,
-				'coef' => (float) $coef,
-				'error' => $error
-			)
+			'id' => (int) $groupe['id'],
+			'nom' => $groupe['nom'],
+			'coursesList' => $coursesList,
+			'membres' => $membresGp,
+			'monthCost' => (float) $monthCost,
+			'coef' => (float) $coef,
+			'error' => $error
 		));
 	});
 });

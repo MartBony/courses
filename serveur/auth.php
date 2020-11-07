@@ -85,7 +85,7 @@ if(isset($_POST['inscript'])){
 }
 
 function connect(PDO $bdd, $mail, $pass){
-	$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ?AND `deleted` = 0');
+	$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ? AND `deleted` = 0');
 	$reqPreUser->execute(array($mail));
 
 	if ($reqPreUser->rowCount() == 1) {

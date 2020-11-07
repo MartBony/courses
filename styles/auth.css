@@ -90,7 +90,7 @@ input#iColor{
 }
 
 @media screen and (max-width: 800px){
-	#authCourses{
+	#authContainer{
 		border-radius: 12px;
 		grid-template-rows: 0.8fr 6.5fr 0.8fr 10.5fr;
 		height: auto;
@@ -98,27 +98,27 @@ input#iColor{
 		grid-template-columns: 1fr;
 	}
 
-	#authCourses input{
+	#authContainer input{
 		width: 100%;
 	}
 
-	#authCourses form{
+	#authContainer form{
 		border-radius: 10px;
 	}
 
-	#authCourses .inscipt{
+	#authContainer .inscipt{
 		grid-row: 4/5;
 	}
 
-	#authCourses .connect{
+	#authContainer .connect{
 		grid-row: 2/3;
 	}
 
-	#authCourses h1{
+	#authContainer h1{
 		grid-row: 1/2;
 	}
 
-	#authCourses h1:nth-child(2){
+	#authContainer h1:nth-child(2){
 		grid-row: 3/4;
 	}
 }

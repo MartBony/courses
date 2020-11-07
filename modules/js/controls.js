@@ -58,37 +58,35 @@ export default function initEvents(app){
 				data: { activate: true, groupe: app.usedGroupe.id }
 			}).then(data => {
 				$('.loader').removeClass('opened');
-				if(data.status == 200){
-					$('.adder').css({'display':''});
+				$('.adder').css({'display':''});
+				setTimeout(function(){
+					$('#add').removeClass('hidden');
+					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
 					setTimeout(function(){
-						$('#add').removeClass('hidden');
-						$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
-						setTimeout(function(){
-							$('.activate').css({'display':'none'});
-						}, 420);	
-					},400);
-					setTimeout(function(){
-						app.setSwipe(0);
-					},200);
-					
+						$('.activate').css({'display':'none'});
+					}, 420);	
+				},400);
+				setTimeout(function(){
+					app.setSwipe(0);
+				},200);
 
-					idbStorage.get("courses", app.course.id)
-						.then(storage => {
-							storage.dateStart = data.time;
-						});
-					app.course.started = true;
+				idbStorage.get("courses", app.course.id)
+					.then(storage => {
+						storage.dateStart = data.time;
+					});
+				app.course.started = true;
 
-				} else if (data.notAuthed){
+			}).catch(res => {
+				if (res.responseJSON && res.responseJSON.notAuthed){
 					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 					]);
-				} else {
-					UI.erreur("Un problème du serveur est survenu, réessayez");
+				} else { // TODO
+					UI.erreur("Un problème sur le serveur est survenu, réessayez");
+					$('.loader').removeClass('opened');
+					$('.activate').css({'opacity':'1'});
+					UI.offlineMsg(app, err);
 				}
-			}).catch(function(err){
-				$('.loader').removeClass('opened');
-				$('.activate').css({'opacity':'1'});
-				UI.offlineMsg(app, err);
 			});
 		},
 		addArticle = e => {
@@ -106,36 +104,35 @@ export default function initEvents(app){
 					}
 				}).then(data => {
 					$('.loader').removeClass('opened');
-					if(data.status == 200){
-						UI.acc(app);
+					UI.acc(app);
 
-						if (!app.course.started) $('.activate').click();
+					if (!app.course.started) $('.activate').click();
 
-						$('html, body').animate({scrollTop: 0}, 30);
-						$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.prix));
-				
-						app.totalPP(data.prix);
-						$('#addArticle #titreA, #addArticle #prix').val('');
-						$('#quantA').val(1);
+					$('html, body').animate({scrollTop: 0}, 30);
+					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.prix));
+			
+					app.totalPP(data.prix);
+					$('#addArticle #titreA, #addArticle #prix').val('');
+					$('#quantA').val(1);
 
-						setTimeout(function(){
-							$('.article').removeClass('animateSlideIn');
-						},300);
+					setTimeout(function(){
+						$('.article').removeClass('animateSlideIn');
+					},300);
 
 
-						app.course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
-						idbStorage.put("courses", app.course.export());
-		
+					app.course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+					idbStorage.put("courses", app.course.export());
 
-					} else if (data.notAuthed){
+				})
+				.catch(res => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(app, err);
 					}
-				})
-				.catch(err => {
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(app, err);
 				});
 			}
 			else{
@@ -152,32 +149,32 @@ export default function initEvents(app){
 					data: { submitPreview: 'true', titre: $('#addPreview #titreP').val(), groupe: app.usedGroupe.id }
 				}).then(data => {
 					$('.loader').removeClass('opened');
-					if(data.status == 200){	
-						UI.acc(app);
-						if (!app.course.started) {
-							$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
-						}
-						else{
-							$('html, body').animate({scrollTop: 0}, 30);
-							$('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
-						}
-						$('#addPreview #titreP').val('');
-						setTimeout(function(){
-							$('.preview').removeClass('animateSlideIn');
-						},300);
+					UI.acc(app);
+					if (!app.course.started) {
+						$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
+					}
+					else{
+						$('html, body').animate({scrollTop: 0}, 30);
+						$('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
+					}
+					$('#addPreview #titreP').val('');
+					setTimeout(function(){
+						$('.preview').removeClass('animateSlideIn');
+					},300);
 
 
-						app.course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
-						idbStorage.put("courses", app.course.export());
-						
-					} else if (data.notAuthed){
+					app.course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+					idbStorage.put("courses", app.course.export());
+					
+				}).catch(res => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(app, err);
 					}
-				}).catch(err => {
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(app, err);
 				});
 			}
 			else
@@ -213,40 +210,40 @@ export default function initEvents(app){
 						taxes: $('#addCourse #cTaxes').val().replace(',','.'),
 						groupe: app.usedGroupe.id
 					}
-				}).then(function(data){
+				}).then(() => {
 					$('.loader').removeClass('opened');
-					if(data.status == 200){
-						history.replaceState({key:'createCourse'}, '','index.php');
+					history.replaceState({key:'createCourse'}, '','index.php');
 
-						LocalStorage.setItem('usedCourse', null);
-						document.querySelector('.loader').classList.add('opened');
-						if(!app.pending){
-							app.pull("refresh").then(() => {
-								UI.acc(app);
-								$('#addCourse #titreC, #addCourse #maxPrice').val('');
-							});
-						} else {
-							let loop = setInterval(() => {
-								if(!app.pending){
-									document.querySelector('.loader').classList.add('opened');
-									app.pull("refresh").then(() => {
-										UI.acc(app);
-										$('#addCourse #titreC, #addCourse #maxPrice').val('');
-									});
-									clearInterval(loop);
-								}
-							}, 1000);
-						}
-					} else if (data.notAuthed){
+					LocalStorage.setItem('usedCourse', null);
+					document.querySelector('.loader').classList.add('opened');
+					if(!app.pending){
+						app.pull("refresh").then(() => {
+							UI.acc(app);
+							$('#addCourse #titreC, #addCourse #maxPrice').val('');
+						});
+					} else {
+						let loop = setInterval(() => {
+							if(!app.pending){
+								document.querySelector('.loader').classList.add('opened');
+								app.pull("refresh").then(() => {
+									UI.acc(app);
+									$('#addCourse #titreC, #addCourse #maxPrice').val('');
+								});
+								clearInterval(loop);
+							}
+						}, 1000);
+					}
+				}).catch(res => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
-					} else if (data.status == 403){
+					} else if (res.status == 403){
 						UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(app, err);
 					}
-				}).catch(function(err){
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(app, err);
 				});
 
 			} else {
@@ -263,22 +260,23 @@ export default function initEvents(app){
 					data: { newGroupe: true, titre: $('#addGroupe #titreG').val() }
 				}).then(data => {
 					$('.loader').removeClass('opened');
-					if(data.status == 200){
-						$('#addGroupe #titreG').val("");
-						LocalStorage.clear();
-						UI.closeForms();
-						document.querySelector('.loader').classList.add('opened');
-						refresh();
-					}else if(data.status == 400 && data.err && data.err == 'length'){
+					$('#addGroupe #titreG').val("");
+					LocalStorage.clear();
+					UI.closeForms();
+					document.querySelector('.loader').classList.add('opened');
+					refresh();
+				}).catch(res => {
+					$('.loader').removeClass('opened');
+					if (res.status == 400 && res.responseJSON && res.responseJSON.err && res.responseJSON.err == 'length'){
 						alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
-					} else if (data.notAuthed){
+					} else if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(app, err);
 					}
-				}).catch(function(err){
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(app, err);
 				});
 			}
 			else
@@ -298,25 +296,24 @@ export default function initEvents(app){
 						data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id }
 					}).then(function(data){
 						$('.loader').removeClass('opened');
-						if(data.status == 200){
 							$('#invitation #nomInv').val('');
 							$('#invitation #keyInv').val('');
 							UI.closeForms();
 							UI.message('Réussi', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
 								{ texte:"C'est noté", action : () => UI.closeMessage()}
 							]);
-						} else if (data.notAuthed){
+				
+					}).catch(res => {
+						$('.loader').removeClass('opened');
+						if (res.responseJSON && res.responseJSON.notAuthed){
 							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 							]);
-						} else if(data.status == 403) {
+						} else if(res.status == 403) {
 							UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
-						} else if(data.status == 400) {
+						} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "No User Found"}) {
 							UI.erreur('Erreur',"Les informations entrées ne correspondent à aucun utilisateur, réessayez");
-						}
-					}).catch(function(err){
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, err);
+						} else UI.offlineMsg(app, err);
 					});
 				}
 				else{

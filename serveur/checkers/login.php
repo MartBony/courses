@@ -19,14 +19,26 @@ function login( PDO $bdd, $callback){
 				$user = $reqUser->fetch();
 				if($user['activated']){
 					call_user_func($callback, $user);
-				} else echo json_encode(array('status' => 403, 'notAuthed' => true, 'err' => 'authNonActivated','sent' => $send));
-			} else echo json_encode(array('status' => 401, 'err' => 'authCredential'));
+				} else {
+					http_response_code(403);
+					echo json_encode(array('notAuthed' => true, 'err' => 'authNonActivated','sent' => $send));
+				}
+			} else {
+				http_response_code(401);
+				echo json_encode(array('err' => 'authCredential'));
+			}
 			$reqUser->closeCursor();
 
-		} else echo json_encode(array('status' => 401, 'err' => 'authNoEmail'));
+		} else {
+			http_response_code(401);
+			echo json_encode(array('err' => 'authNoEmail'));
+		}
 		$reqPreUser->closeCursor();
 		
-	} else echo json_encode(array('status' => 204, 'notAuthed' => true, 'err' => 'authCookies'));
+	} else {
+		http_response_code(204);
+		echo json_encode(array('notAuthed' => true, 'err' => 'authCookies'));
+	}
 
 }
 

@@ -86,13 +86,11 @@ function groupes($user, PDO $bdd) {
 
 	}
 
+	http_response_code(200);
 	echo json_encode(array(
-		'status' => 200,
-		'structure' => array(
-			'groupes' => $groupsInfo,
-			'nom' => $user['nom'],
-			'id' => (int) $user['id']
-		)
+		'groupes' => $groupsInfo,
+		'nom' => $user['nom'],
+		'id' => (int) $user['id']
 	));
 }
 

@@ -7,8 +7,8 @@ require_once('checkers/checkGroupe.php');
 header('Content-type: application/json');
 
 function pushCousesIndependent($user, PDO $bdd){
-	if(isset($_POST['newGroupe'])) {
-		if(isset($_POST['titre']) && strlen($_POST['titre']) <= 20 && strlen($_POST['titre']) >= 2){
+	if(isset($_POST['newGroupe']) && isset($_POST['titre'])) {
+		if(strlen($_POST['titre']) <= 20 && strlen($_POST['titre']) >= 2){
 			$_POST['titre'] = htmlspecialchars($_POST['titre']);
 
 			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (`nom`) VALUES (?)');
@@ -21,9 +21,14 @@ function pushCousesIndependent($user, PDO $bdd){
 			$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
 			$insertUser->execute(array(( "[". $groupe['id'] ."]". $user['groupe']), $user['id']));
 
-			echo json_encode(array('status' => 200));
+			
+			http_response_code(200);
+			echo json_encode(array());
 
-		} else echo json_encode(array('status' => 400, 'err' => 'length'));
+		} else {
+			http_response_code(400);
+			echo json_encode(array('err' => 'length'));
+		}
 
 		return true;
 	} else {
@@ -42,7 +47,8 @@ function pushCousesIndependent($user, PDO $bdd){
 				);
 				$insert->execute(array($titre, $maxPrice, $groupe['id'], $taxes));
 		
-				echo json_encode(array('status' => 200));
+				http_response_code(200);
+				echo json_encode(array());
 				return true;
 		
 			} else if(isset($_POST['leaveGroup'])) {
@@ -78,7 +84,9 @@ function pushCousesIndependent($user, PDO $bdd){
 				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
 				$updateUser->execute(array($newString, $user['id']));
 
-				echo json_encode(array('status' => 200));
+				
+				http_response_code(200);
+				echo json_encode(array());
 
 
 				return true;
@@ -110,14 +118,14 @@ function push($user, $latestCourse, PDO $bdd){
 		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
 		$reqIdInserted->execute(array($latestCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
+		
+		http_response_code(200);
 		echo json_encode([
-			'status' => 200,
 			'id' => $idInserted['id'],
 			'titre' => $titre,
 			'prix' => $prix
 		]);
 
-		return true;
 	}
 	elseif (isset($_POST['submitPreview']) && isset($_POST['titre'])) {
 		$titre = htmlspecialchars($_POST['titre']);
@@ -132,26 +140,43 @@ function push($user, $latestCourse, PDO $bdd){
 		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
 		$reqIdInserted->execute(array($latestCourse['id']));
 		$idInserted = $reqIdInserted->fetch();
+
+		http_response_code(200);
 		echo json_encode([
-			'status' => 200,
 			'id'=> $idInserted['id'],
 			'titre'=> $titre,
 			'color' => $user['hueColor']
 		]);
 		
-		return true;
 	}
 	elseif (isset($_POST['deleteCourse']) && $_POST['id']) {
 
-		$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
-		$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
-		$reqDelete->execute();
-		
-		$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
-		$delArticles->execute(array($_POST['id']));
+		$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = :index');
+		$reqCourse->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
+		$reqCourse->execute();
 
-		echo json_encode(array('status' => 200));
-		return true;
+		if($reqCourse->rowCount() == 1){
+			$course = $reqCourse->fetch();
+			if(strpos($user['groupe'], "[". $course['groupe'] ."]") !== false){
+				$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
+				$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
+				$reqDelete->execute();
+				
+				$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+				$delArticles->execute(array($_POST['id']));
+
+				http_response_code(200);
+				echo json_encode(array());
+			} else {
+				http_response_code(403);
+				echo json_encode(array('err' => 'Course not accessible'));
+			}
+
+		} else {
+			http_response_code(404);
+			echo json_encode(array('err' => 'Missing Course'));
+		}
+		
 	}
 	elseif (isset($_POST['deleteArticle']) && isset($_POST['id'])) {
 
@@ -167,11 +192,14 @@ function push($user, $latestCourse, PDO $bdd){
 			$updCourse = $bdd->prepare('UPDATE courses SET total=? WHERE id=?');
 			$updCourse->execute(array($latestCourse['total'] - $deleted['prix'], $latestCourse['id']));
 
-			echo json_encode(array('status' => 200, 'prix' => $deleted['prix']));
+			http_response_code(200);
+			echo json_encode(array('prix' => $deleted['prix']));
 
-		} else echo json_encode(array('status' => 403));
+		} else {
+			http_response_code(403);
+			echo json_encode(array());
+		}
 
-		return true;
 	}
 	elseif (isset($_POST['deletePreview']) && isset($_POST['id'])) {
 		$reqDeleted = $bdd->prepare('SELECT `id`, `course` FROM `articles` WHERE `id` = ?');
@@ -184,11 +212,14 @@ function push($user, $latestCourse, PDO $bdd){
 			$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
 			$reqDelete->execute();
 	
+			http_response_code(200);
 			echo json_encode(array('status' => 200));
 
-		} else echo json_encode(array('status' => 403));
+		} else {
+			http_response_code(403);
+			echo json_encode(array());
+		}
 		
-		return true;
 	}
 	elseif(isset($_POST['buyPreview']) && isset($_POST['id']) && isset($_POST['prix'])) {
 		$updCourse = $bdd->prepare('UPDATE articles SET preview=0, prix=? WHERE id=?');
@@ -201,26 +232,24 @@ function push($user, $latestCourse, PDO $bdd){
 		$reqIdInserted->execute(array($_POST['id']));
 		$idInserted = $reqIdInserted->fetch();
 
+		http_response_code(200);
 		echo json_encode([
-			'status' => 200,
 			'id' => $_POST['id'],
 			'titre' => $idInserted['titre'],
 			'prix' => $idInserted['prix']
 		]);
 	
-		return true;
 	}
 	elseif(isset($_POST['activate'])) {
 		$time = time();
 		$updCourse = $bdd->prepare('UPDATE courses SET dateStart=? WHERE id=?');
 		$updCourse->execute(array($time, $latestCourse['id']));
 
+		http_response_code(200);
 		echo json_encode([
-			"status" => 200,
 			"time" => $time
 		]);
-		
-		return true;
+	
 	}
 }
 

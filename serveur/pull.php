@@ -11,10 +11,8 @@ login($bdd, function($user) use($bdd){
 
 		$articles = array();
 		$previews = array();
-
-
+		
 		$reqColor = $bdd->prepare('SELECT `hueColor` FROM `users` WHERE id = ?');
-
 		$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ? ORDER BY id DESC');
 		$reqItems->execute(array($course['id']));
 
@@ -37,21 +35,19 @@ login($bdd, function($user) use($bdd){
 				));
 			}
 		}
-
+		
+		http_response_code(200);
 		echo json_encode(array(
-			'status' => 200,
-			'course' => array(
-				'id' => (int) $course['id'],
-				'nom' => $course['nom'],
-				'maxPrice' => (float) $course['maxPrice'],
-				'total' => (float) $course['total'],
-				'dateStart' => (int) $course['dateStart'],
-				'groupe' => (int) $course['groupe'],
-				'taxes' => (float) $course['taxes'],
-				'items' => array(
-					'articles' => $articles,
-					'previews' => $previews
-				)
+			'id' => (int) $course['id'],
+			'nom' => $course['nom'],
+			'maxPrice' => (float) $course['maxPrice'],
+			'total' => (float) $course['total'],
+			'dateStart' => (int) $course['dateStart'],
+			'groupe' => (int) $course['groupe'],
+			'taxes' => (float) $course['taxes'],
+			'items' => array(
+				'articles' => $articles,
+				'previews' => $previews
 			)
 		));	
 		

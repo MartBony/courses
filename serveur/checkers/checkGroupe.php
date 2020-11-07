@@ -9,16 +9,19 @@ function checkGroupe(PDO $bdd, $user, $callback) {
 				$groupe = $reqUsedGroupe->fetch();
 				return call_user_func($callback, $user, $groupe);
 			} else {
+				http_response_code(404);
 				echo json_encode(array('status' => 404));
 				return true;
 			}
 			$reqUsedGroupe->closeCursor();
 			
 		} else {
+			http_response_code(403);
 			echo json_encode(array('status' => 403));
 			return true;
 		}
 	} else {
+		http_response_code(412);
 		echo json_encode(array('status' => 412));
 		return true;
 	}

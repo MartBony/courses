@@ -12,8 +12,8 @@ function pushCousesIndependent($user, PDO $bdd){
 		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ? WHERE id = ?');
 		$reqStoreId->execute(array($id, $user['id']));
 
+		http_response_code(200);
 		echo json_encode(array(
-			'status' => 200,
 			'id' => $id,
 			'user' => $user['id']
 		));
@@ -55,8 +55,8 @@ function pushCousesIndependent($user, PDO $bdd){
 
 		}
 
+		http_response_code(200);
 		echo json_encode(array(
-			'status' => 200,
 			'groupes' => $groupes
 		));
 		
@@ -81,16 +81,21 @@ function pushCousesIndependent($user, PDO $bdd){
 					$cursor = "outside";
 
 					if($idGroupe == $id){
-						$newString = str_replace("[".$id."]","",$pullPendings['pending']);
-						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
-						$updateUser->execute(array($newString, $user['id']));
-	
-						$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-						$insertUser->execute(array(( "[". $idGroupe ."]". $user['groupe']), $user['id']));
-	
-						echo json_encode(array('status' => 200));
-						$gotIt = true;
-	
+						if (strpos($user['groupe'], '['. $id .']') !== false) {
+							$newString = str_replace("[".$id."]","",$pullPendings['pending']);
+							$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
+							$updateUser->execute(array($newString, $user['id']));
+		
+							$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
+							$insertUser->execute(array(( "[". $idGroupe ."]". $user['groupe']), $user['id']));
+		
+							http_response_code(200);
+							echo json_encode(array());
+							$gotIt = true;
+						} else {
+							http_response_code(403);
+							echo json_encode(array('err' => 'Already present'));
+						}
 						break;
 					}
 
@@ -105,7 +110,8 @@ function pushCousesIndependent($user, PDO $bdd){
 		}
 
 		if(!$gotIt){
-			echo json_encode(array('status' => 204));
+			http_response_code(404);
+			echo json_encode(array('err' => 'Not Proposed'));
 		}
 		
 		return true;
@@ -132,8 +138,9 @@ function pushCousesIndependent($user, PDO $bdd){
 						$newString = str_replace("[". $id ."]","",$pullPendings['pending']);
 						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
 						$updateUser->execute(array($newString, $user['id']));
-	
-						echo json_encode(array('status' => 200));
+
+						http_response_code(200);
+						echo json_encode(array());
 						$gotIt = true;
 	
 						break;
@@ -150,7 +157,8 @@ function pushCousesIndependent($user, PDO $bdd){
 		}
 
 		if(!$gotIt){
-			echo json_encode(array('status' => 204));
+			http_response_code(404);
+			echo json_encode(array('err' => 'Not Proposed'));
 		}
 		
 		return true;
@@ -170,14 +178,17 @@ function pushGroupeDependent($user, $groupe, PDO $bdd){
 				$setPending = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE id = ?');
 				$setPending->execute(array( "[". $groupe['id'] ."]" . $invited['pending'], $invited['id']));
 				$setPending->closeCursor();
-				echo json_encode(array('status' => 200));
+				http_response_code(200);
+				echo json_encode(array());
 
 			} else {
-				echo json_encode(array('status' => 403));
+				http_response_code(403);
+				echo json_encode(array());
 			}
 
 		} else {
-			echo json_encode(array('status' => 400));
+			http_response_code(404);
+			echo json_encode(array('err' => 'No User Found'));
 		}
 		
 	}

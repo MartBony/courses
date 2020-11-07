@@ -4,9 +4,14 @@ import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 import { LocalStorage } from './storage.js';
 import { $_GET } from './tools.js';
+import loadCss from './loadCss.js';
 
+let app,
+	refLink = document.querySelectorAll('link')[1],
+	style = loadCss("styles/style.css", refLink);
+loadCss("https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css", refLink);
 
-let app;
+authenticate();
 
 
 // Auth
@@ -62,10 +67,10 @@ document.querySelector('form.connect').onsubmit = e => {
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { connect: true, mail: mail, pass: pass }
-	}).then(data => {
-		console.log(data);
-		if (data.status == 200) authenticate();
-		else if((data.status == 400 || data.status == 401 || (data.status == 403 && data.sent)) && data.err){
+	}).then(res => authenticate())
+	.catch(res => {
+		let data = res.responseJSON;
+		if((res.status == 400 || res.status == 401 || (res.status == 403 && data.sent)) && data.err){
 			switch(data.err){
 				case "manquant":
 					alert('Il faut remplir tous les champs');
@@ -80,11 +85,9 @@ document.querySelector('form.connect').onsubmit = e => {
 					alert('Mot de passe incorrect');
 					break;
 			}
-		} else if(data.status == 403 && !data.sent && data.err) {
+		} else if(res.status == 403 && !data.sent && data.err) {
 			if(data.err == "nonActivated") alert('Votre compte requiert une activation, mais nos serveurs n\'ont pas pu envoyer l\'email de confirmation');
-		}
-	}).catch(err => {
-		console.log(err);
+		} else console.log(res);
 	});
 }
 
@@ -115,7 +118,6 @@ if ($_GET('auth') && $_GET('mail')) {
 	});
 }
 
-authenticate();
 
 function authenticate(){
 	$.ajax({
@@ -124,33 +126,33 @@ function authenticate(){
 		data: { tryCookiesAuth: true }
 	})
 		.then(data => {
-			if (data && data.status == 200){
-				return data.id;
-			} else if (data.status == 401) {
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{
-						texte:"Se connecter", 
-						action : () => {
-							document.getElementById('authContainer').classList.add('opened');
-							UI.closeMessage();
-						}
-					}
-				]);
-			} else if (data.status == 403) {
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{
-						texte:"Se connecter", 
-						action : () => {
-							document.getElementById('authContainer').classList.add('opened');
-							UI.closeMessage();
-						}
-					}
-				]);
-			} else throw "Require auth";
+			return data.id
 		})
-		.catch(err => {
-			if (LocalStorage.getItem('userId')) return LocalStorage.getItem('userId')
-			else throw err;
+		.catch(res => {
+			if (res.status == 401) {
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{
+						texte:"Se connecter", 
+						action : () => {
+							document.getElementById('authContainer').classList.add('opened');
+							UI.closeMessage();
+						}
+					}
+				]);
+			} else if (res.status == 403) {
+				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+					{
+						texte:"Se connecter", 
+						action : () => {
+							document.getElementById('authContainer').classList.add('opened');
+							UI.closeMessage();
+						}
+					}
+				]);
+			} else {
+				if (LocalStorage.getItem('userId')) return LocalStorage.getItem('userId');
+				throw "Require frontauth";
+			}
 		})
 		.then(id => {
 			if(id){
