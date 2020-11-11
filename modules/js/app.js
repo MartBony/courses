@@ -9,6 +9,7 @@ import Generate from './generate.js';
 
 class App{
 	constructor(id){
+		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
 
 		if(window.innerWidth < 900){
@@ -78,7 +79,7 @@ class App{
 			groupe: action != "open",
 			course: action != "open"
 		};
-	
+
 		// Load from network
 		Pull.invitations(this);
 		let pull = Pull.structure(this)
@@ -336,12 +337,15 @@ class App{
 			idbStorage.put("courses", this.course.export());
 
 		}).catch(res => {
+			$('.loader').removeClass('opened');
 			if (res.responseJSON && res.responseJSON.notAuthed){
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 				]);
-			} else {
-				$('.loader').removeClass('opened');
+			} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
+				UI.erreur("Le prix doit être positif")
+			}
+			else {
 				UI.offlineMsg(this, err);
 			}
 		});
@@ -412,11 +416,11 @@ class App{
 						this.chartContent = new Array(chartLen).fill(0);
 						groupe.coursesList.forEach((el) => {
 							for (let i = 0; i < chartLen; i++) {
-								if(el.date > timeMarker-(monthStamp*(i+2)) && el.date < timeMarker-(monthStamp*(i+1)))  this.chartContent[chartLen-i-1] += parseFloat(el.prix)
+								if(el.date > timeMarker-(monthStamp*(i+1)) && el.date < timeMarker-(monthStamp*i))  this.chartContent[chartLen-i-1] += parseFloat(el.prix)
 							}
 							$('.menu article').append(Generate.course(this, el.id, el.nom));
 						});
-						console.log(this.chartContent);
+						this.chartContent = this.chartContent.map(el => parseFloat(el.toFixed(2)));
 					}
 					this.usedGroupe = groupe;
 					return true;
@@ -576,11 +580,17 @@ class App{
 	}
 	totalPP(constante, reset = false){
 		let total = Number((this.course.total + Number(constante)).toFixed(2)),
-			totalTax = Number((total*(1+this.course.taxes)).toFixed(2));
+			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
+			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
 		if(!reset){
 			this.course.total = total;
 			this.course.monthCost += Number(constante);
 		}
+		if(index <= 5 && index >= 0) {
+			this.chartContent[this.chartContent.length - index - 1] = parseFloat((this.chartContent[this.chartContent.length - index - 1] + constante)).toFixed(2);
+			this.chartContent[this.chartContent.length - index - 1] = parseFloat(this.chartContent[this.chartContent.length - index - 1]);
+		}
+		console.log(this.chartContent[this.chartContent.length - index - 1]);
 		$('#totalDep').html(total.toFixed(2) + this.params.currency);
 		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
 		$('#moiDep').html(this.usedGroupe.monthCost.toFixed(2) + this.params.currency);

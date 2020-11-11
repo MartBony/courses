@@ -125,13 +125,15 @@ export default function initEvents(app){
 
 				})
 				.catch(res => {
+					$('.loader').removeClass('opened');
 					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
+					} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
+						UI.erreur("Le prix doit être positif")
 					} else {
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, err);
+						UI.offlineMsg(app, res);
 					}
 				});
 			}
@@ -324,34 +326,6 @@ export default function initEvents(app){
 			{
 				alert('Renseignez le nom de l\'utilisateur');
 			}
-		},
-		openChart = () => {
-			document.getElementById('depensesChart').style.opacity = "1";
-			const labels = Array(app.chartContent.length).fill("");
-			labels[labels.length-1] = "Mois Actuel";
-			const ctx = document.getElementById('depensesChart').getContext('2d'),
-			myChart = new Chart(ctx, {
-				type: 'bar',
-				data: {
-					labels: labels,
-					datasets: [{
-						label: 'Consomation',
-						data: app.chartContent,
-						backgroundColor: 'rgba(54, 162, 235, 0.2)',
-						borderColor: 'rgba(54, 162, 235, 1)',
-						borderWidth: 1
-					}]
-				},
-				options: {
-					scales: {
-						yAxes: [{
-							ticks: {
-								beginAtZero: true
-							}
-						}]
-					}
-				}
-			});
 		};
 
 
@@ -392,14 +366,12 @@ export default function initEvents(app){
 	SwipeBtPanel(btTouchSurface, dir => {
 		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			UI.openMenus('calcul');
-			openChart();
+			UI.openMenus('calcul', app.chartContent, app);
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
 			UI.closeMenus();
-			document.getElementById('depensesChart').style.opacity = "0";
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -409,13 +381,12 @@ export default function initEvents(app){
 	SwipeBackPanel(backTouchSurface, function(dir){
 		$('#calcul').css({'height':'', 'transition':''});
 		if (dir == 'top') {
-			UI.openMenus('calcul');
+			UI.openMenus('calcul', app.chartContent, app);
 			$('#backTouchSurf').css({'visibility':'visible'});
 			$('#btTouchSurf').css({'visibility':'hidden'});
 		}
 		else if(dir == 'bottom'){
 			UI.closeMenus();
-			document.getElementById('depensesChart').style.opacity = "0";
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
@@ -564,7 +535,7 @@ export default function initEvents(app){
 			} else if(el.classList.contains('tablet')) {
 				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenus('mainMenu')
 				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul')
+				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul', app.chartContent, app)
 				else if(e.target.classList.contains('ms-Icon--BarChartVertical')){
 					let calcul = document.querySelector('#calcul');
 					if(calcul.classList.contains('opened')) calcul.classList.remove('opened')

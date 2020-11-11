@@ -61,14 +61,50 @@ export default class UI {
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
-	static openMenus(type){
+	static openMenus(type, data = null, app = null){
 		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "hidden");
 		document.getElementById('menus').classList.remove('calcul', 'params');
 		document.getElementById('menus').classList.add('opened', type);
+		if(type == 'calcul' && data && app) UI.openChart(app, data);
 	}
 	static closeMenus(){
 		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "");
 		document.getElementById('menus').className = "";
+		document.getElementById('depensesChart').style.opacity = "0";
+	}
+	static initChart(app){
+		const ctx = document.getElementById('depensesChart').getContext('2d');
+		app.chart = new Chart(ctx, {
+			type: 'bar',
+			data: {
+				labels: new Array(6).fill(""),
+				datasets: [{
+					label: 'Coût',
+					data: new Array(6).fill(0),
+					backgroundColor: 'rgba(54, 162, 235, 0.2)',
+					borderColor: 'rgba(54, 162, 235, 1)',
+					borderWidth: 1
+				}]
+			},
+			options: {
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
+				}
+			}
+		});
+	}
+	static openChart(app, data){
+		console.log(data);
+		document.getElementById('depensesChart').style.opacity = "1";
+		const labels = Array(data.length).fill("");
+		labels[labels.length-1] = "Mois Actuel";
+		app.chart.data.labels = labels;
+		app.chart.data.datasets.forEach(dataset => dataset.data = data);
+		app.chart.update();
 	}
 	static modal(app, id, data){
 		document.querySelector('#modal').classList.add('opened', id || '');

@@ -71,7 +71,7 @@ function groupes($user, PDO $bdd) {
 				}
 
 				array_push($groupsInfo, array(
-					'id' => $groupe['id'],
+					'id' => (int) $groupe['id'],
 					'nom' => $groupe['nom'],
 					'membres' => $membresGp
 				));

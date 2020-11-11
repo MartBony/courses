@@ -4,12 +4,8 @@ import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 import { LocalStorage } from './storage.js';
 import { $_GET } from './tools.js';
-import loadCss from './loadCss.js';
 
-let app,
-	refLink = document.querySelectorAll('link')[1],
-	style = loadCss("styles/style.css", refLink);
-loadCss("https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css", refLink);
+let app;
 
 authenticate();
 
@@ -156,14 +152,29 @@ function authenticate(){
 		})
 		.then(id => {
 			if(id){
-				document.getElementById('authContainer').classList.remove('opened');
-				
-				// Initialise on read
-				addSiteCache('site-course', 'coursesCache.json');
-				initPwaEvents();
+				if(document.body.classList.contains("cssReady")){
+					document.getElementById('authContainer').classList.remove('opened');
+					
+					// Initialise on read
+					addSiteCache('site-course', 'coursesCache.json');
+					initPwaEvents();
 
-				app = new App(id);
-				initEvents(app);
+					app = new App(id);
+					initEvents(app);	
+				} else {
+					//let timer = setTimeout(() => {window.location.reload()}, 10000);
+					document.addEventListener("cssReady", () => {
+						timer.clearTimeout();
+						document.getElementById('authContainer').classList.remove('opened');
+					
+						// Initialise on read
+						addSiteCache('site-course', 'coursesCache.json');
+						initPwaEvents();
+
+						app = new App(id);
+						initEvents(app);
+					});
+				}
 			} else throw "Require auth";
 		})
 		.catch(err => {

@@ -38,5 +38,9 @@
 	"/courses/images/buy.webp",
 	"/courses/images/melons.webp",
 	"/courses/images/etalage.webp",
-	"/courses/images/legumes.webp"
+	"/courses/images/legumes.webp",
+	"/courses/scripts/chart.js",
+	"/courses/scripts/load/loadHandler.js",
+	"/courses/scripts/load/loadCss.js",
+	"/courses/scripts/load/onLoadCss.js"
 ]
