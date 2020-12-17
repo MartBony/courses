@@ -121,64 +121,11 @@ function authenticate(){
 		url: "serveur/auth.php",
 		data: { tryCookiesAuth: true }
 	})
-		.then(data => {
-			return data.id
-		})
-		.catch(res => {
-			if (res.status == 401) {
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{
-						texte:"Se connecter", 
-						action : () => {
-							document.getElementById('authContainer').classList.add('opened');
-							UI.closeMessage();
-						}
-					}
-				]);
-			} else if (res.status == 403) {
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{
-						texte:"Se connecter", 
-						action : () => {
-							document.getElementById('authContainer').classList.add('opened');
-							UI.closeMessage();
-						}
-					}
-				]);
-			} else {
-				if (LocalStorage.getItem('userId')) return LocalStorage.getItem('userId');
-				throw "Require frontauth";
-			}
-		})
-		.then(id => {
-			if(id){
-				if(document.body.classList.contains("cssReady")){
-					document.getElementById('authContainer').classList.remove('opened');
-					
-					// Initialise on read
-					addSiteCache('site-course', 'coursesCache.json');
-					initPwaEvents();
-
-					app = new App(id);
-					initEvents(app);	
-				} else {
-					//let timer = setTimeout(() => {window.location.reload()}, 10000);
-					document.addEventListener("cssReady", () => {
-						timer.clearTimeout();
-						document.getElementById('authContainer').classList.remove('opened');
-					
-						// Initialise on read
-						addSiteCache('site-course', 'coursesCache.json');
-						initPwaEvents();
-
-						app = new App(id);
-						initEvents(app);
-					});
-				}
-			} else throw "Require auth";
-		})
-		.catch(err => {
-			console.error(err);
+	.then(data => {
+		return data.id
+	})
+	.catch(res => {
+		if (res.status == 401) {
 			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 				{
 					texte:"Se connecter", 
@@ -188,5 +135,58 @@ function authenticate(){
 					}
 				}
 			]);
-		});
+		} else if (res.status == 403) {
+			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+				{
+					texte:"Se connecter", 
+					action : () => {
+						document.getElementById('authContainer').classList.add('opened');
+						UI.closeMessage();
+					}
+				}
+			]);
+		} else {
+			if (LocalStorage.getItem('userId')) return LocalStorage.getItem('userId');
+			throw "Require frontauth";
+		}
+	})
+	.then(id => {
+		if(id){
+			if(document.body.classList.contains("cssReady")){
+				document.getElementById('authContainer').classList.remove('opened');
+				
+				// Initialise on read
+				addSiteCache('site-course', 'coursesCache.json');
+				initPwaEvents();
+
+				app = new App(id);
+				initEvents(app);	
+			} else {
+				// let timer = setTimeout(() => {window.location.reload()}, 10000); TO UNCOMMENT
+				document.addEventListener("cssReady", () => {
+					timer.clearTimeout();
+					document.getElementById('authContainer').classList.remove('opened');
+				
+					// Initialise on read
+					addSiteCache('site-course', 'coursesCache.json');
+					initPwaEvents();
+
+					app = new App(id);
+					initEvents(app);
+				});
+			}
+		} else throw "Require auth";
+	})
+	.catch(err => {
+		console.error(err);
+		UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+			{
+				texte:"Se connecter", 
+				action : () => {
+					document.getElementById('authContainer').classList.add('opened');
+					UI.closeMessage();
+				}
+			}
+		]);
+	});
 }
