@@ -1,0 +1,316 @@
+#mainPanel{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+
+
+#mainPanel > h1
+{
+	display: none;
+	margin: 0px 0px 0px 30px;
+	font-size: 2.3rem;
+}
+
+#mainPanel header {
+	position: relative;
+	width: 100%;
+	height: 50px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px 0px 5px 0px;
+	box-sizing: border-box;
+	background: black;
+	color: white;
+	box-shadow: 0px 2px var(--colorMainLight2);
+	border-radius: 5px;
+
+	box-sizing: border-box;
+}
+
+#mainPanel header i{
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	bottom: 5px;
+	width: 40px;
+	height: 40px;
+	padding: 5px;
+	font-size: 30px;
+	background-color: white;
+	color: black;
+	border-radius: 5px;
+}
+
+#mainPanel > section{
+	visibility: hidden;
+	opacity: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	max-height: 90vh;
+	transition: opacity 200ms cubic-bezier(0.8, 0.1, 0.1, 0.8), transform 200ms cubic-bezier(0.8, 0.1, 0.1, 0.8);
+
+	padding: 5px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-bottom: 150px;
+	overflow: hidden;
+	animation: hide 100ms cubic-bezier(0.7 , 0 , 1 , 0.5) forwards;
+}
+
+@keyframes hide{
+	0%{
+		transform: scale(1);
+		opacity: 1;
+		visibility: visible;
+		max-height: auto;
+	}
+	100%{
+		transform: scale(0.8);
+		opacity: 0;
+		visibility: hidden;
+		max-height: 90%;
+	}
+}
+
+
+#mainPanel ul{
+	padding: 0;
+	width: 100%;
+	margin: 10px 0 0 0;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-gap: 7px;
+	list-style-type: none;
+	
+	box-sizing: border-box;
+}
+
+
+#mainPanel.panier #panier{
+	visibility: visible;
+	max-height: none;
+	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+}
+
+#mainPanel.liste #liste{
+	visibility: visible;
+	max-height: none;
+	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+}
+
+#mainPanel.calcul #calcul{
+	visibility: visible;
+	max-height: none;
+	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+}
+
+#mainPanel.menu #menu{
+	visibility: visible;
+	max-height: none;
+	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+}
+
+@keyframes show{
+	0%{
+		transform: translateY(100px);
+		opacity: 0;
+	}
+	100%{
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+/* Listes */
+button.adder{
+	position: fixed;
+	bottom: 90px;
+	right: 10px;
+	height: 50px;
+	border-radius: 5px;
+	padding: 10px 20px;
+	margin: 0;
+
+	font-size: 2rem;
+	text-align: center;
+	font-weight: bold;
+
+	border: none;
+	outline: none;
+	color: white;
+	cursor: pointer;
+	background: var(--colorAddBt);
+	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
+	transition: all 600ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+	box-sizing: border-box;
+}
+
+#liste button.adder{
+	background: var(--colorAddPrev);
+}
+
+.article, .preview
+{
+	color: white;
+	min-height: 66px;
+	position: relative;
+	padding: 0;
+	background: var(--colorArticle);
+	box-shadow: 0px 0px 0px 2px rgba(0,0,0,0.03);
+	border-radius: 5px;
+	transition: all 100ms cubic-bezier(0.9, 0.1, 1, 0);
+	overflow: hidden;
+	max-width: 100vw;
+	box-sizing: border-box;
+}
+
+.article div, .preview div{
+	padding: 10px 20px;
+	background: black;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 10px;
+	bottom: 0;
+	border-radius: inherit;
+}
+
+
+/* Calcul */
+section#calcul
+{
+	display: block;
+	padding: 5px 5px 150px 5px;
+	box-sizing: border-box;
+}
+
+#calcul h2
+{
+	width: auto;
+	position: relative;
+	z-index: 2;
+	text-transform: uppercase;
+	font-weight: 800;
+	margin: 10px 0px;
+	font-size: 2rem;
+	text-align: center;
+}
+
+#calcul h3
+{
+	width: auto;
+	margin: 0;
+	margin-top: 30px;
+	font-size: 2rem;
+}
+
+#calcul .card h3{
+	margin: 0;
+}
+
+#calcul p
+{
+	font-size: 1.8rem;
+	margin-top: 0;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	color: var(--colorTextLight);
+}
+
+#calcul canvas{
+	margin-top: 20px;
+	transition: opacity 500ms ease;
+}
+
+/* Menu */
+#menu article
+{
+	width: 100%;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 50px;
+	grid-gap: 5px;
+	padding: 5px;
+	box-sizing: border-box;
+}
+
+#menu h2{
+	position: relative;
+	margin: 10px 20px;
+	font-size: 2rem;
+}
+
+#menu > button
+{
+	position: fixed;
+	bottom: 90px;
+	right: 10px;
+	height: 50px;
+	border-radius: 5px;
+	padding: 10px 20px;
+	margin: 0;
+
+	font-size: 2rem;
+	text-align: center;
+	font-weight: bold;
+
+	border: none;
+	outline: none;
+	color: white;
+	cursor: pointer;
+	background: var(--colorAddBt);
+	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
+	transition: all 600ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+	box-sizing: border-box;
+}
+
+#menu .course
+{
+	position: relative;
+	font-size: 1.6rem;
+	color: white;
+	background: black;
+	border: none;
+	outline: none;
+	height: 50px;
+	box-shadow: none;
+	padding: 5px;
+	margin: 0;
+	text-transform: uppercase;
+	font-weight: bold;
+	box-sizing: border-box;
+	border-radius: 5px;
+}
+
+#menu .course.opened
+{
+	grid-column: 1/3;
+	box-shadow: 0px 2px 3px -1px rgba(0,0,0,0.2);
+}
+
+
+.course i{
+	position: absolute;
+	right: 0;
+	top: 0;
+	padding: 15px;
+	font-size: 2rem;
+	display: none;
+}
+
+.course.opened i{
+	display: block;
+}
+
+#menu > i
+{
+	vertical-align: -20%;
+}

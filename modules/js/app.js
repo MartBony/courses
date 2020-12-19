@@ -9,13 +9,9 @@ import Generate from './generate.js';
 
 class App{
 	constructor(id){
+		UI.openPanel('panier');
 		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
-
-		if(window.innerWidth < 900){
-			document.getElementById('liste').style.visibility = "hidden";
-			document.getElementById('liste').style.height = "0";
-		}
 
 		LocalStorage.setItem('userId', id);
 		this.structure;
@@ -150,7 +146,7 @@ class App{
 			});
 		}
 	}
-	setSwipe(swipeBinary){
+	/* setSwipe(swipeBinary){
 		if(window.innerWidth < 900){
 			if (this.swipeBinaryState == !swipeBinary) {
 				switch(swipeBinary){
@@ -181,7 +177,7 @@ class App{
 				}
 			}
 		}
-	}
+	} */
 	deleteCourse(id){
 		$('.loader').addClass('opened');
 		$.ajax({
@@ -317,7 +313,7 @@ class App{
 			UI.closePrice();
 			UI.remove("preview", displayedIndex);
 			setTimeout(() => {
-				this.setSwipe(0);
+				UI.openPanel("panier");
 				setTimeout(() => {
 					UI.acc(this);
 					$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.prix));
@@ -375,8 +371,6 @@ class App{
 					} else {
 						$('.groupe').remove();
 						this.course = new Course();
-						$('#add, #calcul').css({'visibility':'hidden'});
-						$('.adder').css({'display': 'none'});
 						UI.modal(this, 'noGroupe');
 
 						this.structure = data;
@@ -400,8 +394,6 @@ class App{
 				// UPD UI parametres
 				$('.groupe').removeClass('opened');
 				$(`.groupe[key=${groupe.id}]`).addClass('opened');
-				$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
-				$('.adder').css({'display': ''});
 				$('.noCourse').remove();
 				this.course = new Course();
 				UI.closeModal();
@@ -409,7 +401,7 @@ class App{
 				// UPD CourseList
 				if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
 					if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
-						$('.menu .course').remove();
+						$('#menu .course').remove();
 						const chartLen = 6,
 							monthStamp = 60*60*24*30,
 							timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
@@ -418,16 +410,14 @@ class App{
 							for (let i = 0; i < chartLen; i++) {
 								if(el.date > timeMarker-(monthStamp*(i+1)) && el.date < timeMarker-(monthStamp*i))  this.chartContent[chartLen-i-1] += parseFloat(el.prix)
 							}
-							$('.menu article').append(Generate.course(this, el.id, el.nom));
+							$('#menu article').append(Generate.course(this, el.id, el.nom));
 						});
 						this.chartContent = this.chartContent.map(el => parseFloat(el.toFixed(2)));
 					}
 					this.usedGroupe = groupe;
 					return true;
 				} else {
-					$('.menu .course').remove();
-					$('#add, #calcul').css({'visibility':'hidden'});
-					$('.adder').css({'display': 'none'});
+					$('#menu .course').remove();
 					$('.main ul').prepend(Generate.noCourse());
 		
 					this.usedGroupe = groupe;
@@ -446,7 +436,6 @@ class App{
 				this.course = new Course();
 				UI.closeModal();
 				$('.course').removeClass('opened');
-				$('#add, #calcul').removeClass('hidden').css({'display':'', 'visibility':''});
 				$('#btTouchSurf').css({'visibility':''});
 
 				if(save) idbStorage.put("courses", data)
@@ -461,18 +450,14 @@ class App{
 
 				if (this.course.old) {
 					LocalStorage.setItem('usedCourse', data.id);
-					$('#add, #calcul').addClass('hidden');
 					$('#btTouchSurf').css({'visibility':'hidden'});
-					$('#add, .adder').css({'display':'none'});
 				} else{
 					LocalStorage.removeItem('usedCourse');
 
 					if (data.dateStart == 0) {
 						$('.main ul').prepend(Generate.activate());
-						$('#add').addClass('hidden');
-						$('.adder').eq(0).css({'display':'none'});
 
-						this.setSwipe(1);
+						UI.openPanel('liste');
 					}
 				} 
 				

@@ -57,49 +57,38 @@ export default class Generate{
 	}
 	static article(app, id, titre, prix, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
+			div = document.createElement('div'),
 			h2 = document.createElement('h2'),
 			h3 = document.createElement('h3'),
-			childrens = [h2, h3];
+			childrens = [div];
 		li.className = `article ${animation} ${addClass}`;
 		li.setAttribute("idItem", id);
 		h2.innerHTML = titre;
 		h3.innerHTML = (Number(prix)*(1+app.course.taxes)).toFixed(2) + app.params.currency;
+		div.appendChild(h2);
+		div.appendChild(h3);
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});
+		
 		return li;
 	}
 	static preview(app, id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
+			div = document.createElement('div'),
 			h2 = document.createElement('h2'),
-			childrens = [h2];
+			childrens = [div];
 		li.className = `preview ${animation} ${addClass}`;
 		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		li.setAttribute("idItem", id);
 		h2.innerHTML = titre;
-		/* $(buy).on('click', e => {
-			app.addPrice(e, id);
-		});
-		$(security).on('click', e => {
-			app.deletePreview(e, id);
-		});
-		iTags.forEach(i => {
-			i.setAttribute("aria-hidden","true");
-		}); */
+		div.appendChild(h2)
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});
 
 		return li;
-
-		/* return `<li class="preview ${animation} ${addClass}" style="background:${couleur};">
-			<h2>${titre}</h2>
-			<i class="ms-Icon ms-Icon--Shop buy" onclick="app.addPrice(${id},this);"></i>
-			<i class="ms-Icon ms-Icon--Delete" style="background:${couleur}; aria-hidden="true"></i>
-			<i class="ms-Icon ms-Icon--Cancel noDelete" aria-hidden="true"></i>
-			<i class="ms-Icon ms-Icon--Delete Security" aria-hidden="true" onclick="course.initDeletePrev(${id},this)"></i>
-			<div class="bgCards"></div>
-		</li>`; */
+	
 	}
 	static activate(){
 		let button = document.createElement('button'),

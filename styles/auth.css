@@ -4,6 +4,7 @@
 	left: 5px;
 	right: 5px;
 	bottom: 5px;
+	height: 0;
 	z-index: 8;
 
 	visibility: collapse;
@@ -93,9 +94,12 @@ input#iColor{
 	#authContainer{
 		border-radius: 12px;
 		grid-template-rows: 0.8fr 6.5fr 0.8fr 10.5fr;
-		height: auto;
 		bottom: auto;
 		grid-template-columns: 1fr;
+	}
+	
+	#authContainer.opened{
+		height: auto;
 	}
 
 	#authContainer input{

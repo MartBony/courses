@@ -51,8 +51,6 @@ export default class UI {
 		}
 	}
 	static closeForms(){
-		$('#add').addClass('closed');
-		document.getElementById("add").removeAttribute("key");
 		document.querySelector('#forms').className = "";
 		Array.from(document.querySelectorAll('#forms div, #forms input, #forms label, #forms i, #forms ul')).forEach(el => {
 			el.classList.remove('opened');
@@ -61,6 +59,12 @@ export default class UI {
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
+	static openPanel(type, data = null, app = null){
+		document.getElementById('depensesChart').style.opacity = "0";
+		document.getElementById('mainPanel').className = "";
+		document.getElementById('mainPanel').classList.add(type);
+		if(type == 'calcul' && data && app) UI.openChart(app, data);
+	}
 	static openMenus(type, data = null, app = null){
 		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "hidden");
 		document.getElementById('menus').classList.remove('calcul', 'params');
@@ -68,7 +72,6 @@ export default class UI {
 		if(type == 'calcul' && data && app) UI.openChart(app, data);
 	}
 	static closeMenus(){
-		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "");
 		document.getElementById('menus').className = "";
 		document.getElementById('depensesChart').style.opacity = "0";
 	}
@@ -179,7 +182,6 @@ export default class UI {
 	static addArticle(){
 		$('#add').removeClass('closed');
 		document.getElementById("forms").classList.add('opened','formArticle');
-		document.getElementById("add").setAttribute("key","article");
 
 		$('#addArticle div, #addArticle input, #addArticle label, #addArticle i').each(function(i){	
 			setTimeout(function(){

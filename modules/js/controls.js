@@ -2,7 +2,7 @@ import Pull from './requests.js';
 import UI from './UI.js';
 import { LocalStorage, idbStorage } from './storage.js';
 import Generate from './generate.js';
-import { swipedetect, SwipeBackPanel, SwipeBtPanel } from './touch.js';
+import { /* swipedetect, */ SwipeBackPanel, SwipeBtPanel } from './touch.js';
 
 
 export default function initEvents(app){
@@ -58,7 +58,6 @@ export default function initEvents(app){
 				data: { activate: true, groupe: app.usedGroupe.id }
 			}).then(data => {
 				$('.loader').removeClass('opened');
-				$('.adder').css({'display':''});
 				setTimeout(function(){
 					$('#add').removeClass('hidden');
 					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
@@ -67,7 +66,7 @@ export default function initEvents(app){
 					}, 420);	
 				},400);
 				setTimeout(function(){
-					app.setSwipe(0);
+					UI.openPanel("panier");
 				},200);
 
 				idbStorage.get("courses", app.course.id)
@@ -331,7 +330,7 @@ export default function initEvents(app){
 
 	// Touch events
 
-	var swipeSurface = document.getElementById('touchSurface'); // Swipe touch surface
+	/* var swipeSurface = document.getElementById('touchSurface'); // Swipe touch surface
 	swipedetect(swipeSurface, function(swipedir){
 		if($('body').hasClass('bodyPreview')){
 			if (swipedir == 'right'){
@@ -390,7 +389,7 @@ export default function initEvents(app){
 			$('#backTouchSurf').css({'visibility':'hidden'});
 			$('#btTouchSurf').css({'visibility':'visible'});
 		}
-	});
+	}); */
 
 
 
@@ -399,7 +398,6 @@ export default function initEvents(app){
 	document.getElementById('params').addEventListener('click', e => {
 		if(e.target.classList.contains('ms-Icon--Back')){
 			UI.closeMenus();
-			if(window.innerWidth < 900) UI.openMenus('mainMenu')
 		}
 		else if(e.target.id == "deconnect") {
 
@@ -449,10 +447,6 @@ export default function initEvents(app){
 			UI.toggleTheme();
 		}
 	});
-	
-	$('.menu i.ms-Icon--Settings').click(function(){
-		UI.openMenus('params');
-	});
 
 
 	// Modal
@@ -472,15 +466,11 @@ export default function initEvents(app){
 
 
 	// Main content
-	
-	$(document).on('click', '#add.closed',function(){
-		if ($('body').hasClass('bodyPreview')) UI.addPreview()
-		else UI.addArticle()
-	});
 
 	Array.from(document.getElementsByClassName('main')).forEach(el => {
 		el.addEventListener('click', e => {
-			if(e.target.classList.contains('adder')){
+			console.log(e.target.classList);
+			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle()
 				else UI.addPreview()
 			} else if(e.target.classList.contains('noCourse') || e.target.parentNode.classList.contains('noCourse')) UI.openMenus('mainMenu')
@@ -524,15 +514,22 @@ export default function initEvents(app){
 	});
 
 
+	// Menubar
+	document.getElementById("menubar").addEventListener('click', event => {
+		if(event.target.tagName == "IMG" || event.target.getAttribute("linkTo") == "menu") UI.openPanel('menu')
+		else if(event.target.getAttribute("linkTo") == "panier" || event.target.parentNode.getAttribute("linkTo") == "panier") UI.openPanel('panier')
+		else if(event.target.getAttribute("linkTo") == "liste" || event.target.parentNode.getAttribute("linkTo") == "liste") UI.openPanel('liste')
+		else if(event.target.getAttribute("linkTo") == "calcul" || event.target.parentNode.getAttribute("linkTo") == "calcul") UI.openPanel('calcul', app.chartContent, app)
+	});
 
 
 	// Header
 
 	Array.from(document.getElementsByTagName('header')).forEach(el => {
 		el.addEventListener('click', e => {
-			if(el.classList.contains('phones')){
+			/* if(el.classList.contains('phones')){
 				if(e.target.tagName == "I") UI.openMenus('mainMenu')
-			} else if(el.classList.contains('tablet')) {
+			} else */ if(el.classList.contains('tablet')) {
 				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenus('mainMenu')
 				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
 				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul', app.chartContent, app)
@@ -606,21 +603,25 @@ export default function initEvents(app){
 	// Menus
 
 	document.getElementById('menus').addEventListener('click', e => {
-		if(e.target.classList.contains('ms-Icon--Settings')){}
-		else if(e.target.parentNode.classList.contains('menu') && e.target.tagName == "I") UI.closeMenus()
-		else if(e.target.id == "newCourse") UI.addCourse()
-		else if(e.target.parentNode.id == "calcul" && e.target.tagName == "I") UI.closeMenus()
-		else if(e.target.classList.contains('course')) {
-			let id = e.target.getAttribute("dbIndex");
+		if(e.target.parentNode.id == "calcul" && e.target.tagName == "I") UI.closeMenus()
+		else if (e.target.id == "menus") UI.closeMenus()
+	});
+
+	// MainPanel
+	document.getElementById('mainPanel').addEventListener('click', event => {
+		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
+		else if(event.target.id == "newCourse") UI.addCourse()
+		else if(event.target.classList.contains('course')) {
+			let id = event.target.getAttribute("dbIndex");
 			if(id){
 				open(() => UI.acc(app), null, id);
 			}
-		} else if(e.target.parentNode.classList.contains('course') && e.target.tagName == "I") {
-			let id = e.target.parentNode.getAttribute("dbIndex");
+		}
+		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
+			let id = event.target.parentNode.getAttribute("dbIndex");
 			if(id) UI.modal(this, 'deleteCourse', id);
-		} else if (e.target.id == "menus") UI.closeMenus()
+		}
 	});
-
 
 
 	// Others
