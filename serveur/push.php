@@ -125,6 +125,7 @@ function push($user, $latestCourse, PDO $bdd){
 			echo json_encode([
 				'id' => $idInserted['id'],
 				'titre' => $titre,
+				'color' => $user['hueColor'],
 				'prix' => $prix
 			]);
 		

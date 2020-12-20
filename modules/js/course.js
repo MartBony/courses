@@ -44,7 +44,7 @@ export default class Course{
 				if (article.id != this.items.articles[iter].id){
 					if(items.articles.filter(el => el.id == this.items.articles[iter].id).length > 0){
 						this.items.articles.splice(iter, 0, article);
-						$('#panier ul .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+						$('#panier ul .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
 						iter++;
 					} else {
 						this.items.articles.splice(iter, 1);
@@ -56,7 +56,7 @@ export default class Course{
 			}
 			else{
 				this.items.articles.splice(iter, 0, article);
-				$('#panier ul').append(Generate.article(app, article.id, article.titre, article.prix, 'animateSlideTop', attribute));
+				$('#panier ul').append(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
 				iter++;
 			}
 

@@ -55,13 +55,14 @@ export default class Generate{
 
 		return button;
 	}
-	static article(app, id, titre, prix, animation = 'animateSlideIn', addClass = ''){
+	static article(app, id, titre, couleur, prix, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
 			div = document.createElement('div'),
 			h2 = document.createElement('h2'),
 			h3 = document.createElement('h3'),
 			childrens = [div];
 		li.className = `article ${animation} ${addClass}`;
+		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		li.setAttribute("idItem", id);
 		h2.innerHTML = titre;
 		h3.innerHTML = (Number(prix)*(1+app.course.taxes)).toFixed(2) + app.params.currency;

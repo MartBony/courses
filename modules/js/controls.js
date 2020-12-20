@@ -475,13 +475,13 @@ export default function initEvents(app){
 				else UI.addPreview()
 			} else if(e.target.classList.contains('noCourse') || e.target.parentNode.classList.contains('noCourse')) UI.openMenus('mainMenu')
 			else if(e.target.classList.contains('activate')) activate();
-			else if(e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
-				let article = e.target.tagName == "LI" ? e.target : e.target.parentNode;
+			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
+				let article = e.target.tagName == "LI" ? e.target : (e.target.parentNode.tagename == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				UI.hideOptions();
 				setTimeout(() => UI.showOptions(app, "article", article), 50);
 				
-			}else if(e.target.parentNode.classList.contains('preview') || e.target.classList.contains('preview')){
-				let preview = e.target.tagName == "LI" ? e.target : e.target.parentNode;
+			}else if(e.target.parentNode.parentNode.classList.contains('preview') || e.target.parentNode.classList.contains('preview') || e.target.classList.contains('preview')){
+				let preview = e.target.tagName == "LI" ? e.target : (e.target.parentNode.tagename == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				UI.hideOptions();
 				setTimeout(() => UI.showOptions(app, "preview", preview), 50);
 				
@@ -516,7 +516,10 @@ export default function initEvents(app){
 
 	// Menubar
 	document.getElementById("menubar").addEventListener('click', event => {
-		if(event.target.tagName == "IMG" || event.target.getAttribute("linkTo") == "menu") UI.openPanel('menu')
+		if(event.target.tagName == "IMG" || event.target.getAttribute("linkTo") == "menu") {
+			if(window.innerWidth < 900) UI.openPanel('menu')
+			else UI.openPanel('menu', app.chartContent, app)
+		}
 		else if(event.target.getAttribute("linkTo") == "panier" || event.target.parentNode.getAttribute("linkTo") == "panier") UI.openPanel('panier')
 		else if(event.target.getAttribute("linkTo") == "liste" || event.target.parentNode.getAttribute("linkTo") == "liste") UI.openPanel('liste')
 		else if(event.target.getAttribute("linkTo") == "calcul" || event.target.parentNode.getAttribute("linkTo") == "calcul") UI.openPanel('calcul', app.chartContent, app)

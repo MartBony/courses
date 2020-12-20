@@ -297,7 +297,6 @@ class App{
 				groupe: this.usedGroupe.id
 			}
 		}).then(data => {
-			console.log(true);
 			$('.loader').removeClass('opened');
 			let timer = 600,
 				displayedIndex = $(`.preview[iditem=${idPreview}]`).prevAll('li').length;
@@ -308,15 +307,14 @@ class App{
 				$('.activate').click();
 				timer = 1000;
 			}
-			console.log(true);
-	
+
 			UI.closePrice();
 			UI.remove("preview", displayedIndex);
 			setTimeout(() => {
 				UI.openPanel("panier");
 				setTimeout(() => {
 					UI.acc(this);
-					$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.prix));
+					$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.color, data.prix));
 					$('#prices #newPrice').val('');
 					this.totalPP(data.prix);
 					$('.prices #titreA, .prices #prix').val('');
@@ -575,7 +573,6 @@ class App{
 			this.chartContent[this.chartContent.length - index - 1] = parseFloat((this.chartContent[this.chartContent.length - index - 1] + constante)).toFixed(2);
 			this.chartContent[this.chartContent.length - index - 1] = parseFloat(this.chartContent[this.chartContent.length - index - 1]);
 		}
-		console.log(this.chartContent[this.chartContent.length - index - 1]);
 		$('#totalDep').html(total.toFixed(2) + this.params.currency);
 		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
 		$('#moiDep').html(this.usedGroupe.monthCost.toFixed(2) + this.params.currency);

@@ -34,14 +34,6 @@
 	<?php require('modules/php/menus.php'); ?>
 	<?php require('modules/php/forms.php'); ?>
 	<?php require('modules/php/mainPanel.php') ?>
-	<header class="tablet">
-		<h1 class="noselect">Faire ses courses</h1>
-		<i class="ms-Icon ms-Icon--Calculator" aria-hidden="true"></i>
-		<i class="ms-Icon ms-Icon--Settings" aria-hidden="true"></i>
-		<i id="headRefresh" class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i>
-		<i class="ms-Icon ms-Icon--GlobalNavButton" aria-hidden="true"></i>
-	</header>
-	
 	<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
 </body>
 </html>

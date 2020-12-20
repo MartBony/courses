@@ -24,11 +24,12 @@
 	right: 0;
 	bottom: 0;
 	margin: 0;
-	padding: 0;
+	padding: 5px;
 
 	list-style-type: none;
 
 	display: grid;
+	grid-gap: 5px;
 	grid-template-columns: repeat(4, 1fr);
 	flex-direction: row;
 	align-items: center;
@@ -42,6 +43,33 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	box-sizing: border-box;
+	background: rgba(255,255,255,0);
+	border-radius: 5px;
+}
+
+#menubar.panier li:nth-child(1),
+#menubar.liste li:nth-child(2),
+#menubar.calcul li:nth-child(3),
+#menubar.menu li:nth-child(4){
+	background: rgba(255,255,255,0.2);
+	animation: circleBGMB 1s forwards cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+}
+
+@keyframes circleBGMB{
+	0%{
+		background: radial-gradient(circle at center, rgba(255,255,255,0.2) 20%, rgba(0,0,0,0) 20%);
+		background-size: 100%;
+		background-position: center;
+	}
+	99%{
+		background-size: 1000%;
+		background-position: center;
+
+	}
+	100%{
+		background-color: rgba(255,255,255,0.2);	
+	}
 }
 
 #menubar i{
@@ -146,77 +174,26 @@
 		--menu-radius: 8px;
 	}
 
-	#menus{
-		opacity: 0;
-	}
-	
-	#menus.opened{
-		opacity: 1;
-	}
-
-	button.adder{
-		display: block;
-	}
-
 	#refresh{
-		width: 310px;
-		height: 50px;
-		top: calc(50% - 140px);
-		left: calc(50% - 120px);
-		transform: translateY(-20px);
-		opacity: 0;
-		visibility: hidden;
-	}
-
-	.menu
-	{
-		transform: translateY(-100px);
-		left: auto;
-		bottom: auto;
-		width: 400px;
-		height: 650px;
-		box-shadow: 0 0 20px -5px rgba(0,0,0,0.2);
-	}
-
-	.menu i.ms-Icon--Settings{
-		display: none;
-	}
-
-	section#calcul
-	{
-		visibility: hidden;
-		transform: translateY(-100px);
 		top: 10px;
-		left: auto;
-		right: 5rem;
+		left: 220px;
+	}
+
+	#menubar{
 		bottom: auto;
-		width: 400px;
-		height: 500px;
-
-		border-radius: var(--menu-radius);
-		box-shadow: 0 0px 20px -5px rgba(0,0,0,0.2);
-		transition: all 50ms var(--ease-sortir);
+		right: auto;
+		top: 5px;
+		left: 5px;
+		width: 200px;
 	}
 
-	#menus.calcul #calcul
-	{
-		width: 400px;
-		height: 650px;
-		visibility: visible;
-		transform: translateY(0);
-		transition: all 250ms var(--ease-enter);
-	}
-
-	#calcul i{
-		display: block;
-	}
-
-	#calcul div.grip{
+	#menubar li:nth-child(1), #menubar li:nth-child(3){
 		display: none;
+	}
+
+	#menubar ul{
+		direction: rtl;
+		grid-template-columns: repeat(2, 1fr);
 	}
 	
-	#btTouchSurf, #backTouchSurf
-	{
-		display: none;
-	}
 }

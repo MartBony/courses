@@ -61,9 +61,9 @@ export default class UI {
 	}
 	static openPanel(type, data = null, app = null){
 		document.getElementById('depensesChart').style.opacity = "0";
-		document.getElementById('mainPanel').className = "";
-		document.getElementById('mainPanel').classList.add(type);
-		if(type == 'calcul' && data && app) UI.openChart(app, data);
+		document.getElementById('mainPanel').className = type;
+		document.getElementById('menubar').className = type;
+		if((type == 'calcul' || type == "menu") && data && app) UI.openChart(app, data);
 	}
 	static openMenus(type, data = null, app = null){
 		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "hidden");
@@ -101,7 +101,6 @@ export default class UI {
 		});
 	}
 	static openChart(app, data){
-		console.log(data);
 		document.getElementById('depensesChart').style.opacity = "1";
 		const labels = Array(data.length).fill("");
 		labels[labels.length-1] = "Mois Actuel";

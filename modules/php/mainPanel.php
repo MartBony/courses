@@ -1,6 +1,4 @@
 <section id="mainPanel">
-	<h1>Panier</h1>
-	<h1>Liste de course</h1>
 	<section id="panier" class="main">
 		<header class="phones">
 			<h1 class="noselect">Panier</h1>
@@ -30,18 +28,20 @@
 		<header class="phones">
 			<h1 class="noselect">Calculer</h1>
 		</header>
-		<h3 class="maxim">Limite envisagée :</h3>
-		<p id="maxprice"></p>
-		<div class="flex">
-			<div class="card">
-				<h3>Total sans taxes</h3>
-				<p id="totalDep"></p>
+		<article>
+			<h3 class="maxim">Limite envisagée :</h3>
+			<p id="maxprice"></p>
+			<div class="flex">
+				<div class="card">
+					<h3>Total sans taxes</h3>
+					<p id="totalDep"></p>
+				</div>
+				<div class="card">
+					<h3>Total avec taxes</h3>
+					<p id="totalTaxDep"></p>
+				</div>
 			</div>
-			<div class="card">
-				<h3>Total avec taxes</h3>
-				<p id="totalTaxDep"></p>
-			</div>
-		</div>
+		</article>
 		<!-- <h3>Dépenses du dernier mois:</h3>
 		<p id="moiDep"></p>
 		<h3>Dépenses par mois envisagées:</h3>
