@@ -3,8 +3,8 @@
 	"short_name" : "Courses",
 	"start_url" : "/courses/index.php",
 	"display" : "standalone",
-	"background_color" : "#fffcfa",
-	"theme_color" : "#f5f9ff",
+	"background_color" : "#ffffff",
+	"theme_color" : "#022d6f",
 	"orientation" : "any",
 	"icons" : [{
 		"src": "images/logo512.png",
@@ -40,12 +40,19 @@
 		"src": "images/logo72.png",
 		"type" : "image/png",
 		"sizes": "72x72"
-	}],
+	},
+	{
+		"src": "images/maskable_icon.png",
+		"sizes": "512x512",
+		"type": "image/png",
+		"purpose": "any maskable"
+	  }],
 	"dir" : "ltr",
 	"lang" : "French",
 	"scope" : "/",
 	"description" : "Une application pour rassembler, organiser et partager ses courses.",
 	"url" : "https://mprojects.fr",
 	"screenshots" : [],
+	"categories": ["lifestyle", "food", "shopping", "utilities"],
 	"generated" : ""
 }

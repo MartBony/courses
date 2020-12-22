@@ -14,8 +14,8 @@
 
 	font-size: 1.4rem;
 	transform: translateX(100px);
-	background: var(--colorLight);
-	color: var(--colorText);
+	background: var(--color-background);
+	color: var(--color-text);
 	border-radius: var(--menu-radius) 0 0 var(--menu-radius);
 	box-shadow: var(--shadow2);
 	transition: all 50ms var(--ease-sortir);
@@ -86,7 +86,7 @@
 	font-size: 3rem;
 	font-weight: 700;
 	border-radius: var(--menu-radius);
-	background: linear-gradient(to top, rgba(0,0,0,0) 0%, var(--colorLight) 30%)
+	background: linear-gradient(to top, rgba(0,0,0,0) 0%, var(--color-background) 30%)
 }
 
 #params h3{
@@ -124,7 +124,7 @@ button.groupe
 	padding-bottom: 3rem;
 
 	transform: scale(0.99);
-	background: var(--colorMainLight);
+	background: #ffffffa0;
 	border: none;
 	outline: none;
 	box-shadow: 0px 0.5px 0 1px rgba(0,0,0,0.06);
@@ -136,12 +136,12 @@ button.groupe
 {
 	transform: scale(1) translateY(-2px);
 	box-shadow: 0px 5px 5px -1px rgba(0,0,0,0.06);
-	background: var(--colorCourse);
+	background: var(--color-theme-complement);
 
 }
 
 .groupe h4{
-	color: var(--colorText);
+	color: black;
 	text-transform: capitalize;
 	margin: 5px;
 	text-align: left;
@@ -156,12 +156,12 @@ button.groupe
 }
 
 .groupe li{
-	color: var(--colorTextLight);
+	color: black;
 	list-style-type: none;
 }
 
 .groupe i{
-	color: var(--colorTextLight);
+	color: black;
 	position: absolute;
 	display: none;
 	padding: 0.5rem;
@@ -178,7 +178,12 @@ button.groupe
 	left: 5%;
 }
 
+.groupe.opened li, .groupe.opened h4{
+	color: #ffffffe0;
+}
+
 .groupe.opened i{
+	color: #ffffffe0;
 	display: block;
 }
 

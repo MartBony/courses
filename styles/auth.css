@@ -4,7 +4,7 @@
 	left: 5px;
 	right: 5px;
 	bottom: 5px;
-	height: 0;
+	max-height: 90vh;
 	z-index: 8;
 
 	visibility: collapse;
@@ -22,6 +22,7 @@
 	visibility: visible;
 	opacity: 1;
 	transform: scale(1);
+	max-height: none;
 	transition: all 200ms var(--ease-enter) 10ms;
 }
 

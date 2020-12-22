@@ -20,13 +20,13 @@
 					</span>
 					<label for="currency">Utiliser le dollar américain</label>
 				</div>
-				<div class="ticket">
+				<!-- <div class="ticket">
 					<span class="switch">
 						<input type="checkbox" name="theme" id="theme">
 						<span class="slider"></span>
 					</span>
 					<label for="theme">Thème sombre</label>
-				</div>
+				</div> -->
 			</article>
 			<article id="groupes">
 				<h3>Mes groupes</h3>

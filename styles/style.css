@@ -12,8 +12,22 @@
 	font-size: 10px;
 	font-family: "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
 
+	--previewS: 95%;
+    --previewL: 80%;
+	--color-theme: #022d6f;
+	--color-theme-secondary: #005a9e;
+	--color-theme-complement: #c8974c;
+	--color-background: white;
+	--color-text-menu: white;
+	--color-text: black;
+	--color-blur: linear-gradient(to top, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.8) 70%);
+	--ease-enter: cubic-bezier(0.1 , 0.9 , 0.2 , 1);
+	--ease: cubic-bezier(0.8 , 0 , 0.2 , 1);
+	--ease-sortir: cubic-bezier(0.7 , 0 , 1 , 0.5);
+	background: var(--color-background);
+
 	/* Variables css */
-	--colorHeader: #2d2929;
+	/* --colorHeader: #2d2929;
 	--colorHeaderTablet: #211c1c;
 	--colorCourse: #885e58;
 	--colorText: white;
@@ -33,16 +47,14 @@
 	--colorArticle: linear-gradient(to right, #535a61 0%, var(--colorArticleButton) 90%);
 	--colorLight: rgb(46, 44, 44);
 	--shadow2: 0 0 10px 2px rgba(255,255,255,0.1);
-	--ease-enter: cubic-bezier(0.1 , 0.9 , 0.2 , 1);
-	--ease: cubic-bezier(0.8 , 0 , 0.2 , 1);
-	--ease-sortir: cubic-bezier(0.7 , 0 , 1 , 0.5);
+	
 	--colorBlur: linear-gradient(to top, rgba(30,30,30,0.7) 0%, rgba(30,30,30,1) 70%);
 
-	--colorMax: var(--colorText);
+	--colorMax: var(--colorText); */
 	min-height: 100vh;
 }
 
-:root.theme-light {
+/* :root.theme-light {
 	--colorHeader: #ebf3f5;
 	--colorHeaderTablet: #ecf2f3;
 	--colorCourse: #fdebe8;
@@ -60,7 +72,7 @@
 	--colorMainLight2: hsl(18, 25%, 93%);
 	--colorMainAlpha: rgba(255,255,255,0.7);
 	--colorBlur: linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,1) 70%);
-}
+} */
 
 body{
 	background: var(--colorMain);

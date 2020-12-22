@@ -24,10 +24,11 @@
 	justify-content: center;
 	padding: 2px 0px 5px 0px;
 	box-sizing: border-box;
-	background: black;
-	color: white;
-	box-shadow: 0px 2px var(--colorMainLight2);
+	background: var(--color-theme);
+	color: var(--color-text-menu);
 	border-radius: 5px;
+
+	background: var(--color-theme);
 
 	box-sizing: border-box;
 }
@@ -124,7 +125,7 @@
 		opacity: 0;
 	}
 	100%{
-		transform: translateY(0);
+		transform: none;
 		opacity: 1;
 	}
 }
@@ -145,16 +146,18 @@ button.adder{
 
 	border: none;
 	outline: none;
-	color: white;
 	cursor: pointer;
-	background: var(--colorAddBt);
+	background: var(--color-theme-secondary);
+	color: var(--color-text-menu);
 	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	transition: all 600ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 	box-sizing: border-box;
+
+	opacity: 0;
 }
 
-#liste button.adder{
-	background: var(--colorAddPrev);
+#mainPanel.liste #liste .adder, #mainPanel.panier #panier .adder{
+	opacity: 1;
+	transition: 100ms all 400ms linear;
 }
 
 .article, .preview
@@ -174,7 +177,8 @@ button.adder{
 
 .article div, .preview div{
 	padding: 10px 20px;
-	background: black;
+	background: var(--color-theme-secondary);
+	color: var(--color-text-menu);
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -266,10 +270,15 @@ section#calcul
 	outline: none;
 	color: white;
 	cursor: pointer;
-	background: var(--colorAddBt);
+	background: var(--color-theme-secondary);
 	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	transition: all 600ms cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 	box-sizing: border-box;
+	opacity: 0;
+}
+
+.menu #menu > button{
+	opacity: 1;
+	transition: 100ms all 400ms linear;
 }
 
 #menu .course
@@ -277,7 +286,7 @@ section#calcul
 	position: relative;
 	font-size: 1.6rem;
 	color: white;
-	background: black;
+	background: var(--color-theme-complement);
 	border: none;
 	outline: none;
 	height: 50px;
@@ -361,6 +370,16 @@ section#calcul
 		visibility: visible;
 		max-height: none;
 		animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+	}
+
+	#menu > button, button.adder
+	{
+		position: absolute;
+	}
+
+	#mainPanel.liste .adder, #mainPanel.panier .adder, .menu #menu > button{
+		opacity: 1;
+		transition: 100ms all 400ms linear;
 	}
 }
 

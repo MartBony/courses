@@ -1,20 +1,10 @@
 :root {
     font-size: 10px;
     font-family: "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
-	--colorLight: rgb(20,20,20);
-	--colorShadow: rgba(255,255,255,0.4);
-	--colorText: white;
+	--colorShadow: rgba(0,0,0,0.4);
+	--colorLight: rgb(250,250,250);
+	--colorText: black;
 }
-
-@media (prefers-color-scheme: light) { /* Mode clair */
-	:root{
-		--colorShadow: rgba(0,0,0,0.4);
-		--colorLight: rgb(250,250,250);
-		--colorText: black;
-	}
-}
-
-
 
 img{
 	width: 0;
