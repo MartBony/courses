@@ -50,7 +50,7 @@ function initPwaEvents(){
 				switch (newWorker.state) {
 					case 'installed':
 					if (navigator.serviceWorker.controller) {
-						UI.message("Une mise à jour est displonible", "Installer en un click ou laisser l'application s'en occuper plus tard", [
+						UI.message("Une mise à jour est displonible", "Installer en un clic ou laisser l'application s'en occuper plus tard", [
 							{ texte: "Mettre à jour", action: () => newWorker.postMessage({ action: 'skipWaiting' }) },
 							{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
 						]);

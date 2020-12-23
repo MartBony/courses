@@ -153,13 +153,9 @@ export default function initEvents(app){
 				}).then(data => {
 					$('.loader').removeClass('opened');
 					UI.acc(app);
-					if (!app.course.started) {
-						$('.activate').eq(1).after(Generate.preview(app, data.id, data.titre, data.color));
-					}
-					else{
-						$('html, body').animate({scrollTop: 0}, 30);
-						$('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
-					}
+					$('html, body').animate({scrollTop: 0}, 30);
+					$('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
+					
 					$('#addPreview #titreP').val('');
 					setTimeout(function(){
 						$('.preview').removeClass('animateSlideIn');

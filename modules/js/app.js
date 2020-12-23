@@ -226,7 +226,7 @@ class App{
 				]);
 			} else {
 				$('.loader').removeClass('opened');
-				UI.offlineMsg(this, err);
+				UI.offlineMsg(this, res);
 			}
 		});
 		
