@@ -327,7 +327,7 @@ class App{
 			console.log(true);
 
 			this.course.items.previews = this.course.items.previews.filter((obj) => (obj.id != data.id));
-			this.course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+			this.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
 			idbStorage.put("courses", this.course.export());
 
 		}).catch(res => {
@@ -434,7 +434,6 @@ class App{
 				this.course = new Course();
 				UI.closeModal();
 				$('.course').removeClass('opened');
-				$('#btTouchSurf').css({'visibility':''});
 
 				if(save) idbStorage.put("courses", data)
 
@@ -448,12 +447,17 @@ class App{
 
 				if (this.course.old) {
 					LocalStorage.setItem('usedCourse', data.id);
-					$('#btTouchSurf').css({'visibility':'hidden'});
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.add("hide");
+					});
 				} else{
 					LocalStorage.removeItem('usedCourse');
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.remove("hide");
+					});
 
 					if (data.dateStart == 0) {
-						$('.main ul').prepend(Generate.activate());
+						$('#panier ul').prepend(Generate.activate());
 
 						UI.openPanel('liste');
 					}

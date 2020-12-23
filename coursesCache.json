@@ -11,6 +11,7 @@
 	"/courses/styles/switches.css",
 	"/courses/styles/preload.css",
 	"/courses/styles/auth.css",
+	"/courses/styles/mainPanel.css",
 	"/courses/modules/js/app.js",
 	"/courses/modules/js/controls.js",
 	"/courses/modules/js/course.js",

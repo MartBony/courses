@@ -147,7 +147,7 @@ button.adder{
 	border: none;
 	outline: none;
 	cursor: pointer;
-	background: var(--color-theme-secondary);
+	background: var(--color-theme);
 	color: var(--color-text-menu);
 	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
 	box-sizing: border-box;
@@ -270,7 +270,7 @@ section#calcul
 	outline: none;
 	color: white;
 	cursor: pointer;
-	background: var(--color-theme-secondary);
+	background: var(--color-theme);
 	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
 	box-sizing: border-box;
 	opacity: 0;

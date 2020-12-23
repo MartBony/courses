@@ -10,3 +10,4 @@ onLoadCss(style, function() {
 	const event = new CustomEvent("cssReady", {});
 	document.body.dispatchEvent(event);
 });
+document.body.classList.add("cssReady");

@@ -80,6 +80,10 @@ body{
   	min-height: -webkit-fill-available;
 }
 
+.hide{
+	display: none;
+}
+
 img{
 	width: auto;
 	height: auto;
@@ -88,11 +92,6 @@ img{
 .bodyPreview{
 	background: var(--colorMainLight);
 	transition: all 300ms ease;
-}
-
-.flex{
-	display: flex;
-	justify-content: center;
 }
 
 .card{

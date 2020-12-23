@@ -245,6 +245,7 @@ function push($user, $latestCourse, PDO $bdd){
 			http_response_code(200);
 			echo json_encode([
 				'id' => $_POST['id'],
+				'color' => $user['hueColor'],
 				'titre' => $idInserted['titre'],
 				'prix' => $idInserted['prix']
 			]);

@@ -52,7 +52,7 @@ if(isset($_POST['inscript'])){
 			$activate = $bdd->prepare('UPDATE `users` SET `activated` = ? WHERE `id` = ?');
 			$activate->execute(array(true, $user['id']));
 			
-			echo json_encode(array('status' => 200, 'mail' => $user['mail']));
+			echo json_encode(array('mail' => $user['mail']));
 
 		} else echo json_encode(array('status' => 401, 'err' => 'wrong'));
 		$reqUser->closeCursor();
@@ -100,7 +100,7 @@ function connect(PDO $bdd, $mail, $pass){
 			if($user['activated']){
 				setcookie("email", $user['mail'], time() + 31*24*3600, '/', null, false, true);
 				setcookie("pass", $pass, time() + 31*24*3600, '/', null, false, true);
-				echo json_encode(array('status' => 200, 'id' => (int) $user['id'], 'mail' => $mail, 'nom' => $user['nom']));
+				echo json_encode(array('id' => (int) $user['id'], 'mail' => $mail, 'nom' => $user['nom']));
 			} else {
 				$clef = generateRandomString(30);
 
@@ -205,7 +205,7 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 			$send = false;
 		} */
 
-		echo json_encode(array('status' => 200, 'sent' => $send));
+		echo json_encode(array('sent' => $send));
 
 	} else echo json_encode(array('status' => 401, 'err' => 'exists'));
 

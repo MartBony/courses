@@ -211,7 +211,6 @@ export default class UI {
 		document.getElementById("prices").setAttribute("key", id);
 		$('#prices').css({'display':'block', 'opacity':'1'});
 		$('#prices').scrollTop(0);
-		$('.ms-Icon--ShoppingCart').addClass('ms-Icon--ShoppingCartSolid').removeClass('ms-Icon--ShoppingCart');
 		$('.titrePrice').html('<i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i>'+ item.titre);
 
 		document.getElementById("forms").classList.add('opened','prices');
@@ -341,7 +340,7 @@ export default class UI {
 
 			Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = 'auto');
 
-			$(adder).css({'transition':'0s', 'transform':'', 'position':'','top':'','left':''});
+			$(adder).css({'transition':'', 'transform':'', 'position':'','top':'','left':''});
 			$(selector).eq(index).remove();
 			$(selector).css({
 				'position':'',

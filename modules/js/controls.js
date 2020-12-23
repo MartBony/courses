@@ -51,7 +51,7 @@ export default function initEvents(app){
 		},
 		activate = () => {
 			$('.loader').addClass('opened');
-			$('.activate').css({'opacity':'0.8'});
+			$('.promptActivation').css({'opacity':'0.8'});
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
@@ -59,10 +59,12 @@ export default function initEvents(app){
 			}).then(data => {
 				$('.loader').removeClass('opened');
 				setTimeout(function(){
-					$('#add').removeClass('hidden');
-					$('.activate').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.remove("hide");
+					});
+					$('.promptActivation').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
 					setTimeout(function(){
-						$('.activate').css({'display':'none'});
+						$('.promptActivation').css({'display':'none'});
 					}, 420);	
 				},400);
 				setTimeout(function(){
@@ -83,7 +85,7 @@ export default function initEvents(app){
 				} else { // TODO
 					UI.erreur("Un problème sur le serveur est survenu, réessayez");
 					$('.loader').removeClass('opened');
-					$('.activate').css({'opacity':'1'});
+					$('.promptActivation').css({'opacity':'1'});
 					UI.offlineMsg(app, err);
 				}
 			});
@@ -108,7 +110,7 @@ export default function initEvents(app){
 					if (!app.course.started) $('.activate').click();
 
 					$('html, body').animate({scrollTop: 0}, 30);
-					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.prix));
+					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
 			
 					app.totalPP(data.prix);
 					$('#addArticle #titreA, #addArticle #prix').val('');
@@ -119,7 +121,7 @@ export default function initEvents(app){
 					},300);
 
 
-					app.course.items.articles.unshift({id: data.id, titre: data.titre, prix: data.prix});
+					app.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
 					idbStorage.put("courses", app.course.export());
 
 				})
@@ -276,7 +278,7 @@ export default function initEvents(app){
 						]);
 					} else {
 						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, err);
+						UI.offlineMsg(app, res);
 					}
 				});
 			}
@@ -314,7 +316,7 @@ export default function initEvents(app){
 							UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
 						} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "No User Found"}) {
 							UI.erreur('Erreur',"Les informations entrées ne correspondent à aucun utilisateur, réessayez");
-						} else UI.offlineMsg(app, err);
+						} else UI.offlineMsg(app, res);
 					});
 				}
 				else{
@@ -469,21 +471,20 @@ export default function initEvents(app){
 
 	Array.from(document.getElementsByClassName('main')).forEach(el => {
 		el.addEventListener('click', e => {
-			console.log(e.target.classList);
 			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle()
 				else UI.addPreview()
-			} else if(e.target.classList.contains('noCourse') || e.target.parentNode.classList.contains('noCourse')) UI.openMenus('mainMenu')
+			} else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
-				let article = e.target.tagName == "LI" ? e.target : (e.target.parentNode.tagename == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
+				let article = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				UI.hideOptions();
-				setTimeout(() => UI.showOptions(app, "article", article), 50);
+				if(!app.course.old) setTimeout(() => UI.showOptions(app, "article", article), 50);
 				
 			}else if(e.target.parentNode.parentNode.classList.contains('preview') || e.target.parentNode.classList.contains('preview') || e.target.classList.contains('preview')){
-				let preview = e.target.tagName == "LI" ? e.target : (e.target.parentNode.tagename == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
+				let preview = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				UI.hideOptions();
-				setTimeout(() => UI.showOptions(app, "preview", preview), 50);
+				if(!app.course.old) setTimeout(() => UI.showOptions(app, "preview", preview), 50);
 				
 			} else if (e.target.parentNode.classList.contains('options')){
 				if(e.target.classList.contains('ms-Icon--Cancel')){

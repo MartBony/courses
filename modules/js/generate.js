@@ -92,66 +92,47 @@ export default class Generate{
 	
 	}
 	static activate(){
-		let button = document.createElement('button'),
-			i = document.createElement('i'),
-			h4 = document.createElement('h4'),
-			p = document.createElement('p'),
-			childrens = [i, h4, p];
+		let div = document.createElement("div"),
+		i = document.createElement('i'),
+		h4 = document.createElement('h4'),
+		h5 = document.createElement('h5'),
+		p = document.createElement('p'),
+		button = document.createElement('button');
 
-		button.className = "activate";
-		i.className = "ms-Icon ms-Icon--Play";
+		div.classList.add("promptActivation");
+		i.className = "ms-Icon ms-Icon--ShoppingCart";
 		i.setAttribute("aria-hidden","true");
-		h4.innerHTML = "Je suis dans le magasin";
-		p.innerHTML = "Je lance mes courses";
-		
-		childrens.forEach(child => {
-			button.appendChild(child);
-		});
+		h4.appendChild(i);
+		h4.innerHTML += "Vous êtes prêts à faire vos achats?";
+		h5.innerHTML = "Si vous êtes satisfaits de votre liste de course, commencez vos achats ci dessous.";
+		p.innerHTML = "La date actuelle sera associée à votre course. Vous pouvez toujours ajouter des articles à votre liste si besoin, ou acheter directement un article depuis cette page. La course s'active automatiquement lors de l'achat d'un article.";
+		button.className = "activate";
+		button.innerHTML = "Activer";
 
-		return button;
+		div.appendChild(h4);
+		div.appendChild(h5);
+		div.appendChild(p);
+		div.appendChild(button);
 
-		/* return `<button class="activate">
-			<i class="ms-Icon ms-Icon--Play" aria-hidden="true"></i>
-			Je suis dans le magasin<br>
-			<p>Je lance mes courses</p>
-		</button>`; */
+		return div;
+
 	}
 	static noCourse(){
-		let button = document.createElement('button'),
-			i = document.createElement('i'),
+		let div = document.createElement("div"),
 			h4 = document.createElement('h4'),
-			p = document.createElement('p'),
-			childrens = [i, h4, p];
+			h5 = document.createElement('h5'),
+			button = document.createElement('button');
 
+		div.classList.add("promptEmpty");
+		h4.innerHTML += "Bienvenue";
+		h5.innerHTML = "Pour creer la première course de ce groupe, ouvrez le menu et cliquez sur nouvelle course.";
 		button.className = "noCourse";
-		i.className = "ms-Icon ms-Icon--GlobalNavButton";
-		i.setAttribute("aria-hidden","true");
-		h4.innerHTML = "Aucune course";
-		p.innerHTML = "Ouvrir le menu en tapant ici";
+		button.innerHTML = "Menu";
 		
-		childrens.forEach(child => {
-			button.appendChild(child);
-		});
+		div.appendChild(h4);
+		div.appendChild(h5);
+		div.appendChild(button);
 
-		return button;
-	}
-	static noSelected(){
-		let button = document.createElement('button'),
-			i = document.createElement('i'),
-			h4 = document.createElement('h4'),
-			p = document.createElement('p'),
-			childrens = [i, h4, p];
-
-		button.className = "noCourse";
-		i.className = "ms-Icon ms-Icon--GlobalNavButton";
-		i.setAttribute("aria-hidden","true");
-		h4.innerHTML = "Rien par ici";
-		p.innerHTML = "Selectionnez une course";
-		
-		childrens.forEach(child => {
-			button.appendChild(child);
-		});
-
-		return button;
+		return div;
 	}
 }

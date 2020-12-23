@@ -3,10 +3,10 @@ import UI from './UI.js';
 import { addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 import { LocalStorage } from './storage.js';
-import { $_GET } from './tools.js';
 
 let app;
 
+console.log("Index loaded");
 authenticate();
 
 
@@ -87,33 +87,6 @@ document.querySelector('form.connect').onsubmit = e => {
 	});
 }
 
-if ($_GET('auth') && $_GET('mail')) {
-	let clef = $_GET('auth'),
-		mail = $_GET('mail');
-	$.ajax({
-		method: "POST",
-		url: "serveur/auth.php",
-		data: { confirm: true, mail: mail, clef: clef}
-	}).then(data => {
-		if (data.status == 200 && data.mail){
-			document.getElementById('cEmail').value = data.mail;
-			alert("Votre compte est activé, vous pouvez maintenant vous connecter");
-			history.replaceState({key: null}, '', '/courses/');
-		} else if((data.status == 400 || data.status == 401) && data.err){
-			switch(data.err){
-				case "manquant":
-					alert('Il faut remplir tous les champs');
-					break;
-				case "wrong":
-					alert('Les informations fournies ne sont pas correctes, le lien fournit est incorrect');
-					break;
-			}
-		}
-	}).catch(err => {
-		console.log(err);
-	});
-}
-
 
 function authenticate(){
 	$.ajax({
@@ -122,6 +95,8 @@ function authenticate(){
 		data: { tryCookiesAuth: true }
 	})
 	.then(data => {
+		console.log("Auth attempted, request succeeded with res :");
+		console.log(data);
 		return data.id
 	})
 	.catch(res => {
