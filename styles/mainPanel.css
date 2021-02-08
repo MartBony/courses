@@ -179,12 +179,10 @@ button.adder{
 	padding: 10px 20px;
 	background: var(--color-theme-secondary);
 	color: var(--color-text-menu);
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 10px;
-	bottom: 0;
+	position: relative;
+	margin-right: 10px;
 	border-radius: inherit;
+	box-sizing: border-box;
 }
 
 

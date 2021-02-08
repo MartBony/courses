@@ -583,10 +583,10 @@ class App{
 		$('#moiPrev').html((totalTax * this.usedGroupe.coef).toFixed(2) + this.params.currency);
 		$('#anPrev').html((totalTax * this.usedGroupe.coef * 12).toFixed(2) + this.params.currency);
 		if(this.course.maxPrice < totalTax){
-			$('html').css({'--colorHeader': 'linear-gradient(-45deg, #CA5010, #E81123)','--colorAdd': 'linear-gradient(45deg, #CA5010, #E81123)','--colorMax': '#CA5010'});
+			$('#panier').css({'--color-theme': 'linear-gradient(-45deg, #CA5010, #E81123)'});
 		}
 		else{
-			$('html').css({'--colorHeader': '','--colorAdd': '','--colorMax': ''});
+			$('#panier').css({'--color-theme': ''});
 		}
 	}
 	generateInviteKey(){
