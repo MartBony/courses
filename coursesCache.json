@@ -2,7 +2,7 @@
 	"/courses/",
 	"/courses/index.php",
 	"/courses/offlineRes.json",
-	"/courses/manifest.json",
+	"/courses/manifest.webmanifest",
 	"/courses/styles/parametres.css",
 	"/courses/styles/popups.css",
 	"/courses/styles/forms.css",

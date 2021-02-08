@@ -112,7 +112,7 @@ export default function initEvents(app){
 					$('html, body').animate({scrollTop: 0}, 30);
 					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
 			
-					app.totalPP(data.prix);
+					app.total += data.prix;
 					$('#addArticle #titreA, #addArticle #prix').val('');
 					$('#quantA').val(1);
 

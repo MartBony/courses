@@ -3,6 +3,7 @@
 }
 
 #menubar{
+	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
 	background: var(--color-theme);
 	color: var(--color-text-menu);

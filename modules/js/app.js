@@ -213,7 +213,7 @@ class App{
 			$('.loader').removeClass('opened');
 			let displayedIndex = this.course.items.articles.indexOf(item);
 
-			this.totalPP(-data.prix);
+			this.total -= data.prix;
 			UI.remove("article", displayedIndex);
 
 			this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
@@ -316,7 +316,7 @@ class App{
 					UI.acc(this);
 					$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.color, data.prix));
 					$('#prices #newPrice').val('');
-					this.totalPP(data.prix);
+					this.total += data.prix;
 					$('.prices #titreA, .prices #prix').val('');
 		
 					setTimeout(() => {
@@ -565,7 +565,7 @@ class App{
 			}
 		});
 	}
-	totalPP(constante, reset = false){
+	/* totalPP(constante, reset = false){
 		let total = Number((this.course.total + Number(constante)).toFixed(2)),
 			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
 			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
@@ -588,7 +588,7 @@ class App{
 		else{
 			$('#panier').css({'--color-theme': ''});
 		}
-	}
+	} */
 	generateInviteKey(){
 		$('.loader').addClass('opened');
 		$.ajax({
@@ -613,6 +613,31 @@ class App{
 				UI.offlineMsg(this, "Il y a eu un problème innatendu");
 			}
 		});
+	}
+	get total(){
+		return this.course.totalCost;
+	}
+	set total(val){
+		val = Number(val);
+		let total = Number(val.toFixed(2)),
+			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
+			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
+
+		if(index <= 5 && index >= 0) {
+			this.chartContent[this.chartContent.length - index - 1] = parseFloat((this.chartContent[this.chartContent.length - index - 1] + val)).toFixed(2);
+			this.chartContent[this.chartContent.length - index - 1] = parseFloat(this.chartContent[this.chartContent.length - index - 1]);
+		}
+
+		document.getElementById('totalDep').innerHTML = total.toFixed(2) + this.params.currency;
+		document.getElementById('totalTaxDep').innerHTML = totalTax.toFixed(2) + this.params.currency;
+		if(this.course.maxPrice < totalTax){
+			document.getElementById('panier').style.setProperty('--color-theme', 'linear-gradient(-45deg, #CA5010, #E81123)');
+		}
+		else{
+			document.getElementById('panier').style.setProperty('--color-theme', '');
+		}
+
+		this.course.totalCost = total;
 	}
 }
 

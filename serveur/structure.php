@@ -26,7 +26,6 @@ function groupes($user, PDO $bdd) {
 			if($reqGroupe->rowCount() == 1){
 				$coursesList = array();
 				$membresGp = array();
-				$error = false;
 
 				// Pulling membres for specified group
 				$reqAllUsers->execute();
@@ -39,16 +38,11 @@ function groupes($user, PDO $bdd) {
 
 				// Pulling courses + Get additionnal data
 
-				$monthCost = 0;
 				$firstDate = time();
-				$coef = 0;
 
 				$reqAllCourses->execute(array($idGroupe));
 				while($resCoursesGp = $reqAllCourses->fetch()){
 					
-					if (time() - $resCoursesGp['dateStart'] < 31*24*60*60) {
-						$monthCost += $resCoursesGp['total'];
-					}
 					if ($resCoursesGp['dateStart'] != 0) {
 						$firstDate = min($resCoursesGp['dateStart'], $firstDate);
 					}
@@ -59,16 +53,6 @@ function groupes($user, PDO $bdd) {
 					));
 				}
 				$reqAllCourses->closeCursor();
-
-				if (!empty($coursesList)) {
-					if (time() - $firstDate > 31*24*60*60) {
-						$coef = max(1,sizeof($coursesList)*(31*24*60*60)/(time() - $firstDate));
-					} else {
-						$coef = 2.5;
-					}
-				} else {
-					$error = 204;
-				}
 
 				array_push($groupsInfo, array(
 					'id' => (int) $groupe['id'],

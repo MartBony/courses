@@ -5,10 +5,10 @@ export default class Course{
 		this.id;
 		this.nom;
 		this.maxPrice;
-		this.total;
+		this.totalCost;
 		this.dateStart;
 		this.groupe;
-		this.taxes;
+		this.taxes = 0;
 		this.items = {
 			articles: new Array,
 			previews: new Array
@@ -24,14 +24,13 @@ export default class Course{
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
 		this.maxPrice = Number(data.maxPrice);
-		this.total = Number(data.total);
+		app.total = Number(data.total);
 		this.dateStart = data.dateStart;
 		this.groupe = Number(data.groupe);
 		this.taxes = Number(data.taxes);
 
 		this.old = data.id != app.usedGroupe.coursesList[0].id;
 
-		app.totalPP(0, true);
 		$('#maxprice').html(this.maxPrice + app.params.currency);
 
 		let items = data.items,
@@ -106,7 +105,7 @@ export default class Course{
 			'id': this.id,
 			'nom': this.nom,
 			'maxPrice': this.maxPrice,
-			'total': this.total,
+			'total': this.totalCost,
 			'dateStart': this.dateStart,
 			'groupe': this.groupe,
 			'taxes': this.taxes,

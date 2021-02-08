@@ -12,7 +12,6 @@ login($bdd, function($user) use ($bdd){
 
 		$coursesList = array();
 		$membresGp = array();
-		$error = false;
 
 		// Pulling membres for specified group
 		$reqAllUsers->execute();
@@ -25,16 +24,12 @@ login($bdd, function($user) use ($bdd){
 
 		// Pulling courses + Get additionnal data
 
-		$monthCost = 0;
 		$firstDate = time();
-		$coef = 0;
 
 		$reqAllCourses->execute(array($groupe['id']));
 		while($resCoursesGp = $reqAllCourses->fetch()){
 			
-			if (time() - $resCoursesGp['dateStart'] < 31*24*60*60) {
-				$monthCost += $resCoursesGp['total'];
-			}
+		
 			if ($resCoursesGp['dateStart'] != 0) {
 				$firstDate = min($resCoursesGp['dateStart'], $firstDate);
 			}
@@ -48,25 +43,12 @@ login($bdd, function($user) use ($bdd){
 		}
 		$reqAllCourses->closeCursor();
 
-		if (!empty($coursesList)) {
-			if (time() - $firstDate > 31*24*60*60) {
-				$coef = max(1,sizeof($coursesList)*(31*24*60*60)/(time() - $firstDate));
-			} else {
-				$coef = 2.5;
-			}
-		} else {
-			$error = 204;
-		}
-
 		http_response_code(200);
 		echo json_encode(array(
 			'id' => (int) $groupe['id'],
 			'nom' => $groupe['nom'],
 			'coursesList' => $coursesList,
 			'membres' => $membresGp,
-			'monthCost' => (float) $monthCost,
-			'coef' => (float) $coef,
-			'error' => $error
 		));
 	});
 });
