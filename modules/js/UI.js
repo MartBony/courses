@@ -136,7 +136,6 @@ export default class UI {
 		document.querySelector('#modal').className = '';
 	}
 	static offlineMsg(app, err, msg){
-		console.log(err);
 		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
 
 		UI.erreur("Pas de réseau", msg, [

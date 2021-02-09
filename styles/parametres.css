@@ -105,6 +105,12 @@
 
 #params label{
 	font-size: 1.6rem;
+
+	
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 article#groupes {
@@ -112,6 +118,12 @@ article#groupes {
 	grid-template-columns: repeat(2, 1fr);
 	grid-gap: var(--padding-param);
 	padding-bottom: 50px;
+
+	
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 #params button{

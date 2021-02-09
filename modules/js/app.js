@@ -459,8 +459,9 @@ class App{
 					if (data.dateStart == 0) {
 						$('#panier ul').prepend(Generate.activate());
 
+						document.getElementsByClassName("adder")[0].classList.add("hide");
 						UI.openPanel('liste');
-					}
+					} else UI.openPanel('panier');
 				} 
 				
 			}
