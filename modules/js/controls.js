@@ -614,7 +614,7 @@ export default function initEvents(app){
 		else if(event.target.classList.contains('course')) {
 			let id = event.target.getAttribute("dbIndex");
 			if(id){
-				open(() => {UI.acc(app); if(window.innerWidth > 900) {UI.openPanel("menu", app.chartContent, app)}}, null, id);
+				open(null, null, id);
 			}
 		}
 		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {

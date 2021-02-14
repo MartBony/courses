@@ -1,3 +1,89 @@
+.loader
+{
+	font-size: 3rem;
+	font-weight: bold;
+	visibility: collapse;
+	opacity: 0;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	z-index: 8;
+	background: rgba(255,255,255,0.80);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.loader.opened
+{
+	visibility: visible;
+	opacity: 1;
+	transition: visibility 300ms ease-in, opacity 300ms ease-in 1s;
+}
+
+.loader h1{
+	color: var(--colorText);
+	font-size: 2rem;
+	font-weight: bold;
+	animation: pop 300ms ease-out;
+}
+
+.loader .logo
+{
+	position: relative;
+	width: 150px;
+	height: 150px;
+	animation: pulse 500ms ease infinite alternate;
+}
+
+.loader img
+{
+	position: absolute;
+	width: 100%;
+	height: auto;
+}
+
+.loader img:nth-child(2)
+{
+	animation: 1.1s pulsar 500ms ease infinite alternate;
+}
+
+.loader img:nth-child(3)
+{
+	animation: 1.2s pulsar 500ms ease infinite alternate;
+}
+
+.loader img:nth-child(4)
+{
+	animation: 1.3s pulsar 500ms ease infinite alternate;
+}
+
+@keyframes pulsar{
+	30%{
+		transform: scale(1);
+	}
+	50%{
+		transform: scale(1.05);
+	}
+	70%{
+		transform: scale(1);
+	}
+}
+
+.loader img.opened
+{
+	transform: scale(1);
+	opacity: 1;
+	transition: all 500ms cubic-bezier(0.1, 0.9, 0, 1) 300ms;
+}
+
+
+
+
+
 .options{
 	visibility: hidden;
 	opacity: 0;

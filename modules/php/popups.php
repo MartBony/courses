@@ -19,8 +19,13 @@
 	<button>Télécharger l'application</button>
 </section>
 <section class="loader">
-	<div></div>
-	Synchronisation
+	<div class="logo">
+		<img src="images/logo_bg.png">
+		<img src="images/logo_bt.png">
+		<img src="images/logo_md.png">
+		<img src="images/logo_tp.png">
+	</div>
+	<h1>En cours</h1>
 </section>
 <section id="modal">
 	<article id="leaveGroupe">

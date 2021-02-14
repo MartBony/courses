@@ -121,7 +121,7 @@
 	position: fixed;
 	text-align: center;
 	font-weight: bold;
-	padding: 10px;
+	padding: 9px;
 	background:var(--color-theme);
 	color: var(--color-text-menu);
 	border-radius: 5px;

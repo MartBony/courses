@@ -165,7 +165,6 @@ button.adder{
 .article, .preview
 {
 	color: white;
-	min-height: 66px;
 	position: relative;
 	padding: 0;
 	background: var(--colorArticle);
