@@ -47,7 +47,7 @@ class App{
 		}
 
 
-		document.querySelector("#prices ul").innerHTML = "";
+		/* document.querySelector("#prices ul").innerHTML = "";
 		this.liPrices.forEach(item => {
 			let li = document.createElement("li");
 			li.innerHTML = item+this.params.currency;
@@ -56,7 +56,7 @@ class App{
 		var numLi = $('#prices ul').children().length; // Série des prix
 		$('#prices li').each(i => {
 			$('#prices li').eq(i).css({'filter':'grayscale('+ (i+1)/numLi*50 +'%)'});
-		});
+		}); */
 
 		toChange.forEach(item => item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency));
 	}
@@ -632,7 +632,7 @@ class App{
 		document.getElementById('totalDep').innerHTML = total.toFixed(2) + this.params.currency;
 		document.getElementById('totalTaxDep').innerHTML = totalTax.toFixed(2) + this.params.currency;
 		if(this.course.maxPrice < totalTax){
-			document.getElementById('panier').style.setProperty('--color-theme', 'linear-gradient(-45deg, #CA5010, #E81123)');
+			//document.getElementById('panier').style.setProperty('--color-theme', 'linear-gradient(-45deg, #CA5010, #E81123)');
 		}
 		else{
 			document.getElementById('panier').style.setProperty('--color-theme', '');

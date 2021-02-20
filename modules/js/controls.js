@@ -2,7 +2,6 @@ import Pull from './requests.js';
 import UI from './UI.js';
 import { LocalStorage, idbStorage } from './storage.js';
 import Generate from './generate.js';
-import { /* swipedetect, */ SwipeBackPanel, SwipeBtPanel } from './touch.js';
 
 
 export default function initEvents(app){
@@ -15,7 +14,7 @@ export default function initEvents(app){
 		} else {
 			let loop = setInterval(() => {
 				if(!app.pending){
-					document.querySelector('.loader').classList.add('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					app.pull("refresh", idGroupe, idCourse).then(callback);
 					clearInterval(loop);
 				}
@@ -30,7 +29,7 @@ export default function initEvents(app){
 			} else {
 				let loop = setInterval(() => {
 					if(!app.pending){
-						document.querySelector('.loader').classList.add('opened');
+						document.querySelector('.loader').classList.remove('opened');
 						app.pull("open", idGroupe, idCourse).then(callback);
 						clearInterval(loop);
 					}
@@ -50,7 +49,7 @@ export default function initEvents(app){
 		}
 		},
 		activate = () => {
-			$('.loader').addClass('opened');
+			document.getElementsByClassName('loader')[0].classList.add('opened');
 			$('.promptActivation').css({'opacity':'0.8'});
 			$.ajax({
 				method: "POST",
@@ -84,7 +83,7 @@ export default function initEvents(app){
 					]);
 				} else { // TODO
 					UI.erreur("Un problème sur le serveur est survenu, réessayez");
-					$('.loader').removeClass('opened');
+				document.getElementsByClassName('loader')[0].classList.remove('opened');
 					$('.promptActivation').css({'opacity':'1'});
 					UI.offlineMsg(app, err);
 				}
@@ -92,32 +91,32 @@ export default function initEvents(app){
 		},
 		addArticle = e => {
 			e.preventDefault();
-			if (!isNaN(parseFloat($('#addArticle #prix').val().replace(',','.')))) {
-				$('.loader').addClass('opened');
+			if (!isNaN(parseFloat($('#modernArticleAdder #prix').val().replace(',','.')))) {
+				document.getElementsByClassName('loader')[0].classList.add('opened');
 				$.ajax({
 					method: "POST",
 					url: "serveur/push.php",
 					data: {
 						submitArticle: true,
-						titre: $('#addArticle #titreA').val(),
-						prix: $('#addArticle #prix').val().replace(',','.') * $('#quantA').val(),
+						titre: $('#modernArticleAdder #titreA').val(),
+						prix: $('#modernArticleAdder #prix').val().replace(',','.') * $('#quantA').val(),
 						groupe: app.usedGroupe.id
 					}
 				}).then(data => {
-					$('.loader').removeClass('opened');
+					document.getElementsByClassName('loader')[0].classList.remove('opened');
 					UI.acc(app);
 
 					if (!app.course.started) $('.activate').click();
 
-					$('html, body').animate({scrollTop: 0}, 30);
+					window.scrollTo({ top: 0, behavior: 'smooth' });
 					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
 			
 					app.total += data.prix;
-					$('#addArticle #titreA, #addArticle #prix').val('');
-					$('#quantA').val(1);
+					Array.from(document.querySelectorAll('#modernArticleAdder input')).slice(0,2).forEach(el => el.value = '');
+					document.getElementById('quantA').value = 1;
 
-					setTimeout(function(){
-						$('.article').removeClass('animateSlideIn');
+					setTimeout(() => {
+						document.getElementsByClassName('article')[0].classList.remove('animateSlideIn');
 					},300);
 
 
@@ -126,7 +125,7 @@ export default function initEvents(app){
 
 				})
 				.catch(res => {
-					$('.loader').removeClass('opened');
+					document.getElementsByClassName('loader')[0].classList.remove('opened');
 					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -144,21 +143,22 @@ export default function initEvents(app){
 		},
 		addPreview = e => {
 			e.preventDefault();
-			if ($('#addPreview #titreP').val() && $('#addPreview #titreP').val() != '') {
-				$('.loader').addClass('opened');
+			if ($('#modernPreviewAdder #titreP').val() && $('#modernPreviewAdder #titreP').val() != '') {
+				document.getElementsByClassName('loader')[0].classList.add('opened');
 				$.ajax({
 					method: "POST",
 					url: "serveur/push.php",
-					data: { submitPreview: 'true', titre: $('#addPreview #titreP').val(), groupe: app.usedGroupe.id }
+					data: { submitPreview: 'true', titre: $('#modernPreviewAdder #titreP').val(), groupe: app.usedGroupe.id }
 				}).then(data => {
-					$('.loader').removeClass('opened');
+					document.getElementsByClassName('loader')[0].classList.remove('opened');
 					UI.acc(app);
-					$('html, body').animate({scrollTop: 0}, 30);
-					$('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
 					
-					$('#addPreview #titreP').val('');
-					setTimeout(function(){
-						$('.preview').removeClass('animateSlideIn');
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+					document.querySelector('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
+					
+					document.querySelector('#modernPreviewAdder #titreP').value = '';
+					setTimeout(() => {
+						document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn');
 					},300);
 
 
@@ -171,7 +171,7 @@ export default function initEvents(app){
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
 					} else {
-						$('.loader').removeClass('opened');
+						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						UI.offlineMsg(app, err);
 					}
 				});
@@ -197,42 +197,43 @@ export default function initEvents(app){
 		},
 		addCourse = e => {
 			e.preventDefault();
-			if (!isNaN(parseFloat( $('#addCourse #maxPrice').val().replace(',','.')))) {
-				$('.loader').addClass('opened');
+			if (!isNaN(parseFloat( $('#modernCourseAdder #maxPrice').val().replace(',','.')))) {
+				document.getElementsByClassName('loader')[0].classList.add('opened');
 				$.ajax({
 					method: "POST",
 					url: "serveur/push.php",
 					data: {
 						submitCourse: true,
-						titre: $('#addCourse #titreC').val(),
-						maxPrice: $('#addCourse #maxPrice').val().replace(',','.'),
-						taxes: $('#addCourse #cTaxes').val().replace(',','.'),
+						titre: $('#modernCourseAdder #titreC').val(),
+						maxPrice: $('#modernCourseAdder #maxPrice').val().replace(',','.'),
+						taxes: $('#modernCourseAdder #cTaxes').val().replace(',','.'),
 						groupe: app.usedGroupe.id
 					}
 				}).then(() => {
-					$('.loader').removeClass('opened');
+					document.getElementsByClassName('loader')[0].classList.remove('opened');
 					history.replaceState({key:'createCourse'}, '','index.php');
 
 					LocalStorage.setItem('usedCourse', null);
-					document.querySelector('.loader').classList.add('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					if(!app.pending){
 						app.pull("refresh").then(() => {
 							UI.acc(app);
-							$('#addCourse #titreC, #addCourse #maxPrice').val('');
+							Array.from(document.querySelectorAll('#modernCourseAdder input')).slice(0,2).forEach(el => el.value = '');
 						});
 					} else {
 						let loop = setInterval(() => {
 							if(!app.pending){
-								document.querySelector('.loader').classList.add('opened');
+								document.querySelector('.loader').classList.remove('opened');
 								app.pull("refresh").then(() => {
 									UI.acc(app);
-									$('#addCourse #titreC, #addCourse #maxPrice').val('');
+									Array.from(document.querySelectorAll('#modernCourseAdder input')).slice(0,2).forEach(el => el.value = '');
 								});
 								clearInterval(loop);
 							}
 						}, 1000);
 					}
 				}).catch(res => {
+					document.querySelector('.loader').classList.remove('opened');
 					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
@@ -240,7 +241,7 @@ export default function initEvents(app){
 					} else if (res.status == 403){
 						UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
 					} else {
-						$('.loader').removeClass('opened');
+						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						UI.offlineMsg(app, err);
 					}
 				});
@@ -252,20 +253,20 @@ export default function initEvents(app){
 		addGroupe = e => {
 			e.preventDefault();
 			if ($('#addGroupe #titreG').val() && $('#addGroupe #titreG').val() != '') {
-				$('.loader').addClass('opened');
+				document.getElementsByClassName('loader')[0].classList.add('opened');
 				$.ajax({
 					method: "POST",
 					url: "serveur/push.php",
 					data: { newGroupe: true, titre: $('#addGroupe #titreG').val() }
 				}).then(data => {
-					$('.loader').removeClass('opened');
+				document.getElementsByClassName('loader')[0].classList.remove('opened');
 					$('#addGroupe #titreG').val("");
 					LocalStorage.clear();
 					UI.closeForms();
-					document.querySelector('.loader').classList.add('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					refresh();
 				}).catch(res => {
-					$('.loader').removeClass('opened');
+				document.getElementsByClassName('loader')[0].classList.remove('opened');
 					if (res.status == 400 && res.responseJSON && res.responseJSON.err && res.responseJSON.err == 'length'){
 						alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
 					} else if (res.responseJSON && res.responseJSON.notAuthed){
@@ -288,7 +289,7 @@ export default function initEvents(app){
 			if ($('#invitation #nomInv').val() && $('#invitation #nomInv').val() != '') {
 				if ($('#invitation #keyInv').val() && $('#invitation #keyInv').val() != '') {
 			
-					$('.loader').addClass('opened');
+					document.getElementsByClassName('loader')[0].classList.add('opened');
 					$.ajax({
 						method: "POST",
 						url: "serveur/invites.php",
@@ -324,70 +325,6 @@ export default function initEvents(app){
 				alert('Renseignez le nom de l\'utilisateur');
 			}
 		};
-
-
-	// Touch events
-
-	/* var swipeSurface = document.getElementById('touchSurface'); // Swipe touch surface
-	swipedetect(swipeSurface, function(swipedir){
-		if($('body').hasClass('bodyPreview')){
-			if (swipedir == 'right'){
-				app.setSwipe(0);
-			}
-			else{
-				$('#panier ul').css({'transition':'all 250ms cubic-bezier(0.1,0.9,0,1)', 'transform':'translateX(-100vw)'});
-				$('#liste ul').css({'transition':'all 250ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
-			}
-		}
-		else{
-			if (swipedir == 'left'){
-				app.setSwipe(1);
-			}
-			else{
-				$('#panier ul').css({'transition':'all 250ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
-				$('#liste ul').css({'transition':'all 250ms cubic-bezier(0.1,0.9,0,1)', 'transform':'translateX(100vw)'});
-			}
-		}
-
-
-		$('header h1').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':'translateX(0px)'});
-		$('#add, #refresh').css({'transition':'all 100ms cubic-bezier(0.1,0.9,0,1)', 'transform':''});
-
-		setTimeout(function(){
-			$('#calcul').css({'transform': '', 'transition':'', 'display':''});
-			$('header h1, #add').css({'transition':'', 'transform':''});
-		},300);
-	});
-
-	var btTouchSurface = document.getElementById('btTouchSurf'); // Open calcul pane surface
-	SwipeBtPanel(btTouchSurface, dir => {
-		$('#calcul').css({'height':'', 'transition':''});
-		if (dir == 'top') {
-			UI.openMenus('calcul', app.chartContent, app);
-			$('#backTouchSurf').css({'visibility':'visible'});
-			$('#btTouchSurf').css({'visibility':'hidden'});
-		}
-		else if(dir == 'bottom'){
-			UI.closeMenus();
-			$('#backTouchSurf').css({'visibility':'hidden'});
-			$('#btTouchSurf').css({'visibility':'visible'});
-		}
-	});
-
-	var backTouchSurface = document.getElementById('backTouchSurf'); // Close calcul pane surface
-	SwipeBackPanel(backTouchSurface, function(dir){
-		$('#calcul').css({'height':'', 'transition':''});
-		if (dir == 'top') {
-			UI.openMenus('calcul', app.chartContent, app);
-			$('#backTouchSurf').css({'visibility':'visible'});
-			$('#btTouchSurf').css({'visibility':'hidden'});
-		}
-		else if(dir == 'bottom'){
-			UI.closeMenus();
-			$('#backTouchSurf').css({'visibility':'hidden'});
-			$('#btTouchSurf').css({'visibility':'visible'});
-		}
-	}); */
 
 
 
@@ -464,13 +401,19 @@ export default function initEvents(app){
 
 
 	// Main content
-
 	Array.from(document.getElementsByClassName('main')).forEach(el => {
-		el.addEventListener('click', e => {
+		el.addEventListener('pointerdown', e => {
 			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
+				if(el.id == "panier") UI.addArticle(e.clientX, e.clientY)
+				else UI.addPreview(e.clientX, e.clientY)
+			}
+		});
+
+		el.addEventListener('click', e => {
+			/* if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle()
 				else UI.addPreview()
-			} else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
+			} else  */if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
 				let article = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
@@ -549,6 +492,26 @@ export default function initEvents(app){
 
 	// Forms
 
+	document.getElementById('modernForms').addEventListener('click', e => {
+		if(e.target.parentNode.classList.contains("modernFormTitle") ){
+			UI.closeModernForms();
+		}
+	});
+
+	document.getElementById('modernForms').addEventListener('submit', e => {
+		switch(e.target.parentNode.id){
+			case "modernArticleAdder": 
+				if(e.target.tagName == "FORM") addArticle(e)
+				break;
+			case "modernPreviewAdder": 
+				if(e.target.tagName == "FORM") addPreview(e)
+				break;
+			case "modernCourseAdder": 
+				if(e.target.tagName == "FORM") addCourse(e)
+				break;
+		}
+	});
+
 	document.getElementById('forms').addEventListener('click', e => {
 		if (e.target.tagName == "I" && e.target.classList.contains("ms-Icon--Back")){
 			if(e.target.parentNode.id == "prices") UI.closePrice()
@@ -584,7 +547,9 @@ export default function initEvents(app){
 	let inputsForms = new Array(
 		Array.from(document.querySelectorAll('#addArticle input')),
 		Array.from(document.querySelectorAll('#addCourse input')),
-		Array.from(document.querySelectorAll('#prices > input'))
+		Array.from(document.querySelectorAll('#prices > input')),
+		Array.from(document.querySelectorAll('#modernArticleAdder input')),
+		Array.from(document.querySelectorAll('#modernCourseAdder input'))
 	);
 
 	inputsForms.forEach(inputsList => {
@@ -608,9 +573,13 @@ export default function initEvents(app){
 	});
 
 	// MainPanel
+	document.getElementById('mainPanel').addEventListener('pointerdown', e => {
+		if(e.target.id == "newCourse") UI.addCourse(e.clientX, e.clientY)
+	});
+
 	document.getElementById('mainPanel').addEventListener('click', event => {
 		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-		else if(event.target.id == "newCourse") UI.addCourse()
+		//else if(event.target.id == "newCourse") UI.addCourse()
 		else if(event.target.classList.contains('course')) {
 			let id = event.target.getAttribute("dbIndex");
 			if(id){

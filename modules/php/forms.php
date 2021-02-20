@@ -1,5 +1,74 @@
+<div id="modernForms">
+<section id="modernTransitionner" class="formContainer">
+		<h3 class="modernFormTitle">...</h3>
+	</section>
+	<section id="modernArticleAdder" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Acheter un article
+		</h3>
+		<form>
+			<div class="formflex">	
+				<label for="titreA">Nom</label>
+				<input maxlength="50" id="titreA" type="text" name="titreA" required />
+			</div>
+			<div class="formflex">	
+				<label for="prix">Prix (HT, par unité)</label>
+				<div class="prixFlex">
+					<input id="prix" type="double" name="prix" required />
+					€
+				</div>
+			</div>
+			<div class="formflex">
+				<label for="quantA">Quantité</label>
+				<input id="quantA" type="float" name="quantA" required value="1" />
+			</div>
+			<input class="submit" type="submit" name="submit" id="submitArticle" value="Ajouter">
+		</form>
+	</section>
+	<section id="modernPreviewAdder" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Ajouter un article
+		</h3>
+		<form>
+			<div class="formflex">	
+				<label for="titreP">Nom</label>
+				<input maxlength="50" id="titreP" type="text" name="titreP" required />
+			</div>
+			<input class="submit" type="submit" name="submit" id="submitPreview" value="Ajouter">
+		</form>
+	</section>
+	<section id="modernCourseAdder" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Créer une course
+		</h3>
+		<form>
+			<div class="formflex">	
+				<label for="titreC">Titre de la course</label>
+				<input maxlength="15" id="titreC" type="text" name="titreC" required />
+			</div>
+			<div class="formflex">	
+				<label for="maxPrice">Budget</label>
+				<div class="prixFlex">
+					<input id="maxPrice" type="double" name="maxPrice" required />
+					€
+				</div>
+			</div>
+			<div class="formflex">	
+				<label for="cTaxes">Taxes</label>
+				<div class="prixFlex">
+					<input id="cTaxes" type="double" name="cTaxes" value="0" required />
+					%
+				</div>
+			</div>
+			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
+		</form>
+	</section>
+</div>
 <div id="forms">
-	<section id="prices" class="fromContainer">
+	<!-- <section id="prices" class="fromContainer">
 		<div class="blur"></div>
 		<div class="titrePrice"><i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i></div>
 		<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
@@ -59,7 +128,7 @@
 			</div>
 			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 		</form>
-	</section>
+	</section> -->
 	<section id="addGroupe" class="fromContainer">
 		<div class="blur"></div>
 		<h1>Créer un groupe</h1>

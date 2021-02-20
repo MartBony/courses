@@ -47,7 +47,7 @@
 	background-image: url('../images/melons.webp');
 }
 
-.fromContainer{
+#forms .fromContainer{
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -81,7 +81,7 @@
 	background: #a0aeb2;
 }
 
-.fromContainer > .blur{
+#forms .fromContainer > .blur{
 	z-index: 0;
 	position: fixed;
 	top: 0;
@@ -95,7 +95,7 @@
 
 }
 
-.fromContainer > h1
+#forms .fromContainer > h1
 {
 	color: var(--color-text);
 	font-size: 2.5rem;
@@ -310,7 +310,7 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		--form-radius: 10px;
 	}
 
-	.fromContainer{
+	#forms .fromContainer{
 		width: 400px;
 		height: 300px;
 		left: calc(50% - 200px);
@@ -335,7 +335,7 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		top: 5%;
 	}
 
-	.titrePrice{
+	#forms .titrePrice{
 		width: 310px;
 	}
 }

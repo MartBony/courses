@@ -3,6 +3,7 @@
 @import "./parametres.css";
 @import "./popups.css";
 @import "./forms.css";
+@import "./modernForms.css";
 @import "./menus.css";
 @import "./auth.css";
 
@@ -78,10 +79,6 @@ body{
 	background: var(--colorMain);
 	margin: 0;
   	min-height: -webkit-fill-available;
-}
-
-.hide{
-	display: none;
 }
 
 img{

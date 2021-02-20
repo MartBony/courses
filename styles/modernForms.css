@@ -1,0 +1,218 @@
+#modernForms{
+	z-index: 5;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	background: rgba(0,0,0,0);
+	backdrop-filter: blur(0px);
+	visibility: hidden;
+	overflow: hidden;
+}
+
+#modernForms.opened{
+	visibility: visible;
+	background: rgba(0,0,0,0.4);
+	backdrop-filter: blur(20px);
+}
+
+#modernForms .formContainer{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	overflow: auto;
+	z-index: 2;
+}
+
+#modernForms #modernTransitionner{
+	z-index: 1;
+}
+
+#modernForms.articleForm #modernTransitionner,
+#modernForms.previewForm #modernTransitionner{
+	transition: 300ms opacity 300ms linear;
+	opacity: 0;
+}
+
+#modernForms #modernArticleAdder{
+	--formwidth: 300px;
+	--titlewidth: var(--formwidth);
+	--px: calc(50vw - (var(--titlewidth) / 2));
+	--py: 90px;
+	--rad: 10px;
+	opacity: 0;
+	transition: none;
+	visibility: collapse;
+}
+
+#modernForms.articleForm #modernArticleAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	opacity: 1;
+}
+
+#modernForms #modernCourseAdder{
+	--formwidth: 300px;
+	--titlewidth: var(--formwidth);
+	--px: calc(50vw - (var(--titlewidth) / 2));
+	--py: 90px;
+	--rad: 10px;
+	opacity: 0;
+	transition: none;
+	visibility: collapse;
+}
+
+#modernForms.courseForm #modernCourseAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	opacity: 1;
+}
+
+
+
+#modernForms #modernPreviewAdder{
+	--formwidth: 300px;
+	--titlewidth: var(--formwidth);
+	--px: calc(50vw - (var(--titlewidth) / 2));
+	--py: 90px;
+	--rad: 10px;
+	opacity: 0;
+	transition: 0s all linear;
+	visibility: collapse;
+}
+
+#modernForms.previewForm #modernPreviewAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	opacity: 1;
+}
+
+#modernForms #modernTransitionner{
+	--formwidth: 300px;
+	--titlewidth: var(--formwidth);
+	--px: calc(50vw - (var(--titlewidth) / 2));
+	--py: 90px;
+	--rad: 10px;
+}
+
+.modernFormTitle{
+	--pad: 10px;
+	position: absolute;
+	top: var(--py);
+	left: var(--px);
+	width: var(--titlewidth);
+	background: var(--color-theme);
+	color: var(--color-text-menu);
+	padding: var(--pad);
+	margin: 0;
+	text-align: center;
+	font-size: 2rem;
+	border-radius: var(--rad) var(--rad) 0 0;
+	z-index: 2;
+	user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+
+	box-sizing: border-box;
+}
+
+#modernTransitionner .modernFormTitle{
+	border-radius: var(--rad);
+}
+
+.modernFormTitle i{
+	position: absolute;
+	left: 0;
+	top: 0;
+	padding: var(--pad);
+	font-size: 2.7rem;
+}
+
+#modernForms form{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	position: absolute;
+	top: var(--py);
+	left: var(--px);
+	width: var(--formwidth);
+	height: auto;
+	padding: 20px;
+	padding-bottom: 40px;
+	padding-top: 70px;
+	margin-bottom: 200px;
+	background: rgba(250, 248, 245, 0.95);
+	border-radius: var(--rad);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+	box-sizing: border-box;
+}
+
+#modernForms .formflex{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	width: 100%;
+	margin: 10px 0 10px 0;
+}
+
+#modernForms label
+{
+	font-size: 1.6rem;
+	margin-left: 10px;
+	box-sizing: border-box;
+}
+
+#modernForms input{
+	width: 100%;
+	border-radius: 5px;
+	border: 1px solid black;
+	outline: none;
+	font-size: 1.5rem;
+	padding: 3px;
+	box-sizing: border-box;
+}
+
+.prixFlex{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 1.5rem;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 30px;
+	opacity: 1;
+	box-sizing: border-box;
+}
+
+
+
+#modernForms input.submit
+{
+
+	width: 30%;
+	font-weight: 600;
+	margin-top: 20px;
+	background: var(--color-theme);
+	color: white;
+	border: none;
+	outline: none;
+	padding: 5px;
+}
+
+@supports (backdrop-filter: blur(20px)){
+
+	#modernForms.opened{
+		background: rgba(0,0,0,0.2);
+		backdrop-filter: blur(20px);
+	}
+
+	#modernForms form{
+		background: rgba(250, 248, 245, 0.88);
+	}
+
+}

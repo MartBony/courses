@@ -1,165 +1,132 @@
-/* Fonctionnalité de détection */
-var passiveSupported = false;
-
-try {
-  window.addEventListener("test", null, Object.defineProperty({}, "passive", { get: function() { passiveSupported = true; } }));
-} catch(err) {}
-
-function swipedetect(el, callback){
-
-	var touchsurface = el,
-	swipedir,
-	startX,
-	startY,
-	distX,
-	distY,
-	threshold = 150, //required min distance traveled to be considered swipe
-	restraint = 100, // maximum distance allowed at the same time in perpendicular direction
-	allowedTime = 400, // maximum time allowed to travel that distance
-	elapsedTime,
-	startTime,
-	handleswipe = callback || function(swipedir){};
-
-	touchsurface.addEventListener('touchstart', function(e){
-		var touchobj = e.changedTouches[0];
-		swipedir = 'none';
-		distX = 0;
-		distY = 0;
-		startX = touchobj.pageX;
-		startY = touchobj.pageY;
-		startTime = new Date().getTime();
-		e.preventDefault();
-	}, passiveSupported ? { passive: false } : false);
-
-	touchsurface.addEventListener('touchmove', function(e){
-		e.preventDefault(); // prevent scrolling when inside DIV
-		var touchobj = e.changedTouches[0]
-		distX = touchobj.pageX - startX;
-		
-		$('header h1').css({'transform':'translateX('+ distX/20 +'px)'});
-		$('.add').css({'transform':'translateX('+ distX/20 +'px)', 'transition':'none'});
-		$('#refresh').css({'transform':'translateX('+ distX/40 +'px)', 'transition':'0s'});
-		if($('body').hasClass('bodyPreview')){
-			if (distX > 0) {
-				$('#liste ul').css({'transform':'translateX('+ distX/2 +'px)'});
+export default class Touch{
+	static handleFormOpenning(origin, targetId, action, refPointer = {x: 0, y: 0}){
+		// const ball = document.getElementById("ball");
+		const transitionner = document.getElementById("modernTransitionner"),
+			target =  document.getElementById(targetId);
+		let w = {x: null, y: null},
+		position = {x: null, y: null, width: null},
+		trajectory = [[origin, Date.now() / 1000]],
+		speed = null,
+		animKey = null,
+		acceleration = {x: null, y: null},
+		k = 70,
+		mass = 0.7,
+		f = 10,
+		finalPosition = () => {
+			let width = 300;
+			return {
+				x: w.x/2,
+				y: 100,
+				width: 300
 			}
-			else{
-				$('#liste ul').css({'transform':'translateX('+ distX/15 +'px)'});
+		};
+
+		function resize() {
+			w = {x: window.innerWidth, y: window.innerHeight};
+		}
+
+		function getState(){
+			return 1-(finalPosition().y - position.y)/(finalPosition().y - origin.y);
+		}
+
+		function setPos(x = origin.x, y = origin.y, width = origin.width){
+			width = Math.min(finalPosition().width, Math.max(origin.width, width))
+			position = {x, y, width};
+			transitionner.style.setProperty("--px", `${x - width/2}px`);
+			transitionner.style.setProperty("--py", `${y - 10}px`);
+			transitionner.style.setProperty("--titlewidth", `${width}px`);
+
+			target.style.setProperty("--px", `${x - width/2}px`);
+			target.style.setProperty("--py", `${y - 10}px`);
+		}
+
+		function move(e){
+			setPos(e.clientX+refPointer.x, e.clientY+refPointer.y, getState()*finalPosition().width);
+			trajectory.push([{x: e.clientX+refPointer.x, y: e.clientY+refPointer.y}, Date.now() / 1000]);
+			if(trajectory.length > 40) auto()
+		}
+
+		function auto(e) {
+			let precision = 5;
+			if(trajectory.length > precision+1){
+				speed = {
+					x: (position.x - trajectory[trajectory.length - 1 - precision][0].x) / (trajectory[trajectory.length - 1][1] - trajectory[trajectory.length - 1 - precision][1]) || 0,
+					y: (position.y - trajectory[trajectory.length - 1 - precision][0].y) / (trajectory[trajectory.length - 1][1] - trajectory[trajectory.length - 1 - precision][1]) || 0
+				}
+			} else {
+				speed = {
+					x: 0,
+					y: 0
+				}
 			}
+			
+			removeEventListener("pointermove", move);
+			removeEventListener("pointerup", auto);
+			animKey = window.requestAnimationFrame(animation);
 		}
-		else{
-			if (distX > 0) {
-				$('#panier ul').css({'transform':'translateX('+ distX/15 +'px)'});
-			}
-			else{
-				$('#panier ul').css({'transform':'translateX('+ distX/2 +'px)'});
-				$('#calcul').css({'transform': 'translateY('+ Math.min(90,-distX/6) +'px)', 'transition':'0s'});
-			}
-		}
-		
-	}, passiveSupported ? { passive: false } : false);
 
-	touchsurface.addEventListener('touchend', function(e){
-		var touchobj = e.changedTouches[0]
-			distX = touchobj.pageX - startX // get horizontal dist traveled by finger while in contact with surface
-			distY = touchobj.pageY - startY // get vertical dist traveled by finger while in contact with surface
-			elapsedTime = new Date().getTime() - startTime; // get time elapsed
-		if (Math.abs(distX)/elapsedTime >= threshold/allowedTime || Math.abs(distX) > window.innerWidth*0.6){ // first condition for awipe met, compare speeds
-			if (Math.abs(distX) >= threshold && Math.abs(distY) <= restraint){ // 2nd condition for horizontal swipe met
-				swipedir = (distX < 0)? 'left' : 'right'; // if dist traveled is negative, it indicates left swipe
-			}
-		}
-		handleswipe(swipedir);
-		e.preventDefault();
-	}, passiveSupported ? { passive: false } : false);
-}
+		function animation(){
+			let now = Date.now() / 1000,
+			timeInterval = (now - trajectory[trajectory.length - 1][1]),
+			force = getForceToOrigin(position.x - finalPosition().x, position.y - finalPosition().y),
+			frottements = {x: -f*speed.x, y: -f*speed.y};
 
-function SwipeBtPanel(el, callback){
+			acceleration = {x: force.x/mass, y: force.y/mass};
+			speed.x += acceleration.x*timeInterval + frottements.x*timeInterval;
+			speed.y += acceleration.y*timeInterval + frottements.y*timeInterval;
+			setPos((position.x + speed.x * timeInterval), (position.y + speed.y * timeInterval), getState()*finalPosition().width);
+			trajectory.push([{x: (position.x + speed.x * timeInterval), y: (position.y + speed.y * timeInterval)}, now]);
 
-	let touchsurface = el,
-	touchobj,
-	startY,
-	distY,
-	threshold = 150, //required min distance traveled to be considered swipe
-	allowedTime = 400, // maximum time allowed to travel that distance
-	elapsedTime,
-	startTime,
-	handleswipe = callback || function(swipedir){};
 
-	touchsurface.addEventListener('touchstart', function(e){
-		touchobj = e.changedTouches[0];
-		startY = touchobj.pageY;
-		startTime = new Date().getTime(); // record time when finger first makes contact with surface
-		e.preventDefault();
-		$('#calcul').css({'transition': 'none'});
-	}, passiveSupported ? { passive: false } : false);
+			if((Math.sqrt(speed.x**2 + speed.y**2) < 1 && Math.sqrt(acceleration.x**2 + acceleration.y**2) < 1) || !document.getElementById("modernForms").classList.contains("opened")){ 
+				window.cancelAnimationFrame(animKey);
+				removeEventListener("resize", resize);
 
-	touchsurface.addEventListener('touchmove', function(e){
-		e.preventDefault(); // prevent scrolling when inside DIV
-		touchobj = e.changedTouches[0];
-		distY = touchobj.pageY - startY;
-
-		$('#calcul').css({'height': Math.min(80+Math.max(0, -distY), $(window).height()+20) +'px'});
-		
-	}, passiveSupported ? { passive: false } : false);
-
-	touchsurface.addEventListener('touchend', function(e){
-		touchobj = e.changedTouches[0]; // get horizontal dist traveled by finger while in contact with surface
-		distY = touchobj.pageY - startY; // get vertical dist traveled by finger while in contact with surface
-		elapsedTime = new Date().getTime() - startTime; // get time elapsed
-		if (-distY/elapsedTime >= threshold/allowedTime || 80+Math.abs(distY) > $(window).height()/2 || Math.abs(distY) < 3){ // first condition for awipe met, compare speeds	
-			handleswipe('top');
-		}
-		else{
-			handleswipe('bottom');
-		}
+				transitionner.style.setProperty("--px", "");
+				transitionner.style.setProperty("--py", "");
+				transitionner.style.setProperty("--titlewidth", "");
 	
-		e.preventDefault();
-	}, passiveSupported ? { passive: false } : false);
-}
+				target.style.setProperty("--px", "");
+				target.style.setProperty("--py", "");
 
-function SwipeBackPanel(el, callback){
 
-	let touchsurface = el,
-	touchobj,
-	startY,
-	distY,
-	threshold = 150, //required min distance traveled to be considered swipe
-	allowedTime = 400, // maximum time allowed to travel that distance
-	elapsedTime,
-	startTime,
-	handleswipe = callback || function(swipedir){};
+				return;
+			}
 
-	touchsurface.addEventListener('touchstart', function(e){
-		touchobj = e.changedTouches[0];
-		startY = touchobj.pageY;
-		startTime = new Date().getTime(); // record time when finger first makes contact with surface
-		e.preventDefault();
-		$('#calcul').css({'transition': 'none'});
-	}, passiveSupported ? { passive: false } : false);
+			if(
+				document.getElementById("modernForms").classList.contains("opened") 
+				&& !document.getElementById("modernForms").classList.contains(action) 
+				&& Math.sqrt(speed.x**2 + speed.y**2) < 700 
+				&& Math.sqrt(acceleration.x**2 + acceleration.y**2) < 700
+				
+			) {
+				document.getElementById("modernForms").classList.add(action);
+				document.querySelector(`#${targetId} input`).focus();
+			}
 
-	touchsurface.addEventListener('touchmove', function(e){
-		e.preventDefault(); // prevent scrolling when inside DIV
-		touchobj = e.changedTouches[0];
-		distY = touchobj.pageY - startY;
+			animKey = window.requestAnimationFrame(animation);
+		}
 
-		$('#calcul').css({'height': Math.min(80+Math.max(0, $(window).height()+20-distY), $(window).height()+20) +'px'});
+		function getForceToOrigin(x, y, type = "ressort"){
+			switch(type){
+				case "ressort":
+					return {
+						x: -k*(x),
+						y: -k*(y)
+					}
+				default:
+					return {x: 0, y: 0}
+			}
+		}
+
+
+		resize();
+		setPos();
 		
-	}, passiveSupported ? { passive: false } : false);
 
-	touchsurface.addEventListener('touchend', function(e){
-		touchobj = e.changedTouches[0]; // get horizontal dist traveled by finger while in contact with surface
-		distY = touchobj.pageY - startY; // get vertical dist traveled by finger while in contact with surface
-		elapsedTime = new Date().getTime() - startTime; // get time elapsed
-		if (distY/elapsedTime >= threshold/allowedTime || Math.abs(distY) > $(window).height()/1.5){ // first condition for awipe met, compare speeds	
-			handleswipe('bottom');
-		}
-		else{
-			handleswipe('top');
-		}
-	
-		e.preventDefault();
-	}, passiveSupported ? { passive: false } : false);
+
+		addEventListener("resize", resize);
+		addEventListener("pointermove", move);
+		addEventListener("pointerup", auto);
+	}
 }
-
-export { swipedetect, SwipeBackPanel, SwipeBtPanel };

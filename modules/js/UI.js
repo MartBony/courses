@@ -1,3 +1,5 @@
+import Touch from "./touch.js";
+
 export default class UI {
 	static message(titre, texte, buttons){
 		document.querySelector('#message').classList.add('opened');
@@ -56,6 +58,10 @@ export default class UI {
 			el.classList.remove('opened');
 		});
 	}
+	static closeModernForms(){
+		document.querySelector('#modernForms').className = "";
+		Array.from(document.querySelectorAll(".adder, #newCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
+	}
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
@@ -66,7 +72,7 @@ export default class UI {
 		if((type == 'calcul' || type == "menu") && data && app) UI.openChart(app, data);
 	}
 	static openMenus(type, data = null, app = null){
-		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.visibility = "hidden");
+		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.classList.add("hide"));
 		document.getElementById('menus').classList.remove('calcul', 'params');
 		document.getElementById('menus').classList.add('opened', type);
 		if(type == 'calcul' && data && app) UI.openChart(app, data);
@@ -153,6 +159,7 @@ export default class UI {
 		]);
 	}
 	static acc(app){
+		UI.closeModernForms();
 		UI.closeForms();
 		UI.closeMenus();
 		UI.closePrice();
@@ -177,8 +184,21 @@ export default class UI {
 			$('.install').css({'display':'none'});
 		}, 200);
 	}
-	static addArticle(){
-		$('#add').removeClass('closed');
+	static addArticle(x,y){
+		document.body.style.overflow = "hidden";
+		document.getElementById("modernForms").classList.add("opened");
+		const button = document.getElementsByClassName("adder")[0];
+		Touch.handleFormOpenning({
+			x: button.getBoundingClientRect().left + button.clientWidth/2,
+			y: button.getBoundingClientRect().top + 10,
+			width: button.clientWidth
+		}, "modernArticleAdder", "articleForm", {
+			x: button.getBoundingClientRect().left + button.clientWidth/2 - x,
+			y: button.getBoundingClientRect().top + 10 - y
+		});
+		button.style.transition = "none";
+		button.style.opacity = "0";
+	/* 	$('#add').removeClass('closed');
 		document.getElementById("forms").classList.add('opened','formArticle');
 
 		$('#addArticle div, #addArticle input, #addArticle label, #addArticle i').each(function(i){	
@@ -188,10 +208,26 @@ export default class UI {
 		});
 		setTimeout(function(){
 			$('#addArticle input').eq(0).focus();
-		},200);
+		},200); */
 	}
-	static addPreview(){
-		$('#add').removeClass('closed');
+	static addPreview(x,y){
+		document.body.style.overflow = "hidden";
+		document.getElementById("modernForms").classList.add("opened");
+		const button = document.getElementsByClassName("adder")[1];
+		Touch.handleFormOpenning({
+			x: button.getBoundingClientRect().left + button.clientWidth/2,
+			y: button.getBoundingClientRect().top + 10,
+			width: button.clientWidth
+		}, "modernPreviewAdder", "previewForm", {
+			x: button.getBoundingClientRect().left + button.clientWidth/2 - x,
+			y: button.getBoundingClientRect().top + 10 - y
+		});
+		button.style.transition = "none";
+		button.style.opacity = "0";
+		setTimeout(() => {
+			document.querySelector("#modernPreviewAdder input").focus();
+		}, 200);
+		/* $('#add').removeClass('closed');
 		
 		document.getElementById("forms").classList.add('opened','formPreview');
 
@@ -202,7 +238,7 @@ export default class UI {
 		});
 		setTimeout(function(){
 			$('#addPreview input').eq(0).focus();
-		},200);
+		},200); */
 	}
 	static addPrice(app, id){
 		let item = app.course.items.previews.filter(item => item.id == id)[0];
@@ -226,8 +262,21 @@ export default class UI {
 	static closePrice(){
 		UI.closeForms();
 	}
-	static addCourse(){
-		document.getElementById("forms").classList.add('opened','course');
+	static addCourse(x,y){
+		document.body.style.overflow = "hidden";
+		document.getElementById("modernForms").classList.add("opened");
+		const button = document.getElementById("newCourse");
+		Touch.handleFormOpenning({
+			x: button.getBoundingClientRect().left + button.clientWidth/2,
+			y: button.getBoundingClientRect().top + 10,
+			width: button.clientWidth
+		}, "modernCourseAdder", "courseForm", {
+			x: button.getBoundingClientRect().left + button.clientWidth/2 - x,
+			y: button.getBoundingClientRect().top + 10 - y
+		});
+		button.style.transition = "none";
+		button.style.opacity = "0";
+		/* document.getElementById("forms").classList.add('opened','course');
 
 		$('#addCourse div, #addCourse input, #addCourse label, #addCourse i').each(function(i){	
 			setTimeout(function(){
@@ -236,7 +285,7 @@ export default class UI {
 		});
 		setTimeout(function(){
 			$('#addCourse input').eq(0).focus();
-		},200);
+		},200); */
 	}
 	static openMenu(){
 		//$('.menu').css({'display':'block'});
