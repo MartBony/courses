@@ -122,6 +122,7 @@
 
 #modernTransitionner .modernFormTitle{
 	border-radius: var(--rad);
+	box-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
 .modernFormTitle i{
@@ -213,6 +214,11 @@
 
 	#modernForms form{
 		background: rgba(250, 248, 245, 0.88);
+	}
+
+	#modernTransitionner .modernFormTitle{
+		border-radius: var(--rad);
+		box-shadow: none;
 	}
 
 }

@@ -40,6 +40,10 @@
 					<h3>Total avec taxes</h3>
 					<p id="totalTaxDep"></p>
 				</div>
+				<div class="card">
+					<h3>Fin du mois dans</h3>
+					<p id="endmonth"></p>
+				</div>
 			</div>
 		</article>
 		<!-- <h3>Dépenses du dernier mois:</h3>

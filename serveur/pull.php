@@ -12,7 +12,13 @@ login($bdd, function($user) use($bdd){
 		$articles = array();
 		$previews = array();
 		
-		$reqItems = $bdd->prepare('SELECT * FROM `articles` WHERE `course` = ? ORDER BY id DESC');
+		$reqItems = $bdd->prepare('
+			SELECT a.id, a.titre, a.prix, a.course, a.preview, u.hueColor
+			FROM `articles` a 
+			INNER JOIN `users` u
+			ON a.idAuteur = u.id
+			WHERE `course` = ? ORDER BY id DESC
+		');
 		$reqItems->execute(array($course['id']));
 
 		while($article = $reqItems->fetch()){
@@ -20,14 +26,14 @@ login($bdd, function($user) use($bdd){
 				
 				array_push($previews, array(
 					'id' => $article['id'],
-					'color' => $user['hueColor'],
+					'color' => $article['hueColor'],
 					'titre' => $article['titre']
 				));
 			} else {
 				array_push($articles, array(
 					'id' => $article['id'],
 					'prix' => $article['prix'],
-					'color' => $user['hueColor'],
+					'color' => $article['hueColor'],
 					'titre' => $article['titre']
 				));
 			}

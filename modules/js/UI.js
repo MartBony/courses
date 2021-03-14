@@ -59,6 +59,7 @@ export default class UI {
 		});
 	}
 	static closeModernForms(){
+		document.body.style.overflow = "";
 		document.querySelector('#modernForms').className = "";
 		Array.from(document.querySelectorAll(".adder, #newCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
 	}
