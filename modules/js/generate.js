@@ -103,9 +103,9 @@ export default class Generate{
 		i.className = "ms-Icon ms-Icon--ShoppingCart";
 		i.setAttribute("aria-hidden","true");
 		h4.appendChild(i);
-		h4.innerHTML += "Vous êtes prêts à faire vos achats?";
-		h5.innerHTML = "Si vous êtes satisfaits de votre liste de course, commencez vos achats ci dessous.";
-		p.innerHTML = "La date actuelle sera associée à votre course. Vous pouvez toujours ajouter des articles à votre liste si besoin, ou acheter directement un article depuis cette page. La course s'active automatiquement lors de l'achat d'un article.";
+		h4.innerHTML += "A vos marques ? Prêts ? Partez !";
+		h5.innerHTML = "Commencer les achats en activant la course.";
+		p.innerHTML = "La date d'activation sera associée à la course. Vous pouvez ensuite procéder à vos achats et calculer vos dépenses.";
 		button.className = "activate";
 		button.innerHTML = "Activer";
 
@@ -124,8 +124,8 @@ export default class Generate{
 			button = document.createElement('button');
 
 		div.classList.add("promptEmpty");
-		h4.innerHTML += "Bienvenue";
-		h5.innerHTML = "Pour creer la première course de ce groupe, ouvrez le menu et cliquez sur nouvelle course.";
+		h4.innerHTML += "Bienvenue sur votre groupe de courses";
+		h5.innerHTML = "Ce groupe est vide, rendez-vous au menu pour créer une nouvelle course ! Vous pouvez gérer vos groupes dans les paramêtres";
 		button.className = "noCourse";
 		button.innerHTML = "Menu";
 		

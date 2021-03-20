@@ -12,8 +12,10 @@ class App{
 		UI.openPanel('panier');
 		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
-
+		
 		LocalStorage.setItem('userId', id);
+		this.buttonState;
+		this.buttons = "hide";
 		this.structure;
 		this.usedGroupe;
 		this.chartContent;
@@ -402,7 +404,9 @@ class App{
 						$('#menu .course').remove();
 						const chartLen = 6,
 							monthStamp = 60*60*24*30,
-							timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
+							timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
+							dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
+						document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
 						this.chartContent = new Array(chartLen).fill(0);
 						groupe.coursesList.forEach((el) => {
 							for (let i = 0; i < chartLen; i++) {
@@ -417,6 +421,7 @@ class App{
 				} else {
 					$('#menu .course').remove();
 					$('.main ul').prepend(Generate.noCourse());
+					this.buttons = "hide";
 		
 					this.usedGroupe = groupe;
 					return false;
@@ -447,19 +452,15 @@ class App{
 
 				if (this.course.old) {
 					LocalStorage.setItem('usedCourse', data.id);
-					Array.from(document.getElementsByClassName("adder")).forEach(el => {
-						el.classList.add("hide");
-					});
+					this.buttons = "hide";
 				} else{
 					LocalStorage.removeItem('usedCourse');
-					Array.from(document.getElementsByClassName("adder")).forEach(el => {
-						el.classList.remove("hide");
-					});
+					this.buttons = "show";
 
 					if (data.dateStart == 0) {
 						$('#panier ul').prepend(Generate.activate());
 
-						document.getElementsByClassName("adder")[0].classList.add("hide");
+						this.buttons = "listmode";
 						UI.openPanel('liste');
 					} else UI.openPanel('panier');
 				} 
@@ -614,6 +615,33 @@ class App{
 				UI.offlineMsg(this, "Il y a eu un problème innatendu");
 			}
 		});
+	}
+	get buttons(){
+		return this.buttonState;
+	}
+	set buttons(type){
+		console.log(type);
+		if(this.buttons != type){
+			switch(type){
+				case "hide":
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.add("hide");
+					});
+					this.buttonState = "hide";
+					break;
+				case "show":
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.remove("hide");
+					});
+					this.buttonState = "show";
+				case "listmode": // When course not activated
+					Array.from(document.getElementsByClassName("adder")).forEach(el => {
+						el.classList.remove("hide");
+					});
+					document.querySelector(".adder").classList.add("hide");
+					this.buttonState = "listmode";
+			}
+		}
 	}
 	get total(){
 		return this.course.totalCost;

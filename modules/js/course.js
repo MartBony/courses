@@ -65,6 +65,7 @@ export default class Course{
 		
 
 
+
 		iter = 0;
 		while(iter < items.previews.length){
 			let preview = items.previews[iter];
