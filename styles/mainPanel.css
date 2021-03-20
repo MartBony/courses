@@ -273,7 +273,7 @@ section#calcul
 	text-align: center;
 	font-weight: bold;
 
-	border: none;
+    border: white solid 2px;
 	outline: none;
 	color: white;
 	cursor: pointer;

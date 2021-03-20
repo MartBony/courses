@@ -58,9 +58,7 @@ export default function initEvents(app){
 			}).then(data => {
 				$('.loader').removeClass('opened');
 				setTimeout(function(){
-					Array.from(document.getElementsByClassName("adder")).forEach(el => {
-						el.classList.remove("hide");
-					});
+					app.buttons = "show";
 					$('.promptActivation').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
 					setTimeout(function(){
 						$('.promptActivation').css({'display':'none'});
@@ -402,18 +400,18 @@ export default function initEvents(app){
 
 	// Main content
 	Array.from(document.getElementsByClassName('main')).forEach(el => {
-		el.addEventListener('pointerdown', e => {
+		/* el.addEventListener('pointerdown', e => {
 			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle(e.clientX, e.clientY)
 				else UI.addPreview(e.clientX, e.clientY)
 			}
-		});
+		}); */
 
 		el.addEventListener('click', e => {
-			/* if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
+			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
 				if(el.id == "panier") UI.addArticle()
 				else UI.addPreview()
-			} else  */if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
+			} else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
 				let article = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
@@ -573,13 +571,13 @@ export default function initEvents(app){
 	});
 
 	// MainPanel
-	document.getElementById('mainPanel').addEventListener('pointerdown', e => {
+	/* document.getElementById('mainPanel').addEventListener('pointerdown', e => {
 		if(e.target.id == "newCourse") UI.addCourse(e.clientX, e.clientY)
-	});
+	}); */
 
 	document.getElementById('mainPanel').addEventListener('click', event => {
 		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-		//else if(event.target.id == "newCourse") UI.addCourse()
+		else if(event.target.id == "newCourse") UI.addCourse()
 		else if(event.target.classList.contains('course')) {
 			let id = event.target.getAttribute("dbIndex");
 			if(id){

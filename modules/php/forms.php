@@ -1,7 +1,7 @@
 <div id="modernForms">
-<section id="modernTransitionner" class="formContainer">
+	<!-- <section id="modernTransitionner" class="formContainer">
 		<h3 class="modernFormTitle">...</h3>
-	</section>
+	</section> -->
 	<section id="modernArticleAdder" class="formContainer">
 		<h3 class="modernFormTitle">
 			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
