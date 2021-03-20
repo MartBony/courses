@@ -150,8 +150,13 @@
 	outline: none;
 	font-size: 1.5rem;
 	padding: 3px;
+	transform: scale(0.98);
 	box-sizing: border-box;
 }
+
+#modernForms input:focus{
+	transform: scale(1);
+}	
 
 .prixFlex{
 	display: flex;

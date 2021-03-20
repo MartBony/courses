@@ -60,6 +60,7 @@ export default class UI {
 	}
 	static closeModernForms(){
 		document.body.style.overflow = "";
+		document.body.classList.remove("formed");
 		document.querySelector('#modernForms').className = "";
 		Array.from(document.querySelectorAll(".adder, #newCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
 	}
@@ -191,6 +192,7 @@ export default class UI {
 		document.body.style.overflow = "hidden";
 		document.getElementById("modernForms").classList.add("opened", "articleForm");
 		document.querySelector(`#modernArticleAdder input`).focus();
+		document.body.classList.add("formed");
 
 		button.style.transition = "none";
 		button.style.opacity = "0";
@@ -202,6 +204,7 @@ export default class UI {
 		document.body.style.overflow = "hidden";
 		document.getElementById("modernForms").classList.add("opened", "previewForm");
 		document.querySelector(`#modernPreviewAdder input`).focus();
+		document.body.classList.add("formed");
 
 		button.style.transition = "none";
 		button.style.opacity = "0";
@@ -235,6 +238,7 @@ export default class UI {
 		document.body.style.overflow = "hidden";
 		document.getElementById("modernForms").classList.add("opened", "courseForm");
 		document.querySelector(`#modernCourseAdder input`).focus();
+		document.body.classList.add("formed");
 		
 
 		button.style.transition = "none";

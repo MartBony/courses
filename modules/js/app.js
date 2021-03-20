@@ -622,7 +622,6 @@ class App{
 		return this.buttonState;
 	}
 	set buttons(type){
-		console.log(type);
 		if(this.buttons != type){
 			switch(type){
 				case "hide":

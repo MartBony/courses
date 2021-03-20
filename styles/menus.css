@@ -175,7 +175,11 @@
 
 
 
-
+@media screen and (max-height: 550px){
+	.formed #menubar, .formed #refresh{
+		opacity: 0;
+	}
+}
 
 @media screen and (min-width: 900px){
 	:root{
@@ -190,17 +194,19 @@
 		animation: circleBGMB 1s forwards cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 	}
 
-	#refresh{
+	#refresh, .formed #refresh{
 		top: 10px;
 		left: 220px;
+		opacity: 1;
 	}
 
-	#menubar{
+	#menubar, .formed #menubar{
 		bottom: auto;
 		right: auto;
 		top: 5px;
 		left: 5px;
 		width: 200px;
+		opacity: 1;
 	}
 
 	#menubar li:nth-child(1), #menubar li:nth-child(3){
