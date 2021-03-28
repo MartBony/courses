@@ -78,8 +78,22 @@ if(isset($_POST['inscript'])){
 	} else echo json_encode(array('status' => 204));
 
 } else if (isset($_POST['deconnect'])){
-	setcookie("email", "", time() - 3600, '/', null, false, true);
-	setcookie("pass", "", time() - 3600, '/', null, false, true);
+	/* setcookie("email", "", time() - 3600, '/', null, false, true);
+	setcookie("pass", "", time() - 3600, '/', null, false, true); */
+	setcookie("email", "", array(
+		'expires' => time() - 3600,
+		'path' => '/courses/',
+		'secure' => true,
+		'samesite' => 'strict',
+		'httponly' => true
+	));
+	setcookie("pass", "", array(
+		'expires' => time() - 3600,
+		'path' => '/courses/',
+		'secure' => true,
+		'samesite' => 'strict',
+		'httponly' => true
+	));
 
 	echo json_encode(array('status' => 200));
 }
@@ -98,9 +112,30 @@ function connect(PDO $bdd, $mail, $pass){
 		if ($reqUser->rowCount() == 1) {
 			$user = $reqUser->fetch();
 			if($user['activated']){
-				setcookie("email", $user['mail'], time() + 31*24*3600, '/', null, false, true);
-				setcookie("pass", $pass, time() + 31*24*3600, '/', null, false, true);
-				echo json_encode(array('id' => (int) $user['id'], 'mail' => $mail, 'nom' => $user['nom']));
+				setcookie("email", $user['mail'], array(
+					'expires' => time() + 31*24*3600,
+					'path' => '/courses/',
+					'secure' => true,
+					'samesite' => 'strict',
+					'httponly' => true
+				));
+				setcookie("pass", $pass, array(
+					'expires' => time() + 31*24*3600,
+					'path' => '/courses/',
+					'secure' => true,
+					'samesite' => 'strict',
+					'httponly' => true
+				));
+				
+				echo json_encode(array(
+					'status' => 'connected',
+					'user' => array(
+						'id' => (int) $user['id'],
+						'mail' => $mail,
+						'nom' => $user['nom'],
+						'color' => $user['hueColor']
+					)
+				));
 			} else {
 				$clef = generateRandomString(30);
 

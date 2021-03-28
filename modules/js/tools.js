@@ -17,4 +17,16 @@ function jsonEqual(a,b) {
     return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export { $_GET, jsonEqual };
+
+function fetcher(reqData){
+	return fetch(reqData.url, {
+		method: reqData.method,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+		},
+		body: new URLSearchParams(reqData.data),
+	})
+	.then(res => res.json());
+}
+
+export { $_GET, jsonEqual, fetcher };

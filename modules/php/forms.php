@@ -66,6 +66,27 @@
 			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 		</form>
 	</section>
+	<section id="modernBuyer" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Acheter un article
+		</h3>
+		<form>
+			<h2>Article non définit</h2>
+			<div class="formflex">
+				<label for="newPrice">Prix hors taxes (par unité)</label>
+				<div class="prixFlex">
+					<input id="newPrice" type="double" name="newPrice" required />
+					€
+				</div>
+			</div>
+			<div class="formflex">	
+				<label for="quantP">Quantité</label>
+				<input id="quantP" type="number" name="quantP" required value="1" />
+			</div>
+			<input class="submit" type="submit" name="submit" id="setPrice" value="Acheter">
+		</form>
+	</section>
 </div>
 <div id="forms">
 	<!-- <section id="prices" class="fromContainer">

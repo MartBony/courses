@@ -373,14 +373,14 @@
 	flex-direction: column;
 	align-items: center;
 	visibility: hidden;
-	
+	 
 	z-index: 7;
 	border-radius: 15px;
 	background: white;
 	color: black;
 	opacity: 0;
 	transform: translateY(100px);
-	box-shadow: 0 0 0 0px rgba(0,0,0,0.4);
+	box-shadow: 0 0 10px rgba(0,0,0,0.18);
 	transition: all 100ms var(--ease-sortir);
 }
 
@@ -388,15 +388,15 @@
 	opacity: 1;
 	visibility: visible;
 	transform: translateY(0);
-	box-shadow: var(--shadow2);
 	transition: all 300ms var(--ease-enter);
 }
 
 .notification h2{
 	color: #00ad56;
 	font-size: 2.3rem;
-	margin: 10px 0 0 0;
+	margin: 10px;
 	font-weight: 700;
+	text-align: center;
 }
 
 #erreur h2{
@@ -456,4 +456,14 @@ button.greyish{
 	#modal article{
 		max-width: 40vw;
 	}
+}
+
+@supports (backdrop-filter: blur(20px)){
+
+	.notification{
+		background: rgba(255, 255, 255, 0.93);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+	}
+
 }

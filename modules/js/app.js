@@ -1,29 +1,29 @@
 import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
-import { LocalStorage, idbStorage } from './storage.js';
-import {jsonEqual} from './tools.js';
+import { LocalStorage, IndexedDbStorage } from './storage.js';
+import { jsonEqual, fetcher } from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
 
-
 class App{
-	constructor(id){
+	constructor(user){
+
 		UI.openPanel('panier');
 		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
 		
-		LocalStorage.setItem('userId', id);
+		LocalStorage.setItem('userConnectionData', user);
 		this.buttonState;
 		this.buttons = "hide";
 		this.structure;
 		this.usedGroupe;
 		this.chartContent;
 		this.course = new Course();
-		this.userId = id;
+		this.userId = user.id;
+		this.user = user;
 		this.pullState;
 		this.pending; // Avoid collisions
-		this.liPrices = [0.1,0.5,0.9,1,2,3,4,5,6,7,8,9,10,12,15,17,20];
 		this.swipeBinaryState = 0;
 		this.setParameters();
 		this.pull("open");
@@ -63,14 +63,9 @@ class App{
 		toChange.forEach(item => item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency));
 	}
 	async pull(action, idGroupe, idCourse){// Rank as index of array
+
 		console.log("-- PULLING --");
-		let update,
-			anim = () => {
-				$('#refresh i, #headRefresh').removeClass('ms-Icon--Refresh').addClass('ms-Icon--Accept');
-				setTimeout(function(){
-					$('#refresh i, #headRefresh').addClass('ms-Icon--Refresh').removeClass('ms-Icon--Accept');
-				},2000);
-			};
+		let update;
 		this.pending = true;
 		this.pullState = { // Network state in pulling
 			structure: action != "open",
@@ -92,9 +87,8 @@ class App{
 						// Pull further
 						return Pull.groupe(this, idGroupe);
 					}
-					$('.loader').removeClass('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					this.pending = false;
-					anim();
 				}
 			})
 			.then(data => {
@@ -108,9 +102,8 @@ class App{
 						// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
 						return Pull.course(this, idCourse);
 					}
-					$('.loader').removeClass('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					this.pending = false;
-					anim();
 				}
 			})
 			.then(data => {
@@ -118,11 +111,10 @@ class App{
 					this.pullState.course = true;
 					console.log('Network course fetched:', data);
 					update = this.updateCourse(data, true);
+					return Offline.updateRequests(this);
 				}
-				$('.loader').removeClass('opened');
+				document.querySelector('.loader').classList.remove('opened');
 				this.pending = false;
-				anim();
-				return;
 			});
 
 		// Load from indexedDB
@@ -188,7 +180,7 @@ class App{
 			data: { deleteCourse: true, id: id, groupe: this.usedGroupe.id}
 		}).then(() => {
 			$('.loader').removeClass('opened');
-			idbStorage.delete("courses", id);
+			IndexedDbStorage.delete("courses", id);
 			LocalStorage.removeItem("usedCourse");
 			this.pull("open");
 			UI.hideOptions();
@@ -206,60 +198,126 @@ class App{
 	}
 	deleteArticle(index){
 		let item = this.course.items.articles.filter(item => item.id == index)[0];
-		$('.loader').addClass('opened');
-		$.ajax({
-			method: "POST",
-			url: "serveur/push.php",
-			data: { deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
-		}).then(data => {
-			$('.loader').removeClass('opened');
-			let displayedIndex = this.course.items.articles.indexOf(item);
+		if(index < 0){
+			IndexedDbStorage.delete("requests", -index)
+			.then(() => {
+				let rank = this.course.items.articles.indexOf(item);
 
-			this.total -= data.prix;
-			UI.remove("article", displayedIndex);
+				UI.remove("article", rank);
+				this.course.deleteArticle(this, {id: index, prix: item.prix});
 
-			this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
-			idbStorage.put("courses", this.course.export());
+			});
+		} else {
 
-		}).catch(res => {
-			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				IndexedDbStorage.put("requests", {
+					type: "delArticle",
+					data: { id: index, prix: item.prix, groupe: this.usedGroupe.id }
+				}).then(() => {
+					let rank = this.course.items.articles.indexOf(item);
+
+					UI.remove("article", rank);
+					this.course.deleteArticle(this, {id: index, prix: item.prix});
+
+					return navigator.serviceWorker.ready;
+				})
+				.then(reg => reg.sync.register('syncCourses'))
+				.catch(err => {
+					console.log(err);
+					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+				});
 			} else {
-				$('.loader').removeClass('opened');
-				UI.offlineMsg(this, res);
+
+				$('.loader').addClass('opened');
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					data: { deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
+				}).then(data => {
+					$('.loader').removeClass('opened');
+					let displayedIndex = this.course.items.articles.indexOf(item);
+
+					this.total -= data.prix;
+					UI.remove("article", displayedIndex);
+
+					this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
+					IndexedDbStorage.put("courses", this.course.export());
+
+				}).catch(res => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
+						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+						]);
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(this, res);
+					}
+				});
+
 			}
-		});
+		}
 		
 	}
 	deletePreview(index){
 		let item = this.course.items.previews.filter(item => item.id == index)[0];
-		$('.loader').addClass('opened');
-		$.ajax({
-			method: "POST",
-			url: "serveur/push.php",
-			data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
-		}).then(data => {
-			$('.loader').removeClass('opened');
-			if (data.status == 200) {
-				let displayedIndex = this.course.items.previews.indexOf(item);
+		if(index < 0){
+			IndexedDbStorage.delete("requests", -index)
+			.then(() => {
+				let rank = this.course.items.previews.indexOf(item);
 
-				$('.article, .preview').removeClass('ready');
-				UI.remove("preview", displayedIndex);
+				UI.remove("preview", rank);
+				this.course.deletePreview(index);
 
-				this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
-				idbStorage.put("courses", this.course.export());
+			});
+		} else {
 
-			} else if (data.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				
+				IndexedDbStorage.put("requests", {
+					type: "delPreview",
+					data: { id: index, groupe: this.usedGroupe.id }
+				}).then(() => {
+					let rank = this.course.items.previews.indexOf(item);
+
+					UI.remove("preview", rank);
+					this.course.deletePreview(index);
+
+					return navigator.serviceWorker.ready;
+				})
+				.then(reg => reg.sync.register('syncCourses'))
+				.catch(err => {
+					console.log(err);
+					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+				});
+			} else {
+
+				$('.loader').addClass('opened');
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
+				}).then(data => {
+					$('.loader').removeClass('opened');
+					let displayedIndex = this.course.items.previews.indexOf(item);
+
+					$('.article, .preview').removeClass('ready');
+					UI.remove("preview", displayedIndex);
+
+					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
+					IndexedDbStorage.put("courses", this.course.export());
+				}).catch(err => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
+						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+						]);
+					} else {
+						$('.loader').removeClass('opened');
+						UI.offlineMsg(this, res);
+					}
+				});
+				
 			}
-		}).catch(err => {
-			$('.loader').removeClass('opened');
-			UI.offlineMsg(this, err);
-		});
+		}
 	}
 	leaveGrp(){
 		if(this.usedGroupe && this.usedGroupe.id){
@@ -271,8 +329,8 @@ class App{
 			}).then(() => {
 				$('.loader').removeClass('opened');
 				UI.closeModal();
-				this.usedGroupe.coursesList.forEach(el => idbStorage.delete("courses", el.id));
-				idbStorage.delete("groupes", this.usedGroupe.id);
+				this.usedGroupe.coursesList.forEach(el => IndexedDbStorage.delete("courses", el.id));
+				IndexedDbStorage.delete("groupes", this.usedGroupe.id);
 				this.pull("refresh");
 			}).catch(res => {
 				if (res.responseJSON && res.responseJSON.notAuthed){
@@ -288,95 +346,211 @@ class App{
 		}
 	}
 	buy(idPreview, prix){
-		$('.loader').addClass('opened');
-		$.ajax({
-			method: "POST",
-			url: "serveur/push.php",
-			data: {
-				buyPreview: 'true',
-				id: idPreview,
-				prix: prix,
-				groupe: this.usedGroupe.id
-			}
-		}).then(data => {
-			$('.loader').removeClass('opened');
-			let timer = 600,
-				displayedIndex = $(`.preview[iditem=${idPreview}]`).prevAll('li').length;
 
-				console.log(true);
+		const item = this.course.items.previews.filter(item => item.id == idPreview)[0],
+		handleBuy = (req) => {
+			return new Promise((resolve, reject) => {
+
+				const displayedIndex = this.course.items.previews.indexOf(item);
+				let timer = 600;
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+
 	
-			if (!this.course.started) {
-				$('.activate').click();
-				timer = 1000;
-			}
-
-			UI.closePrice();
-			UI.remove("preview", displayedIndex);
-			setTimeout(() => {
-				UI.openPanel("panier");
-				setTimeout(() => {
-					UI.acc(this);
-					$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.color, data.prix));
-					$('#prices #newPrice').val('');
-					this.total += data.prix;
-					$('.prices #titreA, .prices #prix').val('');
 		
+				if (!this.course.started) {
+					document.getElementsByName('activate')[0].click();
+					timer = 1000;
+				}
+				
+				document.querySelector('#modernBuyer #newPrice').value = "";
+				document.querySelector('#modernBuyer #quantP').value = "1";
+				
+				// Delete old preview
+				UI.closeModernForms();
+				
+				this.course.deletePreview(idPreview);
+				UI.remove("preview", displayedIndex);
+
+
+
+				// Add new article
+				this.total += req.data.prix;
+				setTimeout(() => {
+
+					UI.openPanel("panier");
+					UI.acc(this);
 					setTimeout(() => {
-						$('.article').removeClass('animateSlideIn');
-					},300);
-				}, 150);
-			}, timer);
-			console.log(true);
+						this.course.pushArticle(this, {
+							id: -req.reqId,
+							titre: req.data.titre,
+							color: this.user.color,
+							prix: req.data.prix
+						});
+						navigator.serviceWorker.ready.then(reg => reg.sync.register('syncCourses'));
+					}, 100);
+					setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
 
-			this.course.items.previews = this.course.items.previews.filter((obj) => (obj.id != data.id));
-			this.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
-			idbStorage.put("courses", this.course.export());
+				}, timer);
 
-		}).catch(res => {
-			$('.loader').removeClass('opened');
-			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
-			} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
-				UI.erreur("Le prix doit être positif")
+			});
+		}
+
+		if(idPreview < 0){
+			
+			return Promise.all([
+				IndexedDbStorage.delete("requests", -item.id), 
+				IndexedDbStorage.put("requests", {
+					type: "article",
+					data: {
+						titre: item.titre,
+						prix: prix,
+						groupe: this.usedGroupe.id,
+						color: this.user.color
+					}
+				})
+			])
+			.then(res => IndexedDbStorage.get("requests", res[1]))
+			.then(handleBuy)
+			.catch(err => {
+				console.log(err);
+				UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+			});
+
+		} else {
+
+			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+
+			/* return Promise.all([
+				IndexedDbStorage.put("requests", {
+					type: "delPreview",
+					data: { id: item.id, groupe: this.usedGroupe.id }
+				}),
+				IndexedDbStorage.put("requests", {
+					type: "article",
+					data: {
+						titre: item.titre,
+						prix: prix,
+						groupe: this.usedGroupe.id,
+						color: this.user.color
+					}
+				})
+			])
+			.then(res => IndexedDbStorage.get("requests", res[1]))
+			.then(handleBuy)
+			.catch(err => {
+				console.log(err);
+				UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+			}); */
+			return IndexedDbStorage.put("requests", {
+				type: "buy",
+				data: {
+					id: item.id,
+					prix: prix,
+					groupe: this.usedGroupe.id
+				}
+			})
+			.then(res => IndexedDbStorage.get("requests", res))
+			.then(req => {return {reqId: req.reqId, type: req.type, data: {...req.data, titre: item.titre}}})
+			.then(handleBuy)
+			.catch(err => {
+				console.log(err);
+				UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+			});
+
+			} else {
+			
+				$('.loader').addClass('opened');
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					data: {
+						buyPreview: 'true',
+						id: idPreview,
+						prix: prix,
+						groupe: this.usedGroupe.id
+					}
+				}).then(data => {
+					$('.loader').removeClass('opened');
+					let timer = 600,
+						displayedIndex = $(`.preview[iditem=${idPreview}]`).prevAll('li').length;
+
+						console.log(true);
+			
+					if (!this.course.started) {
+						$('.activate').click();
+						timer = 1000;
+					}
+
+					UI.closePrice();
+					UI.remove("preview", displayedIndex);
+					setTimeout(() => {
+						UI.openPanel("panier");
+						setTimeout(() => {
+							UI.acc(this);
+							$('#panier ul').prepend(Generate.article(this, data.id, data.titre, data.color, data.prix));
+							$('#prices #newPrice').val('');
+							this.total += data.prix;
+							$('.prices #titreA, .prices #prix').val('');
+				
+							setTimeout(() => {
+								$('.article').removeClass('animateSlideIn');
+							},300);
+						}, 150);
+					}, timer);
+					console.log(true);
+
+					this.course.items.previews = this.course.items.previews.filter((obj) => (obj.id != data.id));
+					this.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
+					IndexedDbStorage.put("courses", this.course.export());
+				})
+				.catch(res => {
+					$('.loader').removeClass('opened');
+					if (res.responseJSON && res.responseJSON.notAuthed){
+						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+						]);
+					} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
+						UI.erreur("Le prix doit être positif")
+					}
+					else {
+						UI.offlineMsg(this, err);
+					}
+				});
 			}
-			else {
-				UI.offlineMsg(this, err);
-			}
-		});
+
+		}
 	}
 	updateApp(data, save){
 		if(data && data.nom && data.id && data.groupes){
 			if(!this.structure || !jsonEqual(this.structure, groupe)){
-				$('#compte em').html(data.nom);
-				if(data.groupes){
+				document.querySelector('#compte em').innerHTML = data.nom;
+	
 
-					// Save in IDB in structure objectStore
-					if(save) idbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
+				// Save in IDB in structure objectStore
+				if(save) IndexedDbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
 
-					// Display UI
-					if(data.groupes.length != 0){
-						UI.closeModal();
-						if(!this.structure || !jsonEqual(this.structure.groupes, data.groupes)){
-							$('.groupe').remove();
-							data.groupes.forEach(grp => {
-								$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
-							});
-
-							if(this.usedGroupe && this.usedGroupe.id) $(`.groupe[key=${this.usedGroupe.id}]`).addClass('opened');
-						}
-
-						return true;
-					} else {
+				// Display UI
+				if(data.groupes.length != 0){
+					UI.closeModal();
+					if(!this.structure || !jsonEqual(this.structure.groupes, data.groupes)){
 						$('.groupe').remove();
-						this.course = new Course();
-						UI.modal(this, 'noGroupe');
+						data.groupes.forEach(grp => {
+							$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
+						});
 
-						this.structure = data;
-						return false;
+						if(this.usedGroupe && this.usedGroupe.id) $(`.groupe[key=${this.usedGroupe.id}]`).addClass('opened');
 					}
+
+					return true;
+				} else {
+					$('.groupe').remove();
+					this.course = new Course();
+					UI.modal(this, 'noGroupe');
+
+					this.structure = data;
+					return false;
 				}
+
 			} else return data.groupes.length != 0;
 		}
 	}
@@ -385,7 +559,7 @@ class App{
 			if(!jsonEqual(this.usedGroupe, groupe)){
 
 				// Save in IDB in structure objectStore
-				if(save) idbStorage.put("groupes", groupe)
+				if(save) IndexedDbStorage.put("groupes", groupe)
 
 				if(this.usedGroupe && groupe.id != this.usedGroupe.id) LocalStorage.setItem('usedCourse', null)
 
@@ -438,14 +612,24 @@ class App{
 	updateCourse(data, save){
 		if(data && data.id && data.nom && data.items){
 			if(!jsonEqual(this.course.export(), data)){
+				// HERE INTEGRATE THE REQUESTS
+
+				if(save) IndexedDbStorage.put("courses", {
+					id: data.id,
+					dateStart: data.dateStart,
+					groupe: data.groupe,
+					maxPrice: data.maxPrice,
+					nom: data.nom,
+					taxes: data.taxes,
+					total: data.total
+				})
+
 				this.course = new Course();
 				UI.closeModal();
 				$('.course').removeClass('opened');
 
-				if(save) idbStorage.put("courses", data)
-
 				document.getElementById('cTaxes').value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
-				this.course.update(this, data);
+				this.course.updateSelf(this, data, save);
 
 
 				Array.from(document.getElementsByClassName('course')).forEach(el => {
@@ -463,7 +647,7 @@ class App{
 						$('#panier ul').prepend(Generate.activate());
 
 						this.buttons = "listmode";
-						UI.openPanel('liste');
+						// UI.openPanel('liste');
 					} else UI.openPanel('panier');
 				} 
 				
@@ -556,7 +740,7 @@ class App{
 		}).then(data => {
 			if(data.status == 200){
 				LocalStorage.clear();
-				idbStorage.deleteDb()
+				IndexedDbStorage.deleteDb()
 					.then(() => {
 						alert("Compte supprimé avec succès");
 						window.location = "/";
@@ -635,6 +819,7 @@ class App{
 						el.classList.remove("hide");
 					});
 					this.buttonState = "show";
+					break;
 				case "listmode": // When course not activated
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
@@ -642,7 +827,7 @@ class App{
 					document.querySelector(".adder").classList.add("hide");
 					this.buttonState = "listmode";
 			}
-		}
+		} 
 	}
 	get total(){
 		return this.course.totalCost;

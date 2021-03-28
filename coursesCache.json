@@ -6,6 +6,7 @@
 	"/courses/styles/parametres.css",
 	"/courses/styles/popups.css",
 	"/courses/styles/forms.css",
+	"/courses/styles/modernForms.css",
 	"/courses/styles/style.css",
 	"/courses/styles/menus.css",
 	"/courses/styles/switches.css",
@@ -40,8 +41,10 @@
 	"/courses/images/melons.webp",
 	"/courses/images/etalage.webp",
 	"/courses/images/legumes.webp",
+	"/courses/images/logos/android/androidicon144.png",
 	"/courses/scripts/chart.js",
 	"/courses/scripts/load/loadHandler.js",
 	"/courses/scripts/load/loadCss.js",
-	"/courses/scripts/load/onLoadCss.js"
+	"/courses/scripts/load/onLoadCss.js",
+	"/courses/coursesCache.json"
 ]

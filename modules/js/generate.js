@@ -60,7 +60,11 @@ export default class Generate{
 			div = document.createElement('div'),
 			h2 = document.createElement('h2'),
 			h3 = document.createElement('h3'),
-			childrens = [div];
+			i = document.createElement('i'),
+			childrens = [div, i];
+
+		i.classList.add('ms-Icon', 'ms-Icon--StatusCircleSync');
+		i.setAttribute('aria-hidden', 'true');
 		li.className = `article ${animation} ${addClass}`;
 		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		li.setAttribute("idItem", id);
@@ -74,11 +78,15 @@ export default class Generate{
 		
 		return li;
 	}
-	static preview(app, id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
+	static preview(id, titre, couleur, animation = 'animateSlideIn', addClass = ''){
 		let li = document.createElement('li'),
 			div = document.createElement('div'),
 			h2 = document.createElement('h2'),
-			childrens = [div];
+			i = document.createElement('i'),
+			childrens = [div, i];
+
+		i.classList.add('ms-Icon', 'ms-Icon--StatusCircleSync');
+		i.setAttribute('aria-hidden', 'true');
 		li.className = `preview ${animation} ${addClass}`;
 		li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 		li.setAttribute("idItem", id);

@@ -3,11 +3,6 @@ import UI from './UI.js';
 let deferredPrompt,
 	newWorker;
 
-if ('serviceWorker' in navigator) {
-	navigator.serviceWorker.register('./../sw.js')
-	.catch(err => console.log('Failed Registering Service Worker', err));
-}
-
 function addSiteCache(nom, src){
 	caches.open(nom).then(function(cache) { // Cache static parts of site
 		fetch(src).then(function(response) {
@@ -17,6 +12,30 @@ function addSiteCache(nom, src){
 		cache.addAll(urls);
 		});
 	});
+}
+
+function installSW(){
+	if("serviceWorker" in navigator){
+		return navigator.serviceWorker.register('./../sw.js')
+		.then(reg => {
+			reg.addEventListener('updatefound', () => {
+				newWorker = reg.installing;
+				newWorker.addEventListener('statechange', () => {
+					switch (newWorker.state) {
+						case 'installed':
+						if (navigator.serviceWorker.controller) {
+							UI.message("Une mise à jour est displonible", "Installer en un clic ou laisser l'application s'en occuper plus tard", [
+								{ texte: "Mettre à jour", action: () => newWorker.postMessage({ action: 'skipWaiting' }) },
+								{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
+							]);
+						}
+						break;
+					}
+				});
+			});
+		})
+		.catch(err => console.log('Failed Registering Service Worker', err));
+	} else return Promise.resolve();
 }
 
 function initPwaEvents(){
@@ -42,32 +61,15 @@ function initPwaEvents(){
 		})
 	});
 
-	// Update app - https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
-	navigator.serviceWorker.ready.then(reg => {
-		reg.addEventListener('updatefound', () => {
-			newWorker = reg.installing;
-			newWorker.addEventListener('statechange', () => {
-				switch (newWorker.state) {
-					case 'installed':
-					if (navigator.serviceWorker.controller) {
-						UI.message("Une mise à jour est displonible", "Installer en un clic ou laisser l'application s'en occuper plus tard", [
-							{ texte: "Mettre à jour", action: () => newWorker.postMessage({ action: 'skipWaiting' }) },
-							{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
-						]);
-					}
-					break;
-				}
-			});
-		});
-	});
-
 	let refreshing;
 	navigator.serviceWorker.addEventListener('controllerchange', function () {
 		if (refreshing) return;
 		window.location.reload();
 		refreshing = true;
 	});
+
+	// Update app - https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
 	
 }
 
-export { addSiteCache, initPwaEvents, deferredPrompt };
+export { installSW, addSiteCache, initPwaEvents, deferredPrompt };

@@ -1,6 +1,6 @@
 import Pull from './requests.js';
 import UI from './UI.js';
-import { LocalStorage, idbStorage } from './storage.js';
+import { LocalStorage, IndexedDbStorage } from './storage.js';
 import Generate from './generate.js';
 
 
@@ -37,16 +37,17 @@ export default function initEvents(app){
 			}
 			},
 		noLoaderRefresh = () => {
-		if(!app.pending){
-			app.pull("refresh");
-		} else {
-			let loop = setInterval(() => {
-				if(!app.pending){
-					app.pull("refresh");
-					clearInterval(loop);
-				}
-			}, 1000);
-		}
+			console.log(app);
+			if(!app.pending){
+				app.pull("refresh");
+			} else {
+				let loop = setInterval(() => {
+					if(!app.pending){
+						app.pull("refresh");
+						clearInterval(loop);
+					}
+				}, 1000);
+			}
 		},
 		activate = () => {
 			document.getElementsByClassName('loader')[0].classList.add('opened');
@@ -68,7 +69,7 @@ export default function initEvents(app){
 					UI.openPanel("panier");
 				},200);
 
-				idbStorage.get("courses", app.course.id)
+				IndexedDbStorage.get("courses", app.course.id)
 					.then(storage => {
 						storage.dateStart = data.time;
 					});
@@ -89,51 +90,89 @@ export default function initEvents(app){
 		},
 		addArticle = e => {
 			e.preventDefault();
-			if (!isNaN(parseFloat($('#modernArticleAdder #prix').val().replace(',','.')))) {
-				document.getElementsByClassName('loader')[0].classList.add('opened');
-				$.ajax({
-					method: "POST",
-					url: "serveur/push.php",
-					data: {
-						submitArticle: true,
-						titre: $('#modernArticleAdder #titreA').val(),
-						prix: $('#modernArticleAdder #prix').val().replace(',','.') * $('#quantA').val(),
-						groupe: app.usedGroupe.id
-					}
-				}).then(data => {
-					document.getElementsByClassName('loader')[0].classList.remove('opened');
-					UI.acc(app);
+			let inputPrice = document.querySelector('#modernArticleAdder #prix'),
+				inputTitre = document.querySelector('#modernArticleAdder #titreA'),
+				inputQuantity = document.getElementById("quantA");
+			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value && inputQuantity) {
+				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+					IndexedDbStorage.put("requests", {
+						type: "article",
+						data: {
+							titre: inputTitre.value,
+							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
+							groupe: app.usedGroupe.id,
+							color: app.user.color
+						}
+					})
+					.then(res => IndexedDbStorage.get("requests", res))
+					.then(res => {
+						const data = res.data;
+						UI.acc(app);
 
-					if (!app.course.started) $('.activate').click();
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+						app.course.pushArticle(app, {
+							id: -res.reqId,
+							titre: data.titre,
+							color: data.color,
+							prix: data.prix
+						});
 
-					window.scrollTo({ top: 0, behavior: 'smooth' });
-					$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
-			
-					app.total += data.prix;
-					Array.from(document.querySelectorAll('#modernArticleAdder input')).slice(0,2).forEach(el => el.value = '');
-					document.getElementById('quantA').value = 1;
+						[inputPrice, inputTitre].forEach(el => el.value = '');
+						inputQuantity.value = 1;
 
-					setTimeout(() => {
-						document.getElementsByClassName('article')[0].classList.remove('animateSlideIn');
-					},300);
+						return navigator.serviceWorker.ready
+					})
+					.then(reg => reg.sync.register('syncCourses'))
+					.catch(err => {
+						console.log(err);
+						UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+					});;
+					
+					
+				} else {
+					document.getElementsByClassName('loader')[0].classList.add('opened');
+					$.ajax({
+						method: "POST",
+						url: "serveur/push.php",
+						data: {
+							submitArticle: true,
+							titre: $('#modernArticleAdder #titreA').val(),
+							prix: $('#modernArticleAdder #prix').val().replace(',','.') * $('#quantA').val(),
+							groupe: app.usedGroupe.id
+						}
+					}).then(data => {
+						document.getElementsByClassName('loader')[0].classList.remove('opened');
+						UI.acc(app);
+
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+						$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
+				
+						app.total += data.prix;
+						Array.from(document.querySelectorAll('#modernArticleAdder input')).slice(0,2).forEach(el => el.value = '');
+						document.getElementById('quantA').value = 1;
+
+						setTimeout(() => {
+							document.getElementsByClassName('article')[0].classList.remove('animateSlideIn');
+						},300);
 
 
-					app.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
-					idbStorage.put("courses", app.course.export());
+						app.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
+						IndexedDbStorage.put("courses", app.course.export());
 
-				})
-				.catch(res => {
-					document.getElementsByClassName('loader')[0].classList.remove('opened');
-					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
-					} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
-						UI.erreur("Le prix doit être positif")
-					} else {
-						UI.offlineMsg(app, res);
-					}
-				});
+					})
+					.catch(res => {
+						document.getElementsByClassName('loader')[0].classList.remove('opened');
+						if (res.responseJSON && res.responseJSON.notAuthed){
+							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+							]);
+						} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
+							UI.erreur("Le prix doit être positif")
+						} else {
+							UI.offlineMsg(app, res);
+						}
+					});
+				}
 			}
 			else{
 				alert('Prix de l\'article non conforme');
@@ -141,38 +180,69 @@ export default function initEvents(app){
 		},
 		addPreview = e => {
 			e.preventDefault();
-			if ($('#modernPreviewAdder #titreP').val() && $('#modernPreviewAdder #titreP').val() != '') {
-				document.getElementsByClassName('loader')[0].classList.add('opened');
-				$.ajax({
-					method: "POST",
-					url: "serveur/push.php",
-					data: { submitPreview: 'true', titre: $('#modernPreviewAdder #titreP').val(), groupe: app.usedGroupe.id }
-				}).then(data => {
-					document.getElementsByClassName('loader')[0].classList.remove('opened');
-					UI.acc(app);
+			let input = document.querySelector('#modernPreviewAdder #titreP');
+			if (input.value && input.value != '') {
+				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+					IndexedDbStorage.put("requests", {
+						type: "preview",
+						data: { titre: input.value, color: app.user.color, groupe: app.usedGroupe.id }
+					})
+					.then(res => IndexedDbStorage.get("requests", res))
+					.then(res => {
+						const data = res.data;
+						UI.acc(app);
+						
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+						app.course.pushPreview({
+							id: -res.reqId,
+							titre: data.titre,
+							color: data.color
+						});
 					
-					window.scrollTo({ top: 0, behavior: 'smooth' });
-					document.querySelector('#liste ul').prepend(Generate.preview(app, data.id, data.titre, data.color));
-					
-					document.querySelector('#modernPreviewAdder #titreP').value = '';
-					setTimeout(() => {
-						document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn');
-					},300);
+						input.value = '';
 
-
-					app.course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
-					idbStorage.put("courses", app.course.export());
+						return navigator.serviceWorker.ready
+					})
+					.then(reg => reg.sync.register('syncCourses'))
+					.catch(err => {
+						console.log(err);
+						UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+					});
 					
-				}).catch(res => {
-					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
-					} else {
+					
+				} else {
+					document.getElementsByClassName('loader')[0].classList.add('opened');
+					$.ajax({
+						method: "POST",
+						url: "serveur/push.php",
+						data: { submitPreview: 'true', titre: input.value, groupe: app.usedGroupe.id }
+					}).then(data => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
-						UI.offlineMsg(app, err);
-					}
-				});
+						UI.acc(app);
+						
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+						document.querySelector('#liste ul').prepend(Generate.preview(data.id, data.titre, data.color));
+						
+						input.value = '';
+						setTimeout(() => {
+							document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn');
+						},300);
+
+
+						app.course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
+						IndexedDbStorage.put("courses", app.course.export());
+						
+					}).catch(res => {
+						if (res.responseJSON && res.responseJSON.notAuthed){
+							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+							]);
+						} else {
+							document.getElementsByClassName('loader')[0].classList.remove('opened');
+							UI.offlineMsg(app, err);
+						}
+					});
+				}
 			}
 			else
 			{
@@ -181,10 +251,10 @@ export default function initEvents(app){
 		},
 		buyForm = e => {
 			e.preventDefault();
-			if (!isNaN(parseFloat( $('#prices #newPrice').val().replace(',','.')))) {
-				let idPreview = document.getElementById('prices').getAttribute('key'),
-					prix = $('#prices #newPrice').val().replace(',','.') * $('#quantP').val();
-					$('#quantP').val(1);
+			if (!isNaN(parseFloat(document.querySelector('#modernBuyer #newPrice').value)) && !isNaN(parseFloat(document.querySelector('#modernBuyer #quantP').value))) {
+				let idPreview = document.getElementById('modernBuyer').getAttribute('key'),
+					prix = document.querySelector('#modernBuyer #newPrice').value.replace(',','.') * document.getElementById('quantP').value;
+				document.querySelector('#quantP').value = 1;
 				app.buy(idPreview, prix);
 			} else alert('Il faux rentrer un prix numérique')
 		},
@@ -326,6 +396,55 @@ export default function initEvents(app){
 
 
 
+
+	// Service Worker
+	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+		const messageChannel = new MessageChannel();
+		navigator.serviceWorker.controller.postMessage({
+			type: 'INIT_PORT',
+		}, [messageChannel.port2]);
+		
+		messageChannel.port1.onmessage = (event) => {
+			const res = event.data.payload;
+			switch(res.type){
+				case "updPreview":
+					const previewUi = document.querySelector(`.preview[iditem="${-res.id}"]`);
+					if(previewUi) {
+						previewUi.setAttribute("iditem", res.item.id);
+						previewUi.classList.remove('sync');
+					}
+					app.course.items.previews.forEach(preview => {
+						if(preview.id == -res.id) preview.id = res.item.id
+					});
+					break;
+				case "updArticle":
+					const articleUi = document.querySelector(`.article[iditem="${-res.id}"]`);
+					if(articleUi) {
+						articleUi.setAttribute("iditem", res.item.id);
+						articleUi.classList.remove('sync');
+					}
+					app.course.items.articles.forEach(article => {
+						if(article.id == -res.id) article.id = res.item.id
+					});
+					break;
+				case "buy":
+					const buyedUi = document.querySelector(`.article[iditem="${-res.id}"]`);
+					if(buyedUi) {
+						buyedUi.setAttribute("iditem", res.item.id);
+						buyedUi.classList.remove('sync');
+					}
+					app.course.items.articles.forEach(article => {
+						if(article.id == -res.id) article.id = res.item.id
+					});
+					break;
+				case "deleteArticleSetTotal":
+					app.total -= res.prix
+			}
+		};
+	}
+	
+
+
 	// Parametres
 
 	document.getElementById('params').addEventListener('click', e => {
@@ -341,7 +460,7 @@ export default function initEvents(app){
 			}).then(data => {
 				if(data.status == 200){
 					LocalStorage.clear();
-					idbStorage.deleteDb()
+					IndexedDbStorage.deleteDb()
 						.then(() => {
 							window.location = "/";
 						})
@@ -409,8 +528,8 @@ export default function initEvents(app){
 
 		el.addEventListener('click', e => {
 			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
-				if(el.id == "panier") UI.addArticle()
-				else UI.addPreview()
+				if(el.id == "panier") UI.openModernForm("article")
+				else UI.openModernForm("preview")
 			} else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
@@ -507,6 +626,9 @@ export default function initEvents(app){
 			case "modernCourseAdder": 
 				if(e.target.tagName == "FORM") addCourse(e)
 				break;
+			case "modernBuyer": 
+				if(e.target.tagName == "FORM") buyForm(e)
+				break;
 		}
 	});
 
@@ -545,7 +667,7 @@ export default function initEvents(app){
 	let inputsForms = new Array(
 		Array.from(document.querySelectorAll('#addArticle input')),
 		Array.from(document.querySelectorAll('#addCourse input')),
-		Array.from(document.querySelectorAll('#prices > input')),
+		Array.from(document.querySelectorAll('#modernBuyer input')),
 		Array.from(document.querySelectorAll('#modernArticleAdder input')),
 		Array.from(document.querySelectorAll('#modernCourseAdder input'))
 	);
@@ -616,6 +738,20 @@ export default function initEvents(app){
 		UI.hideInstall();
 	});
 
+	window.addEventListener("offline", event => {
+		UI.message(
+			"Vous êtes hors ligne", 
+			"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
+			null, 3000)
+	});
+
+	window.addEventListener("online", event => {
+		UI.message(
+			"Vous êtes de nouveau en ligne", 
+			"Nous synchronisons vos données",
+			null, 2000)
+	});
+
 
 
 
@@ -623,6 +759,6 @@ export default function initEvents(app){
 	document.addEventListener("visibilitychange", ()=>{
 		if (document.visibilityState == "visible") noLoaderRefresh()
 	});
-	window.addEventListener('online', () => noLoaderRefresh());
+	//window.addEventListener('online', () => noLoaderRefresh());
 
 }

@@ -1,24 +1,3 @@
-class LocalStorage{
-	static length(){
-		return localStorage.length;
-	}
-	static setItem(key, value){
-		localStorage.setItem(key, JSON.stringify(value));
-		return this;
-	}
-	static getItem(key){
-		return JSON.parse(localStorage.getItem(key));
-	}
-	static removeItem(key){
-		localStorage.removeItem(key);
-		return this;
-	}
-	static clear(){
-		localStorage.clear();
-		return this;
-	}
-}
-
 class IndexedDbStorage{
 	static openDB(dbVer = 2, dbName = "offlineDb"){
 		return new Promise((resolve, reject) => {
@@ -27,7 +6,6 @@ class IndexedDbStorage{
 
 			request.onerror = function(event) {
 				console.error("Error in openning the local database");
-				console.error(event);
 				reject(event);
 			};
 
@@ -66,12 +44,10 @@ class IndexedDbStorage{
 						break; remove the break */
 				}
 
-				// Wait for all objecstores to update
 				Promise.all(completeEvents.map(objStore => new Promise((resolve, reject) => {
 					objStore.oncomplete = event => resolve();
 				})))
 				.then(() => resolve(db));
-				
 
 			};
 
@@ -81,7 +57,7 @@ class IndexedDbStorage{
 	static put(objStore, obj){
 		return IndexedDbStorage.openDB()
 		.then(db => new Promise((resolve, reject) => {
-			const request = db.transaction([objStore], "readwrite").objectStore(objStore).put(obj);
+			let request = db.transaction([objStore], "readwrite").objectStore(objStore).put(obj);
 			request.onsuccess = event => resolve(event.target.result);
 			request.onerror = event => reject(new Error('fail')) (event.target.error);
 		}));
@@ -89,7 +65,7 @@ class IndexedDbStorage{
 	static delete(objStore, key){
 		return IndexedDbStorage.openDB()
 		.then(db => new Promise((resolve, reject) => {
-			const request = db.transaction([objStore], "readwrite").objectStore(objStore).delete(key);
+			let request = db.transaction([objStore], "readwrite").objectStore(objStore).delete(key);
 			request.onsuccess = event => resolve();
 			request.onerror = event => reject("Transaction failed");
 		}));
@@ -97,7 +73,7 @@ class IndexedDbStorage{
 	static get(objStore, key){
 		return IndexedDbStorage.openDB()
 		.then(db => new Promise((resolve, reject) => {
-			const request = db.transaction(objStore).objectStore(objStore).get(key);
+			let request = db.transaction(objStore).objectStore(objStore).get(key);
 			request.onsuccess = event => resolve(event.target.result);
 			request.onerror = event => reject("Transaction failed");
 		}));
@@ -105,7 +81,7 @@ class IndexedDbStorage{
 	static getAll(objStore){
 		return IndexedDbStorage.openDB()
 		.then(db => new Promise((resolve, reject) => {
-			const request = db.transaction(objStore).objectStore(objStore).getAll();
+			let request = db.transaction(objStore).objectStore(objStore).getAll();
 			request.onsuccess = event => resolve(event.target.result);
 			request.onerror = event => reject("Transaction failed for getAll");
 		}));
@@ -127,8 +103,9 @@ class IndexedDbStorage{
 					results.push(cursor.value);
 					i++;
 					if(!limit || i < limit[1]) cursor.continue();
+				} else {
+					console.log("End of cursor")
 				}
-				
 				resolve(results);
 				
 			}
@@ -152,6 +129,3 @@ class IndexedDbStorage{
 		}));
 	}
 }
-
-
-export { LocalStorage, IndexedDbStorage };

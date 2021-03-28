@@ -1,4 +1,5 @@
 import Generate from './generate.js';
+import {IndexedDbStorage } from './storage.js';
 
 export default class Course{
 	constructor(){
@@ -19,7 +20,7 @@ export default class Course{
 
 		$('.main ul').children().remove();
 	}
-	update(app, data){
+	updateSelf(app, data, save){
 		
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
@@ -33,73 +34,106 @@ export default class Course{
 
 		$('#maxprice').html(this.maxPrice + app.params.currency);
 
-		let items = data.items,
-			attribute = this.old ? "disabled" : "";
+		this.updateItems(app, data.items.articles, data.items.previews, save)
+
+		this.started = data.dateStart != 0;
+
+	}
+	updateItems(app, articles, previews, save = false){
+		let attribute = this.old ? "disabled" : "",
+			pendings = {
+				put: new Array(),
+				delete: new Array()
+			};
 
 		let iter = 0;
-		while(iter < items.articles.length){
-			let article = items.articles[iter];
-			if (this.items.articles[iter]) {
-				if (article.id != this.items.articles[iter].id){
-					if(items.articles.filter(el => el.id == this.items.articles[iter].id).length > 0){
+		while(iter < articles.length){
+			let article = articles[iter];
+			if (this.items.articles[iter]) { // Si un article de même rand existe déja
+				if (article.id != this.items.articles[iter].id){ // Si les articles sont différents
+					if(articles.filter(el => el.id == this.items.articles[iter].id).length > 0){ // Si l'article séléctionné existe plus loin
+						
 						this.items.articles.splice(iter, 0, article);
-						$('#panier ul .article').eq(iter).before(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
+						document.querySelector('#panier ul').insertBefore(
+							Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute),
+							document.querySelectorAll('#panier ul .article')[iter]
+						);
+						pendings.put.push({...article, type: "article", course: this.id });
+
 						iter++;
-					} else {
+					} else { // Supprimer l'article séléctionné
+
+						pendings.delete.push(this.items.articles[iter].id);
 						this.items.articles.splice(iter, 1);
-						$('#panier ul .article').eq(iter).remove();
+						document.querySelectorAll('#panier ul .article')[iter].remove();
+
 					}
-				} else {
-					iter++;
-				}
-			}
-			else{
+				} else iter++
+			} else { // Ajouter l'article en fin de tableau
+
 				this.items.articles.splice(iter, 0, article);
-				$('#panier ul').append(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
+				document.querySelector('#panier ul').append(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
+				pendings.put.push({...article, type: "article", course: this.id})
+
 				iter++;
+
 			}
 
 		}
-		$('#panier ul .article').slice(items.articles.length).remove();
-		this.items.articles = this.items.articles.slice(0, items.articles.length);
+		Array.from(document.querySelectorAll('#panier ul .article')).slice(articles.length).forEach(item => item.remove()); // delete the articles left
+		this.items.articles.slice(articles.length).forEach(item => pendings.delete(item.id));
+		this.items.articles = this.items.articles.slice(0, articles.length);
 		
 
 
 
 		iter = 0;
-		while(iter < items.previews.length){
-			let preview = items.previews[iter];
+		while(iter < previews.length){
+			let preview = previews[iter];
 			if (this.items.previews[iter]) {
 				if (preview.id != this.items.previews[iter].id){
-					if(items.previews.filter(el => el.id == this.items.previews[iter].id).length > 0){
+					if(previews.filter(el => el.id == this.items.previews[iter].id).length > 0){
+
 						this.items.previews.splice(iter, 0, preview);
-						$('#liste ul .preview').eq(iter).before(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+						document.querySelector('#liste ul').insertBefore(
+							Generate.preview(preview.id, preview.titre, preview.color, 'animateSlideTop', attribute),
+							document.querySelectorAll('#liste ul .preview')[iter]
+						);
+						pendings.put.push({...preview, type: "preview", course: this.id});
 						iter++;
+						
 					} else {
+
+						pendings.delete.push(this.items.previews[iter].id);
 						this.items.previews.splice(iter, 1);
-						$('#liste ul .preview').eq(iter).remove();
+						document.querySelectorAll('#liste ul .preview')[iter].remove();
+
 					}
-				} else {
-					iter++;
-				}
-			}
-			else{
+				} else iter++
+			} else {
+
 				this.items.previews.splice(iter, 0, preview);
-				$('#liste ul').append(Generate.preview(app, preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+				document.querySelector('#liste ul').append(Generate.preview(preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
+				pendings.put.push({...preview, type: "preview", course: this.id});
 				iter++;
+
 			}
 
 		}
-		$('#liste ul .preview').slice(items.previews.length).remove();
-		this.items.previews = this.items.previews.slice(0, items.previews.length);
 
-		
+		this.items.previews.slice(previews.length).forEach(item => pendings.delete(item.id));
+		Array.from(document.querySelectorAll('#liste ul .preview')).slice(previews.length).forEach(item => item.remove());
+		this.items.previews = this.items.previews.slice(0, previews.length);
+
+
+		if(save){
+			pendings.put.forEach(item => IndexedDbStorage.put("items", item));
+			pendings.delete.forEach(id => IndexedDbStorage.delete("items", id));
+		}
+
 		setTimeout(function(){
 			$('.article, .preview').removeClass('animateSlideTop');
 		},600);
-
-		this.started = data.dateStart != 0;
-
 	}
 	export(){
 		return {
@@ -112,5 +146,35 @@ export default class Course{
 			'taxes': this.taxes,
 			'items': this.items
 		};
+	}
+	pushArticle(app, item){
+		if(item && item.id && item.titre && item.color && item.prix){
+			const article = item.id < 0 ? 
+				Generate.article(app, item.id, item.titre, item.color, item.prix, 'animateSlideIn', 'sync') :
+				Generate.article(app, item.id, item.titre, item.color, item.prix);
+			document.querySelector('#panier ul').prepend(article);
+			setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn') , 300);
+
+			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix});
+			app.total += item.prix;
+		} else console.log("Article requirements not fullfilled at course.js");
+	}
+	pushPreview(item){
+		if(item && item.id && item.titre && item.color){
+			const preview = item.id < 0 ? 
+				Generate.preview(item.id, item.titre, item.color, 'animateSlideIn', 'sync') :
+				Generate.preview(item.id, item.titre, item.color);
+			document.querySelector('#liste ul').prepend(preview);
+			setTimeout(() => document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn'), 300);
+
+			this.items.previews.unshift({id: item.id, titre: item.titre, color: item.color});
+		} else console.log("Preview requirements not fullfilled at course.js");
+	}
+	deleteArticle(app, item){
+		this.items.articles = this.items.articles.filter(el => el.id != item.id);
+		app.total -= item.prix;
+	}
+	deletePreview(id){
+		this.items.previews = this.items.previews.filter(el => el.id != id);
 	}
 }

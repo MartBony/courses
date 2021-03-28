@@ -18,6 +18,14 @@
 	transition: background 50ms linear, backdrop-filter 50ms linear;
 }
 
+#modernForms h2{
+	font-size: 2rem;
+	color: black;
+	font-weight: bold;
+	width: 100%;
+	text-align: left;
+}
+
 #modernForms .formContainer{
 	position: absolute;
 	top: 0px;
@@ -27,7 +35,7 @@
 	max-height: 600px;
 	overflow: auto;
 	z-index: 2;
-	transform-origin: 30% 50%;
+	transform-origin: 50% 50%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -72,6 +80,21 @@
 }
 
 #modernForms.previewForm #modernPreviewAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernBuyer{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(0, 0) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.buyForm #modernBuyer{
 	transition: opacity 300ms ease;
 	visibility: visible;
 	transform: translate(0, 0) scale(1);
@@ -198,6 +221,7 @@
 	#modernForms #modernCourseAdder{
 		transform: translate(0, 0) scale(0.7);
 	}
+	
 		
 
 	#modernForms .formContainer{

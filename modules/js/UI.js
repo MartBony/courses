@@ -1,7 +1,7 @@
 import Touch from "./touch.js";
 
 export default class UI {
-	static message(titre, texte, buttons){
+	static message(titre, texte, buttons, timer = 7000){
 		document.querySelector('#message').classList.add('opened');
 
 		if(titre) document.querySelector('#message h2').innerHTML = titre
@@ -12,7 +12,7 @@ export default class UI {
 
 		document.querySelectorAll('#message button').forEach(el => el.remove());
 		if(!buttons || buttons.length == 0){
-			setTimeout(() => {UI.closeMessage()}, 7000);
+			setTimeout(() => {UI.closeMessage()}, timer);
 		} else {
 
 			buttons.forEach(button => {
@@ -186,48 +186,47 @@ export default class UI {
 			$('.install').css({'display':'none'});
 		}, 200);
 	}
-	static addArticle(){
-		const button = document.getElementsByClassName("adder")[0];
+	static openModernForm(type = "article"){
+		let button;
 
 		document.body.style.overflow = "hidden";
-		document.getElementById("modernForms").classList.add("opened", "articleForm");
-		document.querySelector(`#modernArticleAdder input`).focus();
 		document.body.classList.add("formed");
+
+		switch(type){
+			case "article":
+				button = document.getElementsByClassName("adder")[0];
+				document.getElementById("modernForms").classList.add("opened", "articleForm");
+				document.querySelector(`#modernArticleAdder input`).focus();
+				break;
+			case "preview":
+				button = document.getElementsByClassName("adder")[1];
+				document.getElementById("modernForms").classList.add("opened", "previewForm");
+				document.querySelector(`#modernPreviewAdder input`).focus();
+				break;
+		}
 
 		button.style.transition = "none";
 		button.style.opacity = "0";
-	
-	}
-	static addPreview(x,y){
-		const button = document.getElementsByClassName("adder")[1];
-
-		document.body.style.overflow = "hidden";
-		document.getElementById("modernForms").classList.add("opened", "previewForm");
-		document.querySelector(`#modernPreviewAdder input`).focus();
-		document.body.classList.add("formed");
-
-		button.style.transition = "none";
-		button.style.opacity = "0";
-
 	}
 	static addPrice(app, id){
-		let item = app.course.items.previews.filter(item => item.id == id)[0];
+		const item = app.course.items.previews.filter(item => item.id == id)[0];
 
-		document.getElementById("prices").setAttribute("key", id);
-		$('#prices').css({'display':'block', 'opacity':'1'});
-		$('#prices').scrollTop(0);
-		$('.titrePrice').html('<i class="ms-Icon ms-Icon--Money" aria-hidden="true"></i>'+ item.titre);
+		if(item){
 
-		document.getElementById("forms").classList.add('opened','prices');
+			document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
+			document.getElementById('modernBuyer').setAttribute("key", item.id);
+			const button = document.getElementsByClassName("adder")[0];
 
-		$('#prices div, #prices input, #prices label, #prices i, #prices ul').each(function(i){	
-			setTimeout(function(){
-				$('#prices div, #prices input, #prices label, #prices i, #prices ul').eq(i).addClass('opened');
-			},20*i+250);
-		});
-		setTimeout(function(){
-			$('#prices input').eq(0).focus();
-		},200);
+			document.body.style.overflow = "hidden";
+			document.getElementById("modernForms").classList.add("opened", "buyForm");
+			document.querySelector(`#modernBuyer input`).focus();
+			document.body.classList.add("formed");
+	
+			button.style.transition = "none";
+			button.style.opacity = "0";
+
+		} else UI.erreur("Un problème est survenu, réessayez")
+
 	}
 	static closePrice(){
 		UI.closeForms();

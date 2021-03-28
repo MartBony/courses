@@ -1,13 +1,14 @@
 import App from './app.js';
 import UI from './UI.js';
-import { addSiteCache, initPwaEvents } from './pwa.js';
+import { installSW, addSiteCache, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 import { LocalStorage } from './storage.js';
+import { fetcher } from './tools.js';
 
 let app;
 
 console.log("Index loaded");
-authenticate();
+installSW().then(authenticate);
 
 
 // Auth
@@ -17,7 +18,7 @@ document.querySelector('form.inscipt').onsubmit = e => {
 		pass = document.querySelector('#iPass').value,
 		passConf = document.querySelector('#iPassConf').value,
 		nom = document.querySelector('#iNom').value;
-	$.ajax({
+	fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { inscript: true, mail: mail, pass: pass, passConf: passConf, nom: nom }
@@ -59,7 +60,7 @@ document.querySelector('form.connect').onsubmit = e => {
 	e.preventDefault();
 	let mail = document.querySelector('#cEmail').value,
 		pass = document.querySelector('#cPass').value;
-	$.ajax({
+	fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { connect: true, mail: mail, pass: pass }
@@ -89,18 +90,20 @@ document.querySelector('form.connect').onsubmit = e => {
 
 
 function authenticate(){
-	$.ajax({
+	fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { tryCookiesAuth: true }
 	})
-	.then(data => {
-		console.log("Auth attempted, request succeeded with res :");
-		console.log(data);
-		return data.id
-	})
-	.catch(res => {
-		if (res.status == 401) {
+	.then(res => {
+		console.log(res);
+		if(res.status && res.status == "connected" && res.user){
+			return res.user;
+		} else if(res.status && res.status == "offline"){
+			if (LocalStorage.getItem('userConnectionData')) return LocalStorage.getItem('userConnectionData');
+			throw "Require auth";
+		}
+		else if (res.status == 401) {
 			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 				{
 					texte:"Se connecter", 
@@ -120,22 +123,22 @@ function authenticate(){
 					}
 				}
 			]);
-		} else {
-			if (LocalStorage.getItem('userId')) return LocalStorage.getItem('userId');
-			throw "Require frontauth";
-		}
+		} else throw "Require auth"
 	})
-	.then(id => {
-		if(id){
+	.then(user => {
+		console.log(user);
+		if(user && user.id && user.mail && user.nom && user.color){
 			if(document.body.classList.contains("cssReady")){
 				document.getElementById('authContainer').classList.remove('opened');
 				
 				// Initialise on read
 				addSiteCache('site-course', 'coursesCache.json');
-				initPwaEvents();
+				initPwaEvents()
+			
+				app = new App(user);
+				initEvents(app);
+		
 
-				app = new App(id);
-				initEvents(app);	
 			} else {
 				// let timer = setTimeout(() => {window.location.reload()}, 10000); TO UNCOMMENT
 				document.addEventListener("cssReady", () => {
@@ -144,13 +147,14 @@ function authenticate(){
 				
 					// Initialise on read
 					addSiteCache('site-course', 'coursesCache.json');
-					initPwaEvents();
-
-					app = new App(id);
+					initPwaEvents()
+					
+					app = new App(user);
 					initEvents(app);
+
 				});
 			}
-		} else throw "Require auth";
+		} else throw "Require auth"
 	})
 	.catch(err => {
 		console.error(err);
