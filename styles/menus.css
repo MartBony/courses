@@ -2,6 +2,53 @@
 	--menu-radius: 15px;
 }
 
+/* Buttons */
+
+#buttons{
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	z-index: 3;
+}
+
+#buttons > button{
+	position: fixed;
+	bottom: 90px;
+	right: 10px;
+	height: 50px;
+	border-radius: 5px;
+	padding: 10px 20px;
+	margin: 0;
+
+	font-size: 2rem;
+	text-align: center;
+	font-weight: bold;
+
+    border: white solid 2px;
+	outline: none;
+	cursor: pointer;
+	background: var(--color-theme);
+	color: var(--color-text-menu);
+	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
+	box-sizing: border-box;
+
+	touch-action: none;
+	visibility: hidden;
+
+	opacity: 0;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#buttons.liste #addPrev, #buttons.panier #addArt, #buttons.menu #addCourse{
+	opacity: 1;
+	visibility: visible;
+	transition: 100ms all 400ms linear;
+}
+
+/* Menubar */
 #menubar{
 	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
@@ -184,6 +231,20 @@
 @media screen and (min-width: 900px){
 	:root{
 		--menu-radius: 8px;
+	}
+
+	#buttons > button{
+		bottom: 10px;
+	}
+
+	button#addArt, button#addCourse{
+		right: 50%;
+	}
+
+	#buttons.liste .adder, #buttons.panier .adder, #buttons.menu #addCourse, #buttons.calcul #addCourse{
+		opacity: 1;
+		visibility: visible;
+		transition: 100ms all 400ms linear;
 	}
 
 	#menubar.panier li:nth-child(2),

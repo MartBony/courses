@@ -1,6 +1,6 @@
 import App from './app.js';
 import UI from './UI.js';
-import { installSW, addSiteCache, initPwaEvents } from './pwa.js';
+import { installSW, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
 import { LocalStorage } from './storage.js';
 import { fetcher } from './tools.js';
@@ -64,10 +64,12 @@ document.querySelector('form.connect').onsubmit = e => {
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { connect: true, mail: mail, pass: pass }
-	}).then(res => authenticate())
-	.catch(res => {
+	})
+	.then(res => {
 		let data = res.responseJSON;
-		if((res.status == 400 || res.status == 401 || (res.status == 403 && data.sent)) && data.err){
+		if(res && res.status == "connected") {
+			authenticate();
+		} else if((res.status == 400 || res.status == 401 || (res.status == 403 && data.sent)) && data.err){
 			switch(data.err){
 				case "manquant":
 					alert('Il faut remplir tous les champs');
@@ -132,7 +134,7 @@ function authenticate(){
 				document.getElementById('authContainer').classList.remove('opened');
 				
 				// Initialise on read
-				addSiteCache('site-course', 'coursesCache.json');
+				/* addSiteCache('site-course', 'coursesCache.json'); */
 				initPwaEvents()
 			
 				app = new App(user);
@@ -146,7 +148,7 @@ function authenticate(){
 					document.getElementById('authContainer').classList.remove('opened');
 				
 					// Initialise on read
-					addSiteCache('site-course', 'coursesCache.json');
+					/* addSiteCache('site-course', 'coursesCache.json'); */
 					initPwaEvents()
 					
 					app = new App(user);

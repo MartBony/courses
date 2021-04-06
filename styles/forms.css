@@ -27,7 +27,7 @@
 	box-shadow: var(--form-shadow);
 }
 
-#forms #addPreview{
+/* #forms #addPreview{
 	background-image: url('../images/melons.webp');
 }
 
@@ -45,7 +45,7 @@
 
 #forms #addPreview{
 	background-image: url('../images/melons.webp');
-}
+} */
 
 #forms .fromContainer{
 	position: absolute;
@@ -325,10 +325,10 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		top: calc(50% - 200px);
 	}
 
-	#invitation, #addCourse{
+/* 	#invitation, #addCourse{
 		height: 500px;
 		top: calc(50% - 250px);
-	}
+	} */
 
 	#prices{
 		height: 90%;

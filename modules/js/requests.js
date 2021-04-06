@@ -15,7 +15,10 @@ class Pull{
 				]);
 			} else {
 				if(!app.pullState.structure) UI.offlineMsg(app, res)	
-				else UI.offlineMsg(app, res, "Vous êtes déconnectés. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
+				else UI.message(
+					"Vous êtes hors ligne", 
+					"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
+					null, 3000);
 			}
 		});
 	}
@@ -28,7 +31,10 @@ class Pull{
 			if(res && res.id && res.coursesList && res.membres && res.nom){
 				return res;
 			} else if(!app.pullState.groupe) UI.offlineMsg(app, res)	
-		 	else UI.offlineMsg(app, res, "Vous êtes déconnectés. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
+		 	else UI.message(
+				"Vous êtes hors ligne", 
+				"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
+				null, 3000);
 		});
 	}
 	static course(app, idCourse){
@@ -40,7 +46,10 @@ class Pull{
 			if(res && res.id) {
 				return res;
 			} else if (!app.pullState.course) UI.offlineMsg(app, res)
-			else UI.offlineMsg(app, res, "Vous êtes déconnecté. La page est en lecture seule et certains éléments peuvent ne pas être à jour.")
+			else UI.message(
+				"Vous êtes hors ligne", 
+				"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
+				null, 3000);
 		});
 	}
 	static invitations(app){

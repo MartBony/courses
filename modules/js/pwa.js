@@ -2,7 +2,7 @@ import UI from './UI.js';
 
 let deferredPrompt,
 	newWorker;
-
+/* 
 function addSiteCache(nom, src){
 	caches.open(nom).then(function(cache) { // Cache static parts of site
 		fetch(src).then(function(response) {
@@ -12,11 +12,11 @@ function addSiteCache(nom, src){
 		cache.addAll(urls);
 		});
 	});
-}
+} */
 
 function installSW(){
 	if("serviceWorker" in navigator){
-		return navigator.serviceWorker.register('./../sw.js')
+		return navigator.serviceWorker.register('./sw.js')
 		.then(reg => {
 			reg.addEventListener('updatefound', () => {
 				newWorker = reg.installing;
@@ -49,7 +49,7 @@ function initPwaEvents(){
 		}
 	});
 	
-	$('.install button').on('click', (e) => {
+	document.querySelector('.install button').addEventListener('click', e => {
 		UI.hideInstall();
 		deferredPrompt.prompt();
 		deferredPrompt.userChoice.then((choiceResult) => {
@@ -72,4 +72,4 @@ function initPwaEvents(){
 	
 }
 
-export { installSW, addSiteCache, initPwaEvents, deferredPrompt };
+export { installSW, initPwaEvents, deferredPrompt };

@@ -58,12 +58,6 @@ export default class UI {
 			el.classList.remove('opened');
 		});
 	}
-	static closeModernForms(){
-		document.body.style.overflow = "";
-		document.body.classList.remove("formed");
-		document.querySelector('#modernForms').className = "";
-		Array.from(document.querySelectorAll(".adder, #newCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
-	}
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
@@ -71,6 +65,7 @@ export default class UI {
 		document.getElementById('depensesChart').style.opacity = "0";
 		document.getElementById('mainPanel').className = type;
 		document.getElementById('menubar').className = type;
+		document.getElementById('buttons').className = type;
 		if((type == 'calcul' || type == "menu") && data && app) UI.openChart(app, data);
 	}
 	static openMenus(type, data = null, app = null){
@@ -186,7 +181,7 @@ export default class UI {
 			$('.install').css({'display':'none'});
 		}, 200);
 	}
-	static openModernForm(type = "article"){
+	static openModernForm(type = "article", data){
 		let button;
 
 		document.body.style.overflow = "hidden";
@@ -194,54 +189,74 @@ export default class UI {
 
 		switch(type){
 			case "article":
-				button = document.getElementsByClassName("adder")[0];
+				button = document.getElementById("addArt");
 				document.getElementById("modernForms").classList.add("opened", "articleForm");
-				document.querySelector(`#modernArticleAdder input`).focus();
+				setTimeout(() => document.querySelector(`#modernArticleAdder input`).focus(), 300)
+
 				break;
 			case "preview":
-				button = document.getElementsByClassName("adder")[1];
+				button = document.getElementById("addPrev");
 				document.getElementById("modernForms").classList.add("opened", "previewForm");
-				document.querySelector(`#modernPreviewAdder input`).focus();
+				setTimeout(() => document.querySelector(`#modernPreviewAdder input`).focus(), 300)
+
+				break;
+			case "course":
+				button = document.getElementById("addCourse");
+				document.getElementById("modernForms").classList.add("opened", "courseForm");
+				document.querySelector(`#modernCourseAdder input`).focus();
+
+				break;
+			case "buy":
+				if(data && data.app && data.id){
+					const item = data.app.course.items.previews.filter(item => item.id == data.id)[0];
+
+					if(item){
+
+						document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
+						document.getElementById('modernBuyer').setAttribute("key", item.id);
+
+						document.getElementById("modernForms").classList.add("opened", "buyForm");
+						setTimeout(() => document.querySelector(`#modernBuyer input`).focus(), 300)
+
+
+					} else UI.erreur("Un problème est survenu, réessayez")
+				}
 				break;
 		}
 
-		button.style.transition = "none";
-		button.style.opacity = "0";
+		if(button){
+			button.style.transition = "none";
+			button.style.opacity = "0";
+		}
 	}
-	static addPrice(app, id){
+	static closeModernForms(){
+		document.body.style.overflow = "";
+		document.body.classList.remove("formed");
+		document.querySelector('#modernForms').className = "";
+		Array.from(document.querySelectorAll(".adder, #addCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
+	}
+	/* static addPrice(app, id){
 		const item = app.course.items.previews.filter(item => item.id == id)[0];
 
 		if(item){
 
 			document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
 			document.getElementById('modernBuyer').setAttribute("key", item.id);
+			document.body.classList.add("formed");
 			const button = document.getElementsByClassName("adder")[0];
 
 			document.body.style.overflow = "hidden";
 			document.getElementById("modernForms").classList.add("opened", "buyForm");
 			document.querySelector(`#modernBuyer input`).focus();
-			document.body.classList.add("formed");
 	
 			button.style.transition = "none";
 			button.style.opacity = "0";
 
 		} else UI.erreur("Un problème est survenu, réessayez")
 
-	}
+	} */
 	static closePrice(){
 		UI.closeForms();
-	}
-	static addCourse(x,y){
-		const button = document.getElementById("newCourse");
-
-		document.body.style.overflow = "hidden";
-		document.getElementById("modernForms").classList.add("opened", "courseForm");
-		document.querySelector(`#modernCourseAdder input`).focus();
-		document.body.classList.add("formed");
-		
-
-		button.style.transition = "none";
-		button.style.opacity = "0";
 	}
 	static openMenu(){
 		//$('.menu').css({'display':'block'});

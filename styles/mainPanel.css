@@ -133,36 +133,6 @@
 }
 
 /* Listes */
-button.adder{
-	position: fixed;
-	bottom: 90px;
-	right: 10px;
-	height: 50px;
-	border-radius: 5px;
-	padding: 10px 20px;
-	margin: 0;
-
-	font-size: 2rem;
-	text-align: center;
-	font-weight: bold;
-
-    border: white solid 2px;
-	outline: none;
-	cursor: pointer;
-	background: var(--color-theme);
-	color: var(--color-text-menu);
-	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	box-sizing: border-box;
-
-	touch-action: none;
-
-	opacity: 0;
-}
-
-#mainPanel.liste #liste .adder, #mainPanel.panier #panier .adder{
-	opacity: 1;
-	transition: 100ms all 400ms linear;
-}
 
 .article, .preview
 {
@@ -200,11 +170,13 @@ button.adder{
 .article i, .preview i
 {
 	display: none;
-	margin: 0;
-	padding: 0;
+	margin: 3px;
+	padding: 0 0 2px 2px;
+	border-radius: 100px;
+	background: var(--color-theme-secondary);
 	font-size: 30px;
 	position: absolute;
-	z-index: 1;
+	z-index: 0;
 	font-size: 30px;
 	right: 10px;
 	top: 0;
@@ -307,43 +279,6 @@ section#calcul
 	font-size: 2rem;
 }
 
-#menu > button
-{
-	position: fixed;
-	bottom: 90px;
-	right: 10px;
-	height: 50px;
-	border-radius: 5px;
-	padding: 10px 20px;
-	margin: 0;
-
-	font-size: 2rem;
-	text-align: center;
-	font-weight: bold;
-
-    border: white solid 2px;
-	outline: none;
-	color: white;
-	cursor: pointer;
-	background: var(--color-theme);
-	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	box-sizing: border-box;
-	opacity: 0;
-
-	touch-action: none;
-
-	
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-webkit-user-select: none;
-	user-select: none;
-}
-
-.menu #menu > button{
-	opacity: 1;
-	transition: 100ms all 400ms linear;
-}
-
 #menu .course
 {
 	position: relative;
@@ -439,16 +374,6 @@ section#calcul
 		visibility: visible;
 		max-height: none;
 		animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
-	}
-
-	#menu > button, button.adder
-	{
-		position: absolute;
-	}
-
-	#mainPanel.liste .adder, #mainPanel.panier .adder, .menu #menu > button{
-		opacity: 1;
-		transition: 100ms all 400ms linear;
 	}
 }
 

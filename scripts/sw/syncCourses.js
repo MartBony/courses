@@ -1,11 +1,11 @@
 const syncCourses = () => {
-	IndexedDbStorage.getAll("requests").then(requests => {
-		Promise.all(requests.map(request => {
+	return IndexedDbStorage.getAll("requests").then(requests => {
+		return Promise.all(requests.map(request => {
 			let itemData;
 			switch(request.type){ // Add catch statements
 				case "preview":
 					return fetcher({
-						url: "/courses/serveur/push.php",
+						url: "./serveur/push.php",
 						method: "POST",
 						data: {
 							submitPreview: true,
@@ -13,16 +13,33 @@ const syncCourses = () => {
 							groupe: request.data.groupe
 						}
 					})
-					.then(data => {
-						itemData = data
-						return IndexedDbStorage.put("items", {type: "preview", course: data.course, color: data.color, id: data.id, prix: data.prix, titre: data.titre})
+					.then(res => {
+						if(res.type == 200){
+							itemData = res.payload;
+							return IndexedDbStorage.put("items", {
+								type: "preview",
+								course: itemData.course,
+								color: itemData.color,
+								id: itemData.id,
+								prix: itemData.prix,
+								titre: itemData.titre
+							})
+						} else if(getVersionPort) getVersionPort.postMessage({
+							type: "Error",
+							payload: {
+								stage: "SubmitPreview",
+								err: "Unknown"
+							}
+						})
+
+						
 					})// Delete Request; // Update course
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {type: "updPreview", id: request.reqId, item: itemData} }) });
+					.then(() => { if(getVersionPort) getVersionPort.postMessage({ type: "updPreview", payload: {id: request.reqId, item: itemData} }) });
 					break;
 				case "article":
 					return fetcher({
-						url: "/courses/serveur/push.php",
+						url: "./serveur/push.php",
 						method: "POST",
 						data: { // Send article
 							submitArticle: true,
@@ -31,16 +48,42 @@ const syncCourses = () => {
 							groupe: request.data.groupe
 						}
 					})
-					.then(data => {
-						itemData = data;
-						return IndexedDbStorage.put("items", {type: "article", course: data.course, color: data.color, id: data.id, prix: data.prix, titre: data.titre})
+					.then(res => {
+						if(res.type == 200){
+							itemData = res.payload;
+							return IndexedDbStorage.put("items", {
+								type: "article",
+								course: itemData.course,
+								color: itemData.color,
+								id: itemData.id,
+								prix: itemData.prix,
+								titre: itemData.titre
+							})
+						} else if(getVersionPort){
+							if(res.type == 201 && res.error && res.error == "NegVal"){
+								if(res.error == "NegVal") getVersionPort.postMessage({
+									type: "Error",
+									payload: {
+										stage: "SubmitArticle",
+										err: "NegVal"
+									}
+								})
+							} else getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "SubmitArticle",
+									err: "Unknown"
+								}
+							})
+						}
+						
 					})// Delete Request; // Update course
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {type: "updArticle", id: request.reqId, item: itemData} }) });
+					.then(() => { if(getVersionPort) getVersionPort.postMessage({ type: "updArticle", payload: {id: request.reqId, item: itemData} }) });
 					break;
 				case "delPreview":
 					return fetcher({
-						url: "/courses/serveur/push.php",
+						url: "./serveur/push.php",
 						method: "POST",
 						data: { // Send article
 							deletePreview: true,
@@ -49,13 +92,38 @@ const syncCourses = () => {
 						}
 					})
 					.then(res => {
-						return IndexedDbStorage.delete("items", request.data.id)
+						if(res.type == 200) return IndexedDbStorage.delete("items", request.data.id)
+						else if(getVersionPort){
+							if(res.type == 203){
+								getVersionPort.postMessage({
+									type: "Error",
+									payload: {
+										stage: "DeletePreview",
+										err: "OldCourse"
+									}
+								})
+							}
+							else if (res.type == 204) getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "DeletePreview",
+									err: "NotFound"
+								}
+							})
+							else getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "DeletePreview",
+									err: "Unknown"
+								}
+							})
+						}
 					})
 					.then(() => IndexedDbStorage.delete("requests", request.reqId));
 					break;
 				case "delArticle":
 					return fetcher({
-						url: "/courses/serveur/push.php",
+						url: "./serveur/push.php",
 						method: "POST",
 						data: { // Send article
 							deleteArticle: true,
@@ -64,16 +132,45 @@ const syncCourses = () => {
 						}
 					})
 					.then(res => {
-						itemData = res;
-						return IndexedDbStorage.delete("items", request.data.id)
+						if(res.type == 200){
+							itemData = res;
+							return IndexedDbStorage.delete("items", request.data.id)
+						} else if(getVersionPort){
+							if(res.type == 203){
+								getVersionPort.postMessage({
+									type: "Error",
+									payload: {
+										stage: "DeleteArticle",
+										err: "OldCourse"
+									}
+								})
+							}
+							else if (res.type == 204) getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "DeleteArticle",
+									err: "NotFound"
+								}
+							})
+							else getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "DeleteArticle",
+									err: "Unknown"
+								}
+							})
+						}
 					})
-					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {type: "deleteArticleSetTotal", prix: itemData.prix} }) });
+					.then(() => IndexedDbStorage.delete("requests", request.reqId))/* 
+					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {
+						type: "deleteArticleSetTotal",
+						prix: itemData.prix
+					} }) }) */;
 					break;
 				case "buy":
-					fetcher({
+					return fetcher({
 						method: "POST",
-						url: "/courses/serveur/push.php",
+						url: "./serveur/push.php",
 						data: {
 							buyPreview: true,
 							id: request.data.id,
@@ -81,57 +178,61 @@ const syncCourses = () => {
 							groupe: request.data.groupe
 						}
 					})
-					.then(article => {
-						itemData = article;
-						IndexedDbStorage.put("items", {...article, type: "article"});
+					.then(res => {
+						if(res.type == 200){
+							itemData = res.payload;
+							IndexedDbStorage.put("items", {...itemData, type: "article"});
+						} else if(getVersionPort){
+							if(res.type == 201 && res.error && res.error == "NegVal"){
+								if(res.error == "NegVal") getVersionPort.postMessage({
+									type: "Error",
+									payload: {
+										stage: "Buy",
+										err: "NegVal"
+									}
+								})
+							}
+							else if (res.type == 204) getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "Buy",
+									err: "NotFound"
+								}
+							})
+							else getVersionPort.postMessage({
+								type: "Error",
+								payload: {
+									stage: "Buy",
+									err: "Unknown"
+								}
+							})
+						}
 					})
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {type: "buy", id: request.reqId, item: itemData} }) });
+					.then(() => { if(getVersionPort) getVersionPort.postMessage({type: "buy",  payload: {id: request.reqId, item: itemData} }) });
 					break;
 			}
 		}));
 	});
-};/* ,
-fetchData = () => {
-	fetcher({
-		method: 'POST',
-		url: '/courses/serveur/structure.php'
-	})
-	.catch(err => {
-		if(getVersionPort) getVersionPort.postMessage({ payload: { type: "ERROR", details: "FetchError"} })
-		console.log(err); 
-	})
-	.then(data => {
-		if(data && data.nom && data.id && data.groupes){
-			return IndexedDbStorage.put("structures", { groupes: data.groupes, nom: data.nom, id: data.id })
+};
+
+async function coursesServerResponse(event){
+	try {
+		const preloadResponse = await event.preloadResponse;
+		if (preloadResponse) {
+			return preloadResponse;
 		}
-	})
-	.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: { type: "DONE", details: "Structure" } }) })
-	.catch(err => { 
-		if(getVersionPort) getVersionPort.postMessage({ payload: { type: "ERROR", details: "DatabaseError"} })
-		console.log(err);
-	});
-} */
 
-async function coursesServerOfflineResponse(event){
-	event.respondWith((async () => {
-		try {
-			const preloadResponse = await event.preloadResponse;
-			if (preloadResponse) {
-				return preloadResponse;
-			}
+		const networkResponse = await fetch(event.request);
+		return networkResponse;
+	} catch (error) {
+		/* console.log('Fetch failed; returning offline page instead.', error);
 
-			const networkResponse = await fetch(event.request);
-			return networkResponse;
-		} catch (error) {
-			console.log('Fetch failed; returning offline page instead.', error);
-
-			/* const cache = await caches.open(staticCacheName); 
-			const cachedResponse = await cache.match(offlineServerRes);
-			return cachedResponse;*/
-			return new Response('{"status":"offline"}', { headers: { 'Content-Type': 'application/json'}});
-		}
-	  })());
+		const cache = await caches.open(staticCacheName); 
+		const cachedResponse = await cache.match(offlineServerRes);
+		return cachedResponse;*/
+		return new Response('{"status":"offline"}', { headers: { 'Content-Type': 'application/json'}});
+	}
 }
 
 
@@ -144,8 +245,4 @@ function fetcher(reqData){
 		body: reqData.data ? new URLSearchParams(reqData.data) : null,
 	})
 	.then(res => res.json());
-}
-
-function deleteItemFromIDB(id){
-	return IndexedDbStorage.delete("items", id);
 }

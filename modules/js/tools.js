@@ -14,7 +14,7 @@ function $_GET(param) {
 }
 
 function jsonEqual(a,b) {
-    return JSON.stringify(a) === JSON.stringify(b);
+	return JSON.stringify(a) === JSON.stringify(b);
 }
 
 

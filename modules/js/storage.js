@@ -40,21 +40,25 @@ class IndexedDbStorage{
 
 				switch(event.oldVersion){
 					case 0:
-						requestsStore = db.createObjectStore("requests", { keyPath: "reqId" , autoIncrement : true});
+						
 						coursesStore = db.createObjectStore("courses", { keyPath: "id" });
 						structuresStore = db.createObjectStore("structures", { keyPath: "id" });
 						groupesStore = db.createObjectStore("groupes", { keyPath: "id" });
 
-						requestsStore.createIndex("type", "type", {unique: false});
-						coursesStore.createIndex("id", "id", {unique: true});
-						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						
-						[requestsStore, coursesStore, structuresStore, groupesStore, itemsStore].map(objStore => completeEvents.push(objStore));
+						[structuresStore, groupesStore].map(objStore => completeEvents.push(objStore));
 						
 					case 1:
-						if (!itemsStore) itemsStore = event.target.transaction.objectStore("items", { keyPath: "id" });
+						requestsStore = db.createObjectStore("requests", { keyPath: "reqId" , autoIncrement : true});
+						requestsStore.createIndex("type", "type", {unique: false});
+						
+						if (!coursesStore) coursesStore = event.target.transaction.objectStore("courses");
+						coursesStore.createIndex("id", "id", {unique: true});
+
+						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						itemsStore.createIndex("course", "course", {unique: false});
-						completeEvents.push(itemsStore);
+						
+						[requestsStore, coursesStore, itemsStore].map(objStore => completeEvents.push(objStore));
 					/* case 1: DO NOT DELETE, expamles of db update processes
 						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						completeEvents.push(itemsStore);
@@ -115,25 +119,45 @@ class IndexedDbStorage{
 		.then(db => new Promise((resolve, reject) => {
 				
 			let results = [],
-			store = db.transaction(objStore).objectStore(objStore);
+			store = db.transaction(objStore).objectStore(objStore),
+			i = limit ? limit[0] : 0;
+
 			const openCursor = indexName && indexValue ?
 				store.index(indexName).openCursor(indexValue) :
 				store.openCursor(keyRange, constants);
 
 			openCursor.onsuccess = event => {
 				const cursor = event.target.result;
-				let i = limit ? limit[0] : 0; 
-				if (cursor) {
+				if (cursor && (!limit || i < limit[1])) {
 					results.push(cursor.value);
 					i++;
-					if(!limit || i < limit[1]) cursor.continue();
-				}
-				
-				resolve(results);
-				
+					
+					cursor.continue();
+				} else resolve(results);
+
 			}
 		}));
 
+	}
+	static filterCursorwise(objStore, indexName = null, indexValue = null, filterFunction = () => true){
+		return IndexedDbStorage.openDB()
+		.then(db => new Promise((resolve, reject) => {
+				
+			let results = [],
+			store = db.transaction([objStore], "readwrite").objectStore(objStore);
+			const openCursor = indexName && indexValue ?
+				store.index(indexName).openCursor(indexValue) :
+				store.openCursor();
+
+			openCursor.onsuccess = event => {
+				const cursor = event.target.result;
+				if (cursor) {
+					if(!filterFunction(cursor.value)) cursor.delete();
+					cursor.continue();
+				} else resolve(results);
+				
+			}
+		}));
 	}
 	static deleteDb(){
 		return IndexedDbStorage.openDB()

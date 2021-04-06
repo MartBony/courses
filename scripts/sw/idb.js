@@ -18,21 +18,25 @@ class IndexedDbStorage{
 
 				switch(event.oldVersion){
 					case 0:
-						requestsStore = db.createObjectStore("requests", { keyPath: "reqId" , autoIncrement : true});
+						
 						coursesStore = db.createObjectStore("courses", { keyPath: "id" });
 						structuresStore = db.createObjectStore("structures", { keyPath: "id" });
 						groupesStore = db.createObjectStore("groupes", { keyPath: "id" });
 
-						requestsStore.createIndex("type", "type", {unique: false});
-						coursesStore.createIndex("id", "id", {unique: true});
-						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						
-						[requestsStore, coursesStore, structuresStore, groupesStore, itemsStore].map(objStore => completeEvents.push(objStore));
+						[structuresStore, groupesStore].map(objStore => completeEvents.push(objStore));
 						
 					case 1:
-						if (!itemsStore) itemsStore = event.target.transaction.objectStore("items", { keyPath: "id" });
+						requestsStore = db.createObjectStore("requests", { keyPath: "reqId" , autoIncrement : true});
+						requestsStore.createIndex("type", "type", {unique: false});
+						
+						if (!coursesStore) coursesStore = event.target.transaction.objectStore("courses");
+						coursesStore.createIndex("id", "id", {unique: true});
+
+						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						itemsStore.createIndex("course", "course", {unique: false});
-						completeEvents.push(itemsStore);
+						
+						[requestsStore, coursesStore, itemsStore].map(objStore => completeEvents.push(objStore));
 					/* case 1: DO NOT DELETE, expamles of db update processes
 						itemsStore = db.createObjectStore("items", { keyPath: "id" });
 						completeEvents.push(itemsStore);

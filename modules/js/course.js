@@ -34,7 +34,7 @@ export default class Course{
 
 		$('#maxprice').html(this.maxPrice + app.params.currency);
 
-		this.updateItems(app, data.items.articles, data.items.previews, save)
+		// this.updateItems(app, data.items.articles, data.items.previews, save)
 
 		this.started = data.dateStart != 0;
 
@@ -135,6 +135,73 @@ export default class Course{
 			$('.article, .preview').removeClass('animateSlideTop');
 		},600);
 	}
+	updateItemsModern(app, articles, previews, save = false){
+
+		// Articles
+		articles.forEach((article, index) => {
+			const articleNode = document.querySelector(`.article[idItem="${article.id}"]`),
+				articleNodeIndex = this.articleIndexOf(article);
+
+			if(articleNodeIndex > -1){
+				if(articleNodeIndex != index) articleNode.parentNode.insertBefore(articleNode, articleNode.parentNode.childNodes[index])
+			} else {
+				if(articleNode) articleNode.remove();
+				this.insertArticle(app, index, article, false);
+			}
+		});
+
+		this.articlesNodeList.slice(articles.length).forEach(articleNode => {
+			articleNode.remove();
+		});
+
+		this.items.articles = articles;
+
+		// Previews
+		previews.forEach((preview, index) => {
+			const previewNode = document.querySelector(`.preview[idItem="${preview.id}"]`),
+				previewNodeIndex = this.previewIndexOf(preview);
+
+			if(previewNodeIndex > -1){
+				if(previewNodeIndex != index) previewNode.parentNode.insertBefore(previewNode, previewNode.parentNode.childNodes[index])
+			} else {
+				if(previewNode) previewNode.remove();
+				this.insertPreview(index, preview, false);
+			}
+		});
+
+		this.previewsNodeList.slice(previews.length).forEach(previewNode => {
+			previewNode.remove();
+		});
+
+		this.items.previews = previews;
+
+		if(save){
+			IndexedDbStorage.filterCursorwise("items", "id", null, (item) => {
+				switch(item.type){
+					case "article":
+						if(item.course == this.id){
+							if(this.articleIndexOf(item) == -1) return false
+						}
+						break;
+					case "preview":
+						if(item.course == this.id){
+							if(this.previewIndexOf(item) == -1) return false
+						}
+						break;
+				}
+				return true;
+			});
+
+			articles.forEach(item => {
+				if(item.id >= 0) IndexedDbStorage.put("items", {...item, type: "article", course: this.id})
+			});
+			previews.forEach(item => {
+				if(item.id >= 0) IndexedDbStorage.put("items", {...item, type: "preview", course: this.id})
+			});
+		}
+
+
+	}
 	export(){
 		return {
 			'id': this.id,
@@ -147,28 +214,46 @@ export default class Course{
 			'items': this.items
 		};
 	}
-	pushArticle(app, item){
+	pushArticle(app, item, animate){ // Appens an article in the logic
 		if(item && item.id && item.titre && item.color && item.prix){
-			const article = item.id < 0 ? 
-				Generate.article(app, item.id, item.titre, item.color, item.prix, 'animateSlideIn', 'sync') :
-				Generate.article(app, item.id, item.titre, item.color, item.prix);
-			document.querySelector('#panier ul').prepend(article);
-			setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn') , 300);
-
+			this.insertArticle(app, 0, item, animate)
 			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix});
 			app.total += item.prix;
-		} else console.log("Article requirements not fullfilled at course.js");
+		} else console.log("Article requirements not fullfilled", item);
 	}
-	pushPreview(item){
-		if(item && item.id && item.titre && item.color){
-			const preview = item.id < 0 ? 
-				Generate.preview(item.id, item.titre, item.color, 'animateSlideIn', 'sync') :
-				Generate.preview(item.id, item.titre, item.color);
-			document.querySelector('#liste ul').prepend(preview);
-			setTimeout(() => document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn'), 300);
+	insertArticle(app, index, item, animate = true){ // Inserts an article in the UI
+		if(item && item.id && item.titre && item.color && item.prix){
+			const animation = animate ? 'animateSlideIn' : 'animateSlideInLight',
+			article = item.id < 0 ? 
+				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync') :
+				Generate.article(app, item.id, item.titre, item.color, item.prix, animation);
+			
+			if(index) document.querySelector('#panier ul').insertBefore(article, this.articlesNodeList[index]);
+			else document.querySelector('#panier ul').prepend(article);
+			
+			setTimeout(() => article.classList.remove(animation) , 300);
 
+		} else console.log("Article requirements not fullfilled", item);
+	}
+	pushPreview(item, animate){
+		if(item && item.id && item.titre && item.color){
+			this.insertPreview(0, item, animate)
 			this.items.previews.unshift({id: item.id, titre: item.titre, color: item.color});
-		} else console.log("Preview requirements not fullfilled at course.js");
+		} else console.log("Preview requirements not fullfilled", item);
+	}
+	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
+		if(item && item.id && item.titre && item.color){
+			const animation = animate ? 'animateSlideIn' : 'animateSlideInLight',
+			preview = item.id < 0 ? 
+				Generate.preview(item.id, item.titre, item.color, animation, 'sync') :
+				Generate.preview(item.id, item.titre, item.color, animation);
+			
+			if(index) document.querySelector('#liste ul').insertBefore(preview, this.previewsNodeList[index]);
+			else document.querySelector('#liste ul').prepend(preview);
+			
+			setTimeout(() => preview.classList.remove(animation) , 300);
+
+		} else console.log("Preview requirements not fullfilled", item);
 	}
 	deleteArticle(app, item){
 		this.items.articles = this.items.articles.filter(el => el.id != item.id);
@@ -176,5 +261,33 @@ export default class Course{
 	}
 	deletePreview(id){
 		this.items.previews = this.items.previews.filter(el => el.id != id);
+	}
+	articleIndexOf(article){
+		return this.articlesNodeList.findIndex((articleNode, index) => {
+			const titre = articleNode.firstChild.firstChild.innerHTML,
+				prix = parseFloat(articleNode.firstChild.lastChild.innerHTML.slice(0, -1));
+		
+			if(parseInt(articleNode.getAttribute("idItem")) == article.id
+			&& titre == article.titre
+			&& prix == article.prix) return true
+
+			return false;
+		});
+	}
+	previewIndexOf(preview){
+		return this.previewsNodeList.findIndex((previewNode, index) => {
+			const titre = previewNode.firstChild.firstChild.innerHTML;
+		
+			if(parseInt(previewNode.getAttribute("idItem")) == preview.id
+			&& titre == preview.titre) return true
+
+			return false;
+		});
+	}
+	get articlesNodeList(){
+		return Array.from(document.getElementsByClassName("article"));
+	}
+	get previewsNodeList(){
+		return Array.from(document.getElementsByClassName("preview"));
 	}
 }

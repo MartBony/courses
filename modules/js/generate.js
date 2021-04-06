@@ -36,16 +36,16 @@ export default class Generate{
 			button.appendChild(child);
 		});
 
-		$(button).on('click', e => {
+		button.addEventListener('click', e => {
 			if(e.target.tagName !== "I"){
-				document.querySelector('.loader').classList.add('opened');
 				if(!app.pending){
-					app.pull("open", id);
+					document.querySelector(".loader").classList.add("opened");
+					app.pull("open", id).then(() => document.querySelector(".loader").classList.remove("opened"));
 				} else {
 					let loop = setInterval(() => {
 						if(!app.pending){
-							document.querySelector('.loader').classList.add('opened');
-							app.pull("open", id);
+							document.querySelector(".loader").classList.add("opened");
+							app.pull("open", id).then(() => document.querySelector(".loader").classList.remove("opened"));
 							clearInterval(loop);
 						}
 					}, 1000);

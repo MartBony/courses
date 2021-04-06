@@ -4,7 +4,6 @@
 			<h1 class="noselect">Panier</h1>
 		</header>
 		<ul></ul>
-		<button class="adder"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
 		<article class="options">
 			<h4>4€ HT</h4>
 			<h4>4.1€</h4>
@@ -16,8 +15,7 @@
 		<header class="phones">
 			<h1 class="noselect">Liste</h1>
 		</header>
-		<ul></ul>
-		<button class="adder"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
+		<ul></ul> 
 		<article class="options">
 			<i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i>
 			<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
@@ -60,12 +58,6 @@
 			<i class="ms-Icon ms-Icon--Settings" aria-hidden="true"></i>
 		</header>
 		<h2>Historique</h2>
-		<article>
-
-		</article>
-		<button id="newCourse">
-			<i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i>
-			Nouvelle Course
-		</button>
+		<article></article>
 	</section>
 </section>

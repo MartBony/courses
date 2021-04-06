@@ -2,19 +2,18 @@ import Pull from './requests.js';
 import UI from './UI.js';
 import { LocalStorage, IndexedDbStorage } from './storage.js';
 import Generate from './generate.js';
+import { fetcher } from './tools.js';
 
 
 export default function initEvents(app){
 
 	const refresh = (callback, idGroupe, idCourse) => {
 		callback = callback || function(){};
-		document.querySelector('.loader').classList.add('opened');
 		if(!app.pending){
 			app.pull("refresh", idGroupe, idCourse).then(callback);
 		} else {
 			let loop = setInterval(() => {
 				if(!app.pending){
-					document.querySelector('.loader').classList.remove('opened');
 					app.pull("refresh", idGroupe, idCourse).then(callback);
 					clearInterval(loop);
 				}
@@ -116,6 +115,7 @@ export default function initEvents(app){
 							color: data.color,
 							prix: data.prix
 						});
+						app.total += data.prix;
 
 						[inputPrice, inputTitre].forEach(el => el.value = '');
 						inputQuantity.value = 1;
@@ -258,11 +258,6 @@ export default function initEvents(app){
 				app.buy(idPreview, prix);
 			} else alert('Il faux rentrer un prix numérique')
 		},
-		buyLi = e => {
-			let idPreview = document.getElementById('prices').getAttribute('key'),
-				prix = app.liPrices[$(e.target).index()];
-			app.buy(idPreview, prix);
-		},
 		addCourse = e => {
 			e.preventDefault();
 			if (!isNaN(parseFloat( $('#modernCourseAdder #maxPrice').val().replace(',','.')))) {
@@ -320,31 +315,28 @@ export default function initEvents(app){
 		},
 		addGroupe = e => {
 			e.preventDefault();
-			if ($('#addGroupe #titreG').val() && $('#addGroupe #titreG').val() != '') {
-				document.getElementsByClassName('loader')[0].classList.add('opened');
+			if (document.querySelector('#addGroupe #titreG').value && document.querySelector('#addGroupe #titreG').value != '') {
+				document.querySelector('.loader').classList.remove('opened');
 				$.ajax({
 					method: "POST",
 					url: "serveur/push.php",
-					data: { newGroupe: true, titre: $('#addGroupe #titreG').val() }
+					data: { newGroupe: true, titre: document.querySelector('#addGroupe #titreG').value }
 				}).then(data => {
-				document.getElementsByClassName('loader')[0].classList.remove('opened');
-					$('#addGroupe #titreG').val("");
+					document.querySelector('.loader').removeClass('opened');
+					document.querySelector('#addGroupe #titreG').value = "";
 					LocalStorage.clear();
 					UI.closeForms();
 					document.querySelector('.loader').classList.remove('opened');
 					refresh();
 				}).catch(res => {
-				document.getElementsByClassName('loader')[0].classList.remove('opened');
+					document.querySelector('.loader').removeClass('opened');
 					if (res.status == 400 && res.responseJSON && res.responseJSON.err && res.responseJSON.err == 'length'){
 						alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
 					} else if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 						]);
-					} else {
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(app, res);
-					}
+					} else UI.offlineMsg(app, res)
 				});
 			}
 			else
@@ -405,40 +397,65 @@ export default function initEvents(app){
 		}, [messageChannel.port2]);
 		
 		messageChannel.port1.onmessage = (event) => {
-			const res = event.data.payload;
+			const res = event.data;
+			const payload = res.payload;
 			switch(res.type){
 				case "updPreview":
-					const previewUi = document.querySelector(`.preview[iditem="${-res.id}"]`);
+					const previewUi = document.querySelector(`.preview[iditem="${-payload.id}"]`);
 					if(previewUi) {
-						previewUi.setAttribute("iditem", res.item.id);
+						previewUi.setAttribute("iditem", payload.item.id);
 						previewUi.classList.remove('sync');
 					}
 					app.course.items.previews.forEach(preview => {
-						if(preview.id == -res.id) preview.id = res.item.id
+						if(preview.id == -payload.id) preview.id = payload.item.id
 					});
 					break;
 				case "updArticle":
-					const articleUi = document.querySelector(`.article[iditem="${-res.id}"]`);
+					const articleUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
 					if(articleUi) {
-						articleUi.setAttribute("iditem", res.item.id);
+						articleUi.setAttribute("iditem", payload.item.id);
 						articleUi.classList.remove('sync');
 					}
 					app.course.items.articles.forEach(article => {
-						if(article.id == -res.id) article.id = res.item.id
+						if(article.id == -payload.id) article.id = payload.item.id
 					});
 					break;
 				case "buy":
-					const buyedUi = document.querySelector(`.article[iditem="${-res.id}"]`);
+					const buyedUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
 					if(buyedUi) {
-						buyedUi.setAttribute("iditem", res.item.id);
+						buyedUi.setAttribute("iditem", payload.item.id);
 						buyedUi.classList.remove('sync');
 					}
 					app.course.items.articles.forEach(article => {
-						if(article.id == -res.id) article.id = res.item.id
+						if(article.id == -payload.id) article.id = payload.item.id
 					});
 					break;
-				case "deleteArticleSetTotal":
-					app.total -= res.prix
+				case "Error":
+					switch(payload.stage){
+						case "SubmitPreview":
+							UI.erreur("Erreur de synchronisation","Un de vos articles dans votre liste n'a pas pu être correctement synchronisé.")
+							break;
+						case "SubmitArticle":
+							if(payload.err == "NegVal") UI.erreur("Erreur de synchronisation","Le prix d'un de vos achats n'est pas conforme et n'a pas pu être correctement synchronisé.")
+							else UI.erreur("Erreur de synchronisation","Un de vos achats n'a pas pu être correctement synchronisé.")
+							break;
+						case "DeletePreview":
+							if(payload.err == "OldCourse") UI.erreur("Erreur de synchronisation","Un article n'a pas pu être supprimé car vous n'êtes pas à jour.")
+							if(payload.err == "NotFound") UI.erreur("Erreur de synchronisation","Un article n'a pas pu être supprimé car est introuvable sur le serveur.")
+							else UI.erreur("Erreur de synchronisation","Problème de synchronisation.")
+							break;
+						case "DeleteArticle":
+							if(payload.err == "OldCourse") UI.erreur("Erreur de synchronisation","Un achat n'a pas pu être supprimé car vous n'êtes pas à jour.")
+							if(payload.err == "NotFound") UI.erreur("Erreur de synchronisation","Un achat n'a pas pu être supprimé car est introuvable sur le serveur.")
+							else UI.erreur("Erreur de synchronisation","Problème de synchronisation.")
+							break;
+						case "Buy":
+							if(payload.err == "NegVal") UI.erreur("Erreur de synchronisation","Un article n'a pas pu être acheté car son prix n'est pas conforme.")
+							if(payload.err == "NotFound") UI.erreur("Erreur de synchronisation","Un article n'a pas pu être acheté car est introuvable sur le serveur.")
+							else UI.erreur("Erreur de synchronisation","Problème de synchronisation.")
+							break;
+					}
+					break;
 			}
 		};
 	}
@@ -527,10 +544,7 @@ export default function initEvents(app){
 		}); */
 
 		el.addEventListener('click', e => {
-			if(e.target.classList.contains('adder') || e.target.parentNode.classList.contains('adder')){
-				if(el.id == "panier") UI.openModernForm("article")
-				else UI.openModernForm("preview")
-			} else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
+			if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
 				let article = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
@@ -561,15 +575,24 @@ export default function initEvents(app){
 						UI.hideOptions();
 						app.deletePreview(key);
 					} else if (e.target.classList.contains('ms-Icon--Shop')){
-						let key = e.target.parentNode.getAttribute('key');
+						const key = e.target.parentNode.getAttribute('key');
 						UI.hideOptions();
-						UI.addPrice(app, key);
+						UI.openModernForm("buy", {app: app, id: key});
 					}
 				} 
 			}
 		});
 	});
 
+
+	// Buttons
+	document.getElementById("buttons").addEventListener('click', event => {
+		if(event.target.tagName == "BUTTON" || event.target.parentNode.tagName == "BUTTON") {
+			if(event.target.id == "addArt" || event.target.parentNode.id == "addArt") UI.openModernForm("article")
+			else if(event.target.id == "addPrev" || event.target.parentNode.id == "addPrev") UI.openModernForm("preview")
+			else if(event.target.id == "addCourse" || event.target.parentNode.id == "addCourse") UI.openModernForm("course")
+		}
+	});
 
 	// Menubar
 	document.getElementById("menubar").addEventListener('click', event => {
@@ -636,8 +659,6 @@ export default function initEvents(app){
 		if (e.target.tagName == "I" && e.target.classList.contains("ms-Icon--Back")){
 			if(e.target.parentNode.id == "prices") UI.closePrice()
 			else UI.closeForms()
-		} else if(document.getElementById('prices').contains(e.target)) {
-			if(e.target.tagName == "LI") buyLi(e)
 		} else if (e.target.id == "forms") UI.closeForms()
 	});
 
@@ -693,13 +714,9 @@ export default function initEvents(app){
 	});
 
 	// MainPanel
-	/* document.getElementById('mainPanel').addEventListener('pointerdown', e => {
-		if(e.target.id == "newCourse") UI.addCourse(e.clientX, e.clientY)
-	}); */
 
 	document.getElementById('mainPanel').addEventListener('click', event => {
 		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-		else if(event.target.id == "newCourse") UI.addCourse()
 		else if(event.target.classList.contains('course')) {
 			let id = event.target.getAttribute("dbIndex");
 			if(id){
@@ -716,18 +733,12 @@ export default function initEvents(app){
 	// Others
 
 	document.getElementById('refresh').onclick = e => {
-		let i = e.currentTarget.children[0];
-		document.querySelector('.loader').classList.add('opened');
 		if(!app.pending){
-			document.querySelector('.loader').classList.remove('opened');
-			i.classList.add('rotate');
-			app.pull("refresh").then(() => i.classList.remove('rotate'));
+			app.pull("refresh");
 		} else {
 			let loop = setInterval(() => {
 				if(!app.pending){
-					document.querySelector('.loader').classList.remove('opened');
-					i.classList.add('rotate');
-					app.pull("refresh").then(() => i.classList.remove('rotate'));
+					app.pull("refresh");
 					clearInterval(loop);
 				}
 			}, 1000);
@@ -738,7 +749,7 @@ export default function initEvents(app){
 		UI.hideInstall();
 	});
 
-	window.addEventListener("offline", event => {
+/* 	window.addEventListener("offline", event => {
 		UI.message(
 			"Vous êtes hors ligne", 
 			"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
@@ -750,15 +761,15 @@ export default function initEvents(app){
 			"Vous êtes de nouveau en ligne", 
 			"Nous synchronisons vos données",
 			null, 2000)
-	});
+	}); */
 
 
 
 
 	// Context Events
-	document.addEventListener("visibilitychange", ()=>{
+	/* document.addEventListener("visibilitychange", ()=>{
 		if (document.visibilityState == "visible") noLoaderRefresh()
-	});
+	}); */
 	//window.addEventListener('online', () => noLoaderRefresh());
 
 }

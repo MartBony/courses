@@ -2204,6 +2204,15 @@ img{
 	}
 }
 
+@keyframes animateSlideInLight{
+	0%{
+		transform: scale(0.9);
+	}
+	100%{
+		transform: scale(1);
+	}
+}
+
 .animateSlideTop
 {
 	animation: animateSlideTop 500ms cubic-bezier(0.1, 0.9, 0, 1) forwards;
