@@ -41,7 +41,7 @@
 	"lang" : "French",
 	"scope" : "/",
 	"description" : "Une application pour rassembler, organiser et partager ses courses.",
-	"url" : "https://mprojects.fr",
+	"url" : "https://mprojects.fr/courses/",
 	"screenshots" : [],
 	"categories": ["lifestyle", "food", "shopping", "utilities"],
 	"generated" : ""

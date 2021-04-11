@@ -35,10 +35,11 @@ class Offline{
 			if(!app.pullState.course && data && data.id){
 				course = data;
 				console.log('Fetching articles');
-				return IndexedDbStorage.getCursorwise("items", "course", data.id);
+				return IndexedDbStorage.getCursorwise("items", "course", data.id, "prev");
 			} else throw new Error('HaltCourses');
 		})
 		.then(items => {
+			items = items.sort((i1,i2) => i2.id - i1.id);
 			if(!app.pullState.course){
 				if(items){
 					course.items = {
@@ -76,7 +77,6 @@ class Offline{
 					case "article":
 						if(req.data.groupe == app.usedGroupe.id){
 							app.course.pushArticle(app, {id: -req.reqId, titre: req.data.titre, color: req.data.color, prix: req.data.prix});
-							app.total += req.data.prix;
 						}
 						break;
 					case "delArticle":
@@ -125,10 +125,26 @@ class Offline{
 							});
 						}
 						break;
+					case "buy":
+						if(req.data.groupe == app.usedGroupe.id){
+							const item =  networkItems.previews.filter(preview => preview.id == req.data.id)[0];
+							if(item){
+								networkItems.previews = networkItems.previews.filter(preview => preview.id != req.data.id);
+								networkItems.articles.unshift({
+									id: -req.reqId,
+									titre: item.titre,
+									color: item.color,
+									prix: req.data.prix
+								});
+							}
+						}
+						break;
 					case "delArticle":
 						networkItems.articles = networkItems.articles.filter(article => article.id != req.data.id);
-					case "delArticle":
+						break;
+					case "delPreview":
 						networkItems.previews = networkItems.previews.filter(preview => preview.id != req.data.id);
+						break;
 				}
 			});
 

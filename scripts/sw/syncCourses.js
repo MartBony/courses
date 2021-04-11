@@ -21,7 +21,7 @@ const syncCourses = () => {
 								course: itemData.course,
 								color: itemData.color,
 								id: itemData.id,
-								prix: itemData.prix,
+								prix: 0,
 								titre: itemData.titre
 							})
 						} else if(getVersionPort) getVersionPort.postMessage({

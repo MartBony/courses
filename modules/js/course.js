@@ -1,5 +1,5 @@
 import Generate from './generate.js';
-import {IndexedDbStorage } from './storage.js';
+import { IndexedDbStorage } from './storage.js';
 
 export default class Course{
 	constructor(){

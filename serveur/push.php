@@ -204,7 +204,7 @@ function push($user, $latestCourse, PDO $bdd){
 			$deleted = $reqDeleted->fetch();
 
 			if($deleted['course'] == $latestCourse['id']){ // Si l'id correspond à la course utilisée
-				$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
+				$reqDelete = $bdd->prepare('DELETE FROM `articles` WHERE id=:index');
 				$reqDelete->bindParam(':index', $deleted['id'], PDO::PARAM_INT);
 				$reqDelete->execute();
 

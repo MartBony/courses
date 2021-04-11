@@ -286,22 +286,13 @@ export default class UI {
 		$('#addGroupe').css({'display':'', 'opacity':'', 'transform':''});
 		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
-	static remove(type, index){
+	static remove(type, index){ // To rewrite
 		let selector = "."+ type,
 			olds = new Array(),
-			news = new Array(),
-			//containers = new Array(2),
-			adder = type == "article" ? "#panier .adder" : "#liste .adder";
+			news = new Array();
 
 			
 		Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = el.clientHeight +'px');
-
-		// Fix .adder in place
-		$(adder).css({
-			"left": $(adder).position().left,
-			"top": $(adder).position().top
-		});
-		$(adder).css({'position':'absolute'});
 		
 
 
@@ -359,7 +350,6 @@ export default class UI {
 
 			Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = 'auto');
 
-			$(adder).css({'transition':'', 'transform':'', 'position':'','top':'','left':''});
 			$(selector).eq(index).remove();
 			$(selector).css({
 				'position':'',

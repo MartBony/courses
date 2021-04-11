@@ -115,7 +115,6 @@ export default function initEvents(app){
 							color: data.color,
 							prix: data.prix
 						});
-						app.total += data.prix;
 
 						[inputPrice, inputTitre].forEach(el => el.value = '');
 						inputQuantity.value = 1;
@@ -136,28 +135,35 @@ export default function initEvents(app){
 						url: "serveur/push.php",
 						data: {
 							submitArticle: true,
-							titre: $('#modernArticleAdder #titreA').val(),
-							prix: $('#modernArticleAdder #prix').val().replace(',','.') * $('#quantA').val(),
+							titre: inputTitre.value,
+							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
 							groupe: app.usedGroupe.id
 						}
-					}).then(data => {
+					}).then(res => {
+						const item = res.payload;
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
+					
 						UI.acc(app);
 
 						window.scrollTo({ top: 0, behavior: 'smooth' });
-						$('#panier ul').prepend(Generate.article(app, data.id, data.titre, data.color, data.prix));
-				
-						app.total += data.prix;
-						Array.from(document.querySelectorAll('#modernArticleAdder input')).slice(0,2).forEach(el => el.value = '');
-						document.getElementById('quantA').value = 1;
+						app.course.pushArticle(app, {
+							id: item.id,
+							titre: item.titre,
+							color: item.color,
+							prix: item.prix
+						});
 
-						setTimeout(() => {
-							document.getElementsByClassName('article')[0].classList.remove('animateSlideIn');
-						},300);
+						[inputPrice, inputTitre].forEach(el => el.value = '');
+						inputQuantity.value = 1;
 
-
-						app.course.items.articles.unshift({id: data.id, titre: data.titre, color: data.color, prix: data.prix});
-						IndexedDbStorage.put("courses", app.course.export());
+						IndexedDbStorage.put("items", {
+							type: "preview",
+							course: app.course.id,
+							color: item.color,
+							id: item.id,
+							prix: item.prix,
+							titre: item.titre
+						})
 
 					})
 					.catch(res => {
@@ -185,7 +191,11 @@ export default function initEvents(app){
 				if ('serviceWorker' in navigator && 'SyncManager' in window) {
 					IndexedDbStorage.put("requests", {
 						type: "preview",
-						data: { titre: input.value, color: app.user.color, groupe: app.usedGroupe.id }
+						data: {
+							titre: input.value,
+							color: app.user.color,
+							groupe: app.usedGroupe.id
+						}
 					})
 					.then(res => IndexedDbStorage.get("requests", res))
 					.then(res => {
@@ -215,22 +225,33 @@ export default function initEvents(app){
 					$.ajax({
 						method: "POST",
 						url: "serveur/push.php",
-						data: { submitPreview: 'true', titre: input.value, groupe: app.usedGroupe.id }
-					}).then(data => {
+						data: {
+							submitPreview: true,
+							titre: input.value,
+							groupe: app.usedGroupe.id
+						}
+					}).then(res => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
+						const item = res.payload;
 						UI.acc(app);
 						
 						window.scrollTo({ top: 0, behavior: 'smooth' });
-						document.querySelector('#liste ul').prepend(Generate.preview(data.id, data.titre, data.color));
-						
+						app.course.pushPreview({
+							id: item.id,
+							titre: item.titre,
+							color: item.color
+						});
+					
 						input.value = '';
-						setTimeout(() => {
-							document.getElementsByClassName('preview')[0].classList.remove('animateSlideIn');
-						},300);
 
-
-						app.course.items.previews.unshift({id: data.id, titre: data.titre, color: data.color});
-						IndexedDbStorage.put("courses", app.course.export());
+						IndexedDbStorage.put("items", {
+							type: "article",
+							course: app.course.id,
+							color: item.color,
+							id: item.id,
+							prix: item.prix,
+							titre: item.titre
+						})
 						
 					}).catch(res => {
 						if (res.responseJSON && res.responseJSON.notAuthed){
@@ -390,8 +411,9 @@ export default function initEvents(app){
 
 
 	// Service Worker
+	let messageChannel;
 	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-		const messageChannel = new MessageChannel();
+		messageChannel = new MessageChannel();
 		navigator.serviceWorker.controller.postMessage({
 			type: 'INIT_PORT',
 		}, [messageChannel.port2]);
@@ -400,6 +422,12 @@ export default function initEvents(app){
 			const res = event.data;
 			const payload = res.payload;
 			switch(res.type){
+				case "DISCONNECT":
+					if("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations()
+						.then(registrations => Promise.all(registrations.map(reg => reg.unregister())))
+						.then(() => window.location = "/courses/");
+					else window.location = "/courses/";
+					break;
 				case "updPreview":
 					const previewUi = document.querySelector(`.preview[iditem="${-payload.id}"]`);
 					if(previewUi) {
@@ -470,27 +498,27 @@ export default function initEvents(app){
 		}
 		else if(e.target.id == "deconnect") {
 
-			$.ajax({
+			fetcher({
 				method: 'POST',
 				url: 'serveur/auth.php',
 				data: { deconnect: true }
 			}).then(data => {
 				if(data.status == 200){
 					LocalStorage.clear();
-					IndexedDbStorage.deleteDb()
-						.then(() => {
-							window.location = "/";
-						})
-						.catch(err => {
-							console.log(err);
-							alert("Des données locales n'ont pas pu être supprimées. Ceci peut être fait en supprimant les données de site dans les paramêtres de votre navigateur");
-							window.location = "/";
-						});
-				} else {
-					UI.erreur("Erreur","Il y a eu un problème inattendu lors de la tentative de déconnection");
-				}
-			}).catch(() => {
-				UI.offlineMsg(app);
+					IndexedDbStorage.closeIDB()
+				
+						if("serviceWorker" in navigator) {
+							navigator.serviceWorker.controller.postMessage({
+								type: 'DELETEDB',
+							});
+							// window.location = "/courses/"; Location changes on message from the SW
+						}
+			
+				} else throw "Offline"
+			})
+			.catch(err => {
+				console.log(err);
+				if(err == "Offline") UI.offlineMsg(app)
 			});
 			
 		} else if (e.target.id == "supprCompte") UI.modal(app, 'deleteAll')

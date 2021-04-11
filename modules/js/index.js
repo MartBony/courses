@@ -90,20 +90,55 @@ document.querySelector('form.connect').onsubmit = e => {
 	});
 }
 
+async function cssReady(){
+	if(document.body.classList.contains("cssReady")){
+		document.getElementById('authContainer').classList.remove('opened');
+
+		Promise.resolve();
+	} else {
+		// let timer = setTimeout(() => {window.location.reload()}, 10000); TO UNCOMMENT
+		document.addEventListener("cssReady", () => {
+			timer.clearTimeout();
+			document.getElementById('authContainer').classList.remove('opened');
+			
+			Promise.resolve();
+		});
+	}
+}
+
+function startApp(user){
+	if(!app){
+		initPwaEvents()
+		app = new App(user);
+		initEvents(app);
+	} else {
+		app.user = user;
+	}
+}
+
+async function getLocalUserData(){
+	const user = LocalStorage.getItem('userConnectionData')
+	if(user && user.id && user.mail && user.nom && user.color){
+		await cssReady();
+		startApp(user);
+	}
+	Promise.resolve();
+}
 
 function authenticate(){
-	fetcher({
+	getLocalUserData()
+	.then(() => fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
 		data: { tryCookiesAuth: true }
-	})
+	}))
 	.then(res => {
 		console.log(res);
 		if(res.status && res.status == "connected" && res.user){
 			return res.user;
 		} else if(res.status && res.status == "offline"){
-			if (LocalStorage.getItem('userConnectionData')) return LocalStorage.getItem('userConnectionData');
-			throw "Require auth";
+			if(!app) throw "Require auth";
+			else throw "Working on Cache"
 		}
 		else if (res.status == 401) {
 			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -130,37 +165,13 @@ function authenticate(){
 	.then(user => {
 		console.log(user);
 		if(user && user.id && user.mail && user.nom && user.color){
-			if(document.body.classList.contains("cssReady")){
-				document.getElementById('authContainer').classList.remove('opened');
-				
-				// Initialise on read
-				/* addSiteCache('site-course', 'coursesCache.json'); */
-				initPwaEvents()
-			
-				app = new App(user);
-				initEvents(app);
-		
-
-			} else {
-				// let timer = setTimeout(() => {window.location.reload()}, 10000); TO UNCOMMENT
-				document.addEventListener("cssReady", () => {
-					timer.clearTimeout();
-					document.getElementById('authContainer').classList.remove('opened');
-				
-					// Initialise on read
-					/* addSiteCache('site-course', 'coursesCache.json'); */
-					initPwaEvents()
-					
-					app = new App(user);
-					initEvents(app);
-
-				});
-			}
+			LocalStorage.setItem('userConnectionData', user);
+			return cssReady().then(() => startApp(user));
 		} else throw "Require auth"
 	})
 	.catch(err => {
 		console.error(err);
-		UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+		if(err == "Require auth") UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 			{
 				texte:"Se connecter", 
 				action : () => {

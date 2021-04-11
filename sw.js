@@ -7,7 +7,7 @@ const assets = [
 	"./index.php",
 	// PWA
 	"./manifest.webmanifest",
-	'/sw.js',
+	'./sw.js',
 	// CSS
 	"./styles/parametres.css",
 	"./styles/popups.css",
@@ -68,12 +68,18 @@ self.importScripts("./scripts/sw/syncCourses.js");
 let getVersionPort;
 
 self.addEventListener("message", event => {
+	// console.log("Service Worker recieved a message", event);
 	if(event.data){
 		if (event.data.type === 'INIT_PORT') {
 			getVersionPort = event.ports[0];
-		}/*  else if (event.data.type === "FETCH_DATA"){
-			event.waitUntil(fetchData());
-		} */
+		} else if (event.data.type === "DELETEDB"){
+			event.waitUntil((async () => {
+				IndexedDbStorage.closeIDB()
+				.then(() => IndexedDbStorage.deleteDb())
+				.then(() => getVersionPort.postMessage({ type: "DISCONNECT" }))
+				.catch(err => console.error(err));
+			})());
+		}
 
 		else if (event.data.action === 'skipWaiting') {
 			self.skipWaiting();

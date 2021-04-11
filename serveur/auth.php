@@ -82,14 +82,14 @@ if(isset($_POST['inscript'])){
 	setcookie("pass", "", time() - 3600, '/', null, false, true); */
 	setcookie("email", "", array(
 		'expires' => time() - 3600,
-		'path' => '/courses/',
+		'path' => '',
 		'secure' => true,
 		'samesite' => 'strict',
 		'httponly' => true
 	));
 	setcookie("pass", "", array(
 		'expires' => time() - 3600,
-		'path' => '/courses/',
+		'path' => '',
 		'secure' => true,
 		'samesite' => 'strict',
 		'httponly' => true
@@ -114,14 +114,14 @@ function connect(PDO $bdd, $mail, $pass){
 			if($user['activated']){
 				setcookie("email", $user['mail'], array(
 					'expires' => time() + 31*24*3600,
-					'path' => '/courses/',
+					'path' => '',
 					'secure' => true,
 					'samesite' => 'strict',
 					'httponly' => true
 				));
 				setcookie("pass", $pass, array(
 					'expires' => time() + 31*24*3600,
-					'path' => '/courses/',
+					'path' => '',
 					'secure' => true,
 					'samesite' => 'strict',
 					'httponly' => true
