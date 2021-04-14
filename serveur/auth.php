@@ -128,12 +128,9 @@ function connect(PDO $bdd, $mail, $pass){
 				));
 				
 				echo json_encode(array(
-					'status' => 'connected',
-					'user' => array(
-						'id' => (int) $user['id'],
-						'mail' => $mail,
-						'nom' => $user['nom'],
-						'color' => $user['hueColor']
+					'status' => 200,
+					'payload' => array(
+						'userId' => (int) $user['id']
 					)
 				));
 			} else {

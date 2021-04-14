@@ -1,11 +1,10 @@
 let db;
 
 class IndexedDbStorage{
-	static openDB(dbVer = 2, dbName = "offlineDb"){
+	static openDB(dbVer = 4, dbName = "offlineDb"){
 		return new Promise((resolve, reject) => {
 			
 			if(!db){
-				db = "pending";
 				const request = indexedDB.open(dbName, dbVer);
 
 				request.onerror = function(event) {
@@ -45,6 +44,14 @@ class IndexedDbStorage{
 							itemsStore.createIndex("course", "course", {unique: false});
 							
 							[requestsStore, coursesStore, itemsStore].map(objStore => completeEvents.push(objStore));
+					
+						case 2:
+							if (!coursesStore) coursesStore = event.target.transaction.objectStore("courses");
+							coursesStore.createIndex("groupe", "groupe", {unique: false});
+						case 3:
+							if (!groupesStore) groupesStore = event.target.transaction.objectStore("groupes");
+							groupesStore.createIndex("user", "user", {unique: false});
+
 						/* case 1: DO NOT DELETE, expamles of db update processes
 							itemsStore = db.createObjectStore("items", { keyPath: "id" });
 							completeEvents.push(itemsStore);
@@ -57,18 +64,16 @@ class IndexedDbStorage{
 					}
 
 					// Wait for all objecstores to update
-					console.log(completeEvents);
 					if(completeEvents.length){
-						Promise.all(completeEvents.map(objStore => new Promise((resolve, reject) => {
-							objStore.oncomplete = event => resolve();
+						Promise.all(completeEvents.map(objStore => new Promise((res, rej) => {
+							objStore.oncomplete = event => res();
 						})))
 						.then(() => resolve(db));
 					} else resolve(db);
 					
 
 				};
-			} else if(db != "pending") resolve(db);
-			else reject();
+			} else resolve(db);
 
 		})
 

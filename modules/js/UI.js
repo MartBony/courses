@@ -121,8 +121,8 @@ export default class UI {
 
 			$('#leaveGroupe div').children().remove();
 
-			h4.innerHTML = app.usedGroupe.nom;
-			app.usedGroupe.membres.forEach(membre => {
+			h4.innerHTML = app.groupe.nom;
+			app.groupe.membres.forEach(membre => {
 				let li = document.createElement('li');
 				li.innerHTML = membre;
 				ul.appendChild(li);
@@ -365,7 +365,7 @@ export default class UI {
 		}, 400+(olds.length)*32);
 	}
 	static promptAddFriend(app){
-		$('#invitation span').html(app.usedGroupe.nom);
+		$('#invitation span').html(app.groupe.nom);
 
 		document.getElementById("forms").classList.add('opened','invite');
 

@@ -3,6 +3,13 @@ const syncCourses = () => {
 		return Promise.all(requests.map(request => {
 			let itemData;
 			switch(request.type){ // Add catch statements
+				case "activate":
+					return fetcher({
+						url: "serveur/push.php",
+						method: "POST",
+						data: { activate: true, groupe: request.data.groupe }
+					})
+					.then(() => IndexedDbStorage.delete("requests", request.reqId))
 				case "preview":
 					return fetcher({
 						url: "./serveur/push.php",
@@ -24,18 +31,13 @@ const syncCourses = () => {
 								prix: 0,
 								titre: itemData.titre
 							})
-						} else if(getVersionPort) getVersionPort.postMessage({
-							type: "Error",
-							payload: {
-								stage: "SubmitPreview",
-								err: "Unknown"
-							}
-						})
-
+						} else postMessageToCLients("Error", { stage: "SubmitPreview", err: "Unknown" })
 						
 					})// Delete Request; // Update course
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ type: "updPreview", payload: {id: request.reqId, item: itemData} }) });
+					.then(() => {
+						postMessageToCLients("updPreview", {id: request.reqId, item: itemData});
+					});
 					break;
 				case "article":
 					return fetcher({
@@ -59,27 +61,14 @@ const syncCourses = () => {
 								prix: itemData.prix,
 								titre: itemData.titre
 							})
-						} else if(getVersionPort){
-							if(res.type == 201 && res.error && res.error == "NegVal"){
-								if(res.error == "NegVal") getVersionPort.postMessage({
-									type: "Error",
-									payload: {
-										stage: "SubmitArticle",
-										err: "NegVal"
-									}
-								})
-							} else getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "SubmitArticle",
-									err: "Unknown"
-								}
-							})
-						}
+						} else if(res.type == 201 && res.error && res.error == "NegVal") postMessageToCLients("Error", { stage: "SubmitArticle", err: "NegVal" })
+						else postMessageToCLients("Error", { stage: "SubmitArticle", err: "Unknown" })
 						
 					})// Delete Request; // Update course
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ type: "updArticle", payload: {id: request.reqId, item: itemData} }) });
+					.then(() => {
+						postMessageToCLients("updArticle", {id: request.reqId, item: itemData});
+					});
 					break;
 				case "delPreview":
 					return fetcher({
@@ -93,31 +82,10 @@ const syncCourses = () => {
 					})
 					.then(res => {
 						if(res.type == 200) return IndexedDbStorage.delete("items", request.data.id)
-						else if(getVersionPort){
-							if(res.type == 203){
-								getVersionPort.postMessage({
-									type: "Error",
-									payload: {
-										stage: "DeletePreview",
-										err: "OldCourse"
-									}
-								})
-							}
-							else if (res.type == 204) getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "DeletePreview",
-									err: "NotFound"
-								}
-							})
-							else getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "DeletePreview",
-									err: "Unknown"
-								}
-							})
-						}
+						else if(res.type == 203) postMessageToCLients("Error", { stage: "DeletePreview", err: "OldCourse" })
+						else if (res.type == 204) postMessageToCLients("Error", { stage: "DeletePreview", err: "NotFound" })
+						else postMessageToCLients("Error", { stage: "DeletePreview", err: "Unknown" })
+						
 					})
 					.then(() => IndexedDbStorage.delete("requests", request.reqId));
 					break;
@@ -135,37 +103,11 @@ const syncCourses = () => {
 						if(res.type == 200){
 							itemData = res;
 							return IndexedDbStorage.delete("items", request.data.id)
-						} else if(getVersionPort){
-							if(res.type == 203){
-								getVersionPort.postMessage({
-									type: "Error",
-									payload: {
-										stage: "DeleteArticle",
-										err: "OldCourse"
-									}
-								})
-							}
-							else if (res.type == 204) getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "DeleteArticle",
-									err: "NotFound"
-								}
-							})
-							else getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "DeleteArticle",
-									err: "Unknown"
-								}
-							})
-						}
+						} else if(res.type == 203) postMessageToCLients("Error", { stage: "DeleteArticle", err: "OldCourse" })
+						else if (res.type == 204) postMessageToCLients("Error", { stage: "DeleteArticle", err: "NotFound" })
+						else postMessageToCLients("Error", { stage: "DeleteArticle", err: "Unknown" })
 					})
-					.then(() => IndexedDbStorage.delete("requests", request.reqId))/* 
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({ payload: {
-						type: "deleteArticleSetTotal",
-						prix: itemData.prix
-					} }) }) */;
+					.then(() => IndexedDbStorage.delete("requests", request.reqId));
 					break;
 				case "buy":
 					return fetcher({
@@ -182,34 +124,15 @@ const syncCourses = () => {
 						if(res.type == 200){
 							itemData = res.payload;
 							IndexedDbStorage.put("items", {...itemData, type: "article"});
-						} else if(getVersionPort){
-							if(res.type == 201 && res.error && res.error == "NegVal"){
-								if(res.error == "NegVal") getVersionPort.postMessage({
-									type: "Error",
-									payload: {
-										stage: "Buy",
-										err: "NegVal"
-									}
-								})
-							}
-							else if (res.type == 204) getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "Buy",
-									err: "NotFound"
-								}
-							})
-							else getVersionPort.postMessage({
-								type: "Error",
-								payload: {
-									stage: "Buy",
-									err: "Unknown"
-								}
-							})
-						}
+						} else if(res.type == 201 && res.error && res.error == "NegVal") postMessageToCLients("Error", { stage: "Buy", err: "NegVal" })
+						else if (res.type == 204) postMessageToCLients("Error", { stage: "Buy", err: "NotFound" })
+						else postMessageToCLients("Error", { stage: "Buy", err: "Unknown" })
+					
 					})
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
-					.then(() => { if(getVersionPort) getVersionPort.postMessage({type: "buy",  payload: {id: request.reqId, item: itemData} }) });
+					.then(() => {
+						postMessageToCLients("buy", {id: request.reqId, item: itemData});
+					});
 					break;
 			}
 		}));

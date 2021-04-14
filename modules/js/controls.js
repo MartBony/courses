@@ -9,16 +9,31 @@ export default function initEvents(app){
 
 	const refresh = (callback, idGroupe, idCourse) => {
 		callback = callback || function(){};
-		if(!app.pending){
-			app.pull("refresh", idGroupe, idCourse).then(callback);
-		} else {
-			let loop = setInterval(() => {
-				if(!app.pending){
-					app.pull("refresh", idGroupe, idCourse).then(callback);
-					clearInterval(loop);
-				}
-			}, 1000);
-		}
+			if(!app.pending){
+				app.pull("refresh", idGroupe, idCourse).then(callback);
+			} else {
+				let loop = setInterval(() => {
+					if(!app.pending){
+						app.pull("refresh", idGroupe, idCourse).then(callback);
+						clearInterval(loop);
+					}
+				}, 1000);
+			}
+		},
+		refreshAsync = async (idGroupe, idCourse) => {
+			return app.queue.enqueue(() => app.pull("refresh", idGroupe, idCourse));
+			/* if(!app.pending){
+				const pullRes = await app.pull("refresh", idGroupe, idCourse);
+				return pullRes;
+			} else {
+				let loop = setInterval(() => {
+					if(!app.pending){
+						const pullRes = await app.pull("refresh", idGroupe, idCourse);
+						clearInterval(loop);
+						return pullRes;
+					}
+				}, 1000);
+			} */
 		},
 		open = (callback, idGroupe, idCourse) => {
 			callback = callback || function(){};
@@ -34,7 +49,7 @@ export default function initEvents(app){
 					}
 				}, 1000);
 			}
-			},
+		},
 		noLoaderRefresh = () => {
 			console.log(app);
 			if(!app.pending){
@@ -49,43 +64,109 @@ export default function initEvents(app){
 			}
 		},
 		activate = () => {
-			document.getElementsByClassName('loader')[0].classList.add('opened');
-			$('.promptActivation').css({'opacity':'0.8'});
-			$.ajax({
-				method: "POST",
-				url: "serveur/push.php",
-				data: { activate: true, groupe: app.usedGroupe.id }
-			}).then(data => {
-				$('.loader').removeClass('opened');
-				setTimeout(function(){
-					app.buttons = "show";
-					$('.promptActivation').css({'transition':'all 200ms ease-out 200ms', 'opacity':'0','transform':'scale(0.98)'});
-					setTimeout(function(){
-						$('.promptActivation').css({'display':'none'});
-					}, 420);	
-				},400);
-				setTimeout(function(){
-					UI.openPanel("panier");
-				},200);
+			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				IndexedDbStorage.put("requests", {
+					type: "activate",
+					data: { groupe: app.groupe.id }
+				})
+				.then(() => navigator.serviceWorker.ready)
+				.then(reg => reg.sync.register('syncCourses'))
+				.then(() => {
+					let latestCourse = app.groupe.courses[0];
+					app.course.started = true;
+					if(latestCourse){
+						latestCourse.dateStart = parseInt(Date.now()/1000);
+						return IndexedDbStorage.put("courses", latestCourse) 
+					} else throw "Pas de course"	
+				})
+				.then(() => {
+					const activationPanels = Array.from(document.getElementsByClassName('promptActivation'));
 
-				IndexedDbStorage.get("courses", app.course.id)
-					.then(storage => {
-						storage.dateStart = data.time;
-					});
-				app.course.started = true;
+					app.course.started = true;
 
-			}).catch(res => {
-				if (res.responseJSON && res.responseJSON.notAuthed){
-					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-					]);
-				} else { // TODO
-					UI.erreur("Un problème sur le serveur est survenu, réessayez");
-				document.getElementsByClassName('loader')[0].classList.remove('opened');
-					$('.promptActivation').css({'opacity':'1'});
-					UI.offlineMsg(app, err);
-				}
-			});
+					setTimeout(() => {
+						UI.openPanel("panier");
+					},200);
+
+					setTimeout(() => {
+						app.buttons = "show";
+						activationPanels.forEach(node => {
+							node.style.transition = 'all 200ms ease-out 200ms';
+							node.style.opacity = '0';
+							node.style.transform = 'scale(0.98)';
+						});
+						
+						setTimeout(() => {
+							activationPanels.forEach(node => {
+								node.style.display = 'none';
+							});
+						}, 400);	
+					}, 400);
+
+				})
+				.catch(err => {
+					console.log(err);
+					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
+				});
+				
+				
+			} else {
+				document.querySelector('loader').classList.add('opened');
+				$('.promptActivation').css({'opacity':'0.8'});
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					data: { activate: true, groupe: app.groupe.id }
+				})
+				.then(res => {
+					if(res.status == 200){
+						let latestCourse = app.groupe.courses[0];
+						app.course.started = true;
+						
+						if(latestCourse){
+							latestCourse.dateStart = res.payload.time;
+							return IndexedDbStorage.put("courses", latestCourse) 
+						} else throw "Pas de course"
+					}	
+				})
+				.then(() => {
+					document.querySelector('loader').classList.remove('opened');
+
+					const activationPanels = Array.from(document.getElementsByClassName('promptActivation'));
+					
+
+					setTimeout(() => {
+						UI.openPanel("panier");
+					},200);
+
+					setTimeout(() => {
+						app.buttons = "show";
+						activationPanels.forEach(node => {
+							node.style.transition = 'all 200ms ease-out 200ms';
+							node.style.opacity = '0';
+							node.style.transform = 'scale(0.98)';
+						});
+						
+						setTimeout(() => {
+							activationPanels.forEach(node => {
+								node.style.display = 'none';
+							});
+						}, 400);	
+					}, 400);
+
+				}).catch(res => {
+					if (res.responseJSON && res.responseJSON.notAuthed){
+						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
+						]);
+					} else { // TODO
+						UI.erreur("Un problème sur le serveur est survenu, réessayez");
+					document.getElementsByClassName('loader')[0].classList.remove('opened');
+						$('.promptActivation').css({'opacity':'1'});
+						UI.offlineMsg(app, err);
+					}
+				});
+			}
 		},
 		addArticle = e => {
 			e.preventDefault();
@@ -99,7 +180,7 @@ export default function initEvents(app){
 						data: {
 							titre: inputTitre.value,
 							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
-							groupe: app.usedGroupe.id,
+							groupe: app.groupe.id,
 							color: app.user.color
 						}
 					})
@@ -137,7 +218,7 @@ export default function initEvents(app){
 							submitArticle: true,
 							titre: inputTitre.value,
 							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
-							groupe: app.usedGroupe.id
+							groupe: app.groupe.id
 						}
 					}).then(res => {
 						const item = res.payload;
@@ -194,7 +275,7 @@ export default function initEvents(app){
 						data: {
 							titre: input.value,
 							color: app.user.color,
-							groupe: app.usedGroupe.id
+							groupe: app.groupe.id
 						}
 					})
 					.then(res => IndexedDbStorage.get("requests", res))
@@ -228,7 +309,7 @@ export default function initEvents(app){
 						data: {
 							submitPreview: true,
 							titre: input.value,
-							groupe: app.usedGroupe.id
+							groupe: app.groupe.id
 						}
 					}).then(res => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
@@ -281,51 +362,51 @@ export default function initEvents(app){
 		},
 		addCourse = e => {
 			e.preventDefault();
-			if (!isNaN(parseFloat( $('#modernCourseAdder #maxPrice').val().replace(',','.')))) {
+			const inputTitre = document.querySelector('#modernCourseAdder #titreC'),
+			inputPrice = document.querySelector('#modernCourseAdder #maxPrice'),
+			inputTaxes = document.querySelector('#modernCourseAdder #cTaxes');
+			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value) {
 				document.getElementsByClassName('loader')[0].classList.add('opened');
-				$.ajax({
+				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
 					data: {
 						submitCourse: true,
-						titre: $('#modernCourseAdder #titreC').val(),
-						maxPrice: $('#modernCourseAdder #maxPrice').val().replace(',','.'),
-						taxes: $('#modernCourseAdder #cTaxes').val().replace(',','.'),
-						groupe: app.usedGroupe.id
+						titre: inputTitre.value,
+						maxPrice: inputPrice.value.replace(',','.'),
+						taxes: inputTaxes.value.replace(',','.') | "0",
+						groupe: app.groupe.id
 					}
-				}).then(() => {
-					document.getElementsByClassName('loader')[0].classList.remove('opened');
-					history.replaceState({key:'createCourse'}, '','index.php');
-
-					LocalStorage.setItem('usedCourse', null);
+				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
-					if(!app.pending){
-						app.pull("refresh").then(() => {
-							UI.acc(app);
-							Array.from(document.querySelectorAll('#modernCourseAdder input')).slice(0,2).forEach(el => el.value = '');
+					if(res.status == 200){	
+						const course = res.payload;
+						IndexedDbStorage.put("courses", {
+							groupe: course.groupe,
+							dateStart: course.dateStart,
+							id: course.id,
+							maxPrice: course.maxPrice,
+							nom: course.nom,
+							taxes: course.taxes,
+							total: course.total
 						});
-					} else {
-						let loop = setInterval(() => {
-							if(!app.pending){
-								document.querySelector('.loader').classList.remove('opened');
-								app.pull("refresh").then(() => {
-									UI.acc(app);
-									Array.from(document.querySelectorAll('#modernCourseAdder input')).slice(0,2).forEach(el => el.value = '');
-								});
-								clearInterval(loop);
-							}
-						}, 1000);
-					}
-				}).catch(res => {
-					document.querySelector('.loader').classList.remove('opened');
-					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
-					} else if (res.status == 403){
+						app.groupe.pushCourse(course);
+
+						UI.acc(app);
+						inputTitre.value = "";
+						inputPrice.value = "";
+						inputTaxes.value = "0";
+
+						LocalStorage.setItem('usedCourse', null);
+						app.queue.enqueue(() => app.pull("open", null, course.id))
+					} else if(res.status == "Offline") throw "Offline"
+					else throw res
+					
+				}).catch(err => {
+					console.log(err);
+					if (err.status == 403){
 						UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
 					} else {
-						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						UI.offlineMsg(app, err);
 					}
 				});
@@ -374,7 +455,7 @@ export default function initEvents(app){
 					$.ajax({
 						method: "POST",
 						url: "serveur/invites.php",
-						data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.usedGroupe.id }
+						data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.groupe.id }
 					}).then(function(data){
 						$('.loader').removeClass('opened');
 							$('#invitation #nomInv').val('');
@@ -411,14 +492,8 @@ export default function initEvents(app){
 
 
 	// Service Worker
-	let messageChannel;
 	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-		messageChannel = new MessageChannel();
-		navigator.serviceWorker.controller.postMessage({
-			type: 'INIT_PORT',
-		}, [messageChannel.port2]);
-		
-		messageChannel.port1.onmessage = (event) => {
+		navigator.serviceWorker.onmessage = (event) => {
 			const res = event.data;
 			const payload = res.payload;
 			switch(res.type){
@@ -495,6 +570,23 @@ export default function initEvents(app){
 	document.getElementById('params').addEventListener('click', e => {
 		if(e.target.classList.contains('ms-Icon--Back')){
 			UI.closeMenus();
+		}
+		if(e.target.classList.contains('groupe')
+			|| e.target.parentNode.classList.contains('groupe')
+			|| e.target.parentNode.parentNode.classList.contains('groupe')) {
+			let btGroupe;
+			switch(true){
+				case e.target.classList.contains('groupe'):
+				btGroupe = e.target;
+				break;
+				case e.target.parentNode.classList.contains('groupe'):
+				btGroupe = e.target.parentNode;
+				break;
+				case e.target.parentNode.parentNode.classList.contains('groupe'):
+				btGroupe = e.target.parentNode.parentNode;
+				break;
+			}
+			app.queue.enqueue(() => app.pull("open", btGroupe.getAttribute("idGroupe")));
 		}
 		else if(e.target.id == "deconnect") {
 
@@ -610,6 +702,23 @@ export default function initEvents(app){
 				} 
 			}
 		});
+	});
+
+
+	// MenuPanel
+
+	document.getElementById('menu').addEventListener('click', event => {
+		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
+		else if(event.target.classList.contains('course')) {
+			const id = event.target.getAttribute("dbIndex");
+			if(id){
+				app.queue.enqueue(() => app.pull("open", null, id))
+			}
+		}
+		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
+			const id = event.target.parentNode.getAttribute("dbIndex");
+			if(id) UI.modal(app, 'deleteCourse', id);
+		}
 	});
 
 
@@ -741,21 +850,6 @@ export default function initEvents(app){
 		else if (e.target.id == "menus") UI.closeMenus()
 	});
 
-	// MainPanel
-
-	document.getElementById('mainPanel').addEventListener('click', event => {
-		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-		else if(event.target.classList.contains('course')) {
-			let id = event.target.getAttribute("dbIndex");
-			if(id){
-				open(null, null, id);
-			}
-		}
-		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
-			let id = event.target.parentNode.getAttribute("dbIndex");
-			if(id) UI.modal(this, 'deleteCourse', id);
-		}
-	});
 
 
 	// Others

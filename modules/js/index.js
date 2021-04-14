@@ -2,13 +2,13 @@ import App from './app.js';
 import UI from './UI.js';
 import { installSW, initPwaEvents } from './pwa.js';
 import initEvents from './controls.js';
-import { LocalStorage } from './storage.js';
+import { IndexedDbStorage, LocalStorage } from './storage.js';
 import { fetcher } from './tools.js';
 
 let app;
 
 console.log("Index loaded");
-installSW().then(authenticate);
+installSW().then(authenticateCookies);
 
 
 // Auth
@@ -66,9 +66,9 @@ document.querySelector('form.connect').onsubmit = e => {
 		data: { connect: true, mail: mail, pass: pass }
 	})
 	.then(res => {
-		let data = res.responseJSON;
-		if(res && res.status == "connected") {
-			authenticate();
+		if(res && res.status == 200) {
+			LocalStorage.setItem('userId', res.payload.userId);
+			return cssReady().then(() => startApp(res.payload.userId));
 		} else if((res.status == 400 || res.status == 401 || (res.status == 403 && data.sent)) && data.err){
 			switch(data.err){
 				case "manquant":
@@ -111,21 +111,19 @@ function startApp(user){
 		initPwaEvents()
 		app = new App(user);
 		initEvents(app);
-	} else {
-		app.user = user;
 	}
 }
 
 async function getLocalUserData(){
-	const user = LocalStorage.getItem('userConnectionData')
-	if(user && user.id && user.mail && user.nom && user.color){
+	const userId = LocalStorage.getItem('userId');
+	if(userId){
 		await cssReady();
-		startApp(user);
+		startApp(userId);
 	}
 	Promise.resolve();
 }
 
-function authenticate(){
+function authenticateCookies(){
 	getLocalUserData()
 	.then(() => fetcher({
 		method: "POST",
@@ -133,9 +131,8 @@ function authenticate(){
 		data: { tryCookiesAuth: true }
 	}))
 	.then(res => {
-		console.log(res);
-		if(res.status && res.status == "connected" && res.user){
-			return res.user;
+		if(res.status == 200 && res.payload && res.payload.userId){
+			return res.payload.userId;
 		} else if(res.status && res.status == "offline"){
 			if(!app) throw "Require auth";
 			else throw "Working on Cache"
@@ -162,12 +159,9 @@ function authenticate(){
 			]);
 		} else throw "Require auth"
 	})
-	.then(user => {
-		console.log(user);
-		if(user && user.id && user.mail && user.nom && user.color){
-			LocalStorage.setItem('userConnectionData', user);
-			return cssReady().then(() => startApp(user));
-		} else throw "Require auth"
+	.then(userId => {
+		LocalStorage.setItem('userId', userId);
+		return cssReady().then(() => startApp(userId));
 	})
 	.catch(err => {
 		console.error(err);

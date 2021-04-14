@@ -46,9 +46,26 @@ function pushCousesIndependent($user, PDO $bdd){
 					VALUES (?,?,0,0,?,?)'
 				);
 				$insert->execute(array($titre, $maxPrice, $groupe['id'], $taxes));
-		
-				http_response_code(200);
-				echo json_encode(array());
+
+				$reqInserted =  $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC LIMIT 1');
+				$reqInserted->execute(array($groupe['id']));
+				if($reqInserted->rowCount() == 1){
+					$inserted = $reqInserted->fetch();
+					echo json_encode(array(
+						"status" => 200,
+						"payload" => array(
+							"id" => $inserted['id'],
+							"groupe" => $groupe['id'],
+							"dateStart" => $inserted['dateStart'],
+							"maxPrice" => $inserted['maxPrice'],
+							"nom" => $inserted['nom'],
+							"taxes" => $inserted['taxes']
+						)
+					));
+				} else {
+					echo json_encode(array("status" => "Failed Retrieving"));
+				}
+
 				return true;
 		
 			} else if(isset($_POST['leaveGroup'])) {
@@ -91,6 +108,36 @@ function pushCousesIndependent($user, PDO $bdd){
 
 				return true;
 
+			} elseif (isset($_POST['deleteCourse']) && $_POST['id']) {
+				$id = (int) $_POST['id'];
+		
+				$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = :index AND `groupe` = :groupe');
+				$reqCourse->bindParam(':index', $id, PDO::PARAM_INT);
+				$reqCourse->bindParam(':groupe', $groupe['id'], PDO::PARAM_INT);
+				$reqCourse->execute();
+		
+				if($reqCourse->rowCount() == 1){
+					$course = $reqCourse->fetch();
+					/* 
+					if(strpos($user['groupe'], "[". $course['groupe'] ."]") !== false){ */
+						$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
+						$reqDelete->bindParam(':index', $id, PDO::PARAM_INT);
+						$reqDelete->execute();
+						
+						$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+						$delArticles->execute(array($id));
+		
+						echo json_encode(array('status' => 200, "payload" => array("id" => $id)));
+			/* 		} else {
+						echo json_encode(array('status' => 403));
+					}
+		 */
+				} else {
+					echo json_encode(array('status' => 404));
+				}
+
+				return true;
+				
 			}
 
 			return false;
@@ -163,36 +210,6 @@ function push($user, $latestCourse, PDO $bdd){
 				'course' => $latestCourse['id']
 			)
 		]);
-		
-	}
-	elseif (isset($_POST['deleteCourse']) && $_POST['id']) { // TODO REMOVE RESPONSECODE
-
-		$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = :index');
-		$reqCourse->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
-		$reqCourse->execute();
-
-		if($reqCourse->rowCount() == 1){
-			$course = $reqCourse->fetch();
-			
-			if(strpos($user['groupe'], "[". $course['groupe'] ."]") !== false){
-				$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
-				$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
-				$reqDelete->execute();
-				
-				$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
-				$delArticles->execute(array($_POST['id']));
-
-				http_response_code(200);
-				echo json_encode(array());
-			} else {
-				http_response_code(403);
-				echo json_encode(array('err' => 'Course not accessible'));
-			}
-
-		} else {
-			http_response_code(404);
-			echo json_encode(array('err' => 'Missing Course'));
-		}
 		
 	}
 	elseif (isset($_POST['deleteArticle']) && isset($_POST['id'])) {
@@ -295,9 +312,13 @@ function push($user, $latestCourse, PDO $bdd){
 		$updCourse->execute(array($time, $latestCourse['id']));
 
 		http_response_code(200);
-		echo json_encode([
-			"time" => $time
-		]);
+		echo json_encode(array(
+			"status" => 200,
+			"payload" => array(
+				"time" => $time,
+				"course" => (int) $latestCourse['id']
+			)
+		));
 	
 	}
 }

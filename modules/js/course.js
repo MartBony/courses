@@ -18,9 +18,10 @@ export default class Course{
 		this.started;
 		this.old;
 
-		$('.main ul').children().remove();
+		Array.from(document.querySelectorAll('.main ul'))
+		.forEach(container => Array.from(container.childNodes).forEach(itemNode => itemNode.remove()));
 	}
-	updateSelf(app, data, save){
+	updateSelf(app, data){
 		
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
@@ -28,9 +29,9 @@ export default class Course{
 		app.total = Number(data.total);
 		this.dateStart = data.dateStart;
 		this.groupe = Number(data.groupe);
-		this.taxes = Number(data.taxes);
+		this.taxes = Number(data.taxes) || 0;
 
-		this.old = data.id != app.usedGroupe.coursesList[0].id;
+		this.old = data.id != app.groupe.courses[0].id;
 
 		$('#maxprice').html(this.maxPrice + app.params.currency);
 
@@ -227,7 +228,7 @@ export default class Course{
 			article = item.id < 0 ? 
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync') :
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation);
-			
+
 			if(index) document.querySelector('#panier ul').insertBefore(article, this.articlesNodeList[index]);
 			else document.querySelector('#panier ul').prepend(article);
 			

@@ -39,18 +39,20 @@ login($bdd, function($user) use($bdd){
 			}
 		}
 		
-		http_response_code(200);
 		echo json_encode(array(
-			'id' => (int) $course['id'],
-			'nom' => $course['nom'],
-			'maxPrice' => (float) $course['maxPrice'],
-			'total' => (float) $course['total'],
-			'dateStart' => (int) $course['dateStart'],
-			'groupe' => (int) $course['groupe'],
-			'taxes' => (float) $course['taxes'],
-			'items' => array(
-				'articles' => $articles,
-				'previews' => $previews
+			'status' => 200,
+			'payload' => array(
+				'id' => (int) $course['id'],
+				'nom' => $course['nom'],
+				'maxPrice' => (float) $course['maxPrice'],
+				'total' => (float) $course['total'],
+				'dateStart' => (int) $course['dateStart'],
+				'groupe' => (int) $course['groupe'],
+				'taxes' => (float) $course['taxes'],
+				'items' => array(
+					'articles' => $articles,
+					'previews' => $previews
+				)
 			)
 		));	
 		

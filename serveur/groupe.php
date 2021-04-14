@@ -35,20 +35,23 @@ login($bdd, function($user) use ($bdd){
 			}
 
 			array_push($coursesList, array(
-				'id' => $resCoursesGp['id'],
-				'nom' => $resCoursesGp['nom'],
-				'prix' => $resCoursesGp['total'],
-				'date' => $resCoursesGp['dateStart']
+					'id' => (int) $resCoursesGp['id'],
+					'nom' => $resCoursesGp['nom'],
+					'total' => (float) $resCoursesGp['total'],
+					'maxPrice' => (float) $resCoursesGp['maxPrice'],
+					'dateStart' => (int) $resCoursesGp['dateStart']
 			));
 		}
 		$reqAllCourses->closeCursor();
 
-		http_response_code(200);
 		echo json_encode(array(
-			'id' => (int) $groupe['id'],
-			'nom' => $groupe['nom'],
-			'coursesList' => $coursesList,
-			'membres' => $membresGp,
+			'status' => 200,
+			'payload' => array(
+				'id' => (int) $groupe['id'],
+				'nom' => $groupe['nom'],
+				'coursesList' => $coursesList,
+				'membres' => $membresGp
+			)
 		));
 	});
 });

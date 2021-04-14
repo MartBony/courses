@@ -23,6 +23,8 @@ const assets = [
 	"./modules/js/app.js",
 	"./modules/js/controls.js",
 	"./modules/js/course.js",
+	"./modules/js/groupe.js",
+	"./modules/js/structure.js",
 	"./modules/js/generate.js",
 	"./modules/js/tools.js",
 	"./modules/js/index.js",
@@ -62,21 +64,29 @@ const assets = [
 	'https://static2.sharepointonline.com/files/fabric/assets/icons/fabricmdl2icons-3.54.woff'
 ];
 
+
+function postMessageToCLients(type, payload = {}){
+	self.clients.matchAll({
+		includeUncontrolled: true,
+		type: 'window'
+	}).then(clients => {
+		clients.forEach(client => client.postMessage({type, payload}))
+	})
+}
+
+
 self.importScripts("./scripts/sw/idb.js");
 self.importScripts("./scripts/sw/syncCourses.js");
 
-let getVersionPort;
 
 self.addEventListener("message", event => {
 	// console.log("Service Worker recieved a message", event);
 	if(event.data){
-		if (event.data.type === 'INIT_PORT') {
-			getVersionPort = event.ports[0];
-		} else if (event.data.type === "DELETEDB"){
+		if (event.data.type === "DELETEDB"){
 			event.waitUntil((async () => {
 				IndexedDbStorage.closeIDB()
 				.then(() => IndexedDbStorage.deleteDb())
-				.then(() => getVersionPort.postMessage({ type: "DISCONNECT" }))
+				.then(() => postMessageToCLients("DISCONNECT"))
 				.catch(err => console.error(err));
 			})());
 		}

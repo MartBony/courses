@@ -1,5 +1,5 @@
 export default class Generate{
-	static course(app, id, nom){
+	static course(id, nom){
 		let button = document.createElement('button'),
 			i = document.createElement('i');
 		button.classList.add("course");
@@ -11,7 +11,7 @@ export default class Generate{
 
 		return button;
 	}
-	static groupe(app, id, nom, membres){
+	static groupe(id, nom, membres){
 		let button = document.createElement('button'),
 			h4 = document.createElement('h4'),
 			ul = document.createElement('ul'),
@@ -20,7 +20,7 @@ export default class Generate{
 			childrens = [h4, ul, invite, remv];
 
 		button.className = "groupe";
-		button.setAttribute("key", id);
+		button.setAttribute("idGroupe", id);
 		h4.innerHTML = nom;
 		remv.className = "ms-Icon ms-Icon--Leave";
 		remv.setAttribute("aria-hidden","true");
@@ -34,23 +34,6 @@ export default class Generate{
 
 		childrens.forEach(child => {
 			button.appendChild(child);
-		});
-
-		button.addEventListener('click', e => {
-			if(e.target.tagName !== "I"){
-				if(!app.pending){
-					document.querySelector(".loader").classList.add("opened");
-					app.pull("open", id).then(() => document.querySelector(".loader").classList.remove("opened"));
-				} else {
-					let loop = setInterval(() => {
-						if(!app.pending){
-							document.querySelector(".loader").classList.add("opened");
-							app.pull("open", id).then(() => document.querySelector(".loader").classList.remove("opened"));
-							clearInterval(loop);
-						}
-					}, 1000);
-				}
-			}
 		});
 
 		return button;

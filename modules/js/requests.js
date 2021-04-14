@@ -7,18 +7,19 @@ class Pull{
 			method: 'POST',
 			url: 'serveur/structure.php'
 		}).then(res => {
-			if(res && res.groupes && res.id && res.nom){
-				return res;
+			if(res.status == 200 && res.payload && res.payload.groupes && res.payload.id && res.payload.nom){
+				return res.payload;
 			} else if (res.status == 401) {
 				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
 				]);
+				throw "Not Athenticated"
 			} else {
-				if(!app.pullState.structure) UI.offlineMsg(app, res)	
-				else UI.message(
+				UI.message(
 					"Vous êtes hors ligne", 
 					"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
 					null, 3000);
+				throw "no App data"
 			}
 		});
 	}
@@ -26,27 +27,31 @@ class Pull{
 		return fetcher({
 			method: 'POST',
 			url: 'serveur/groupe.php',
-			data: {groupe: idGroupe}
-		}).then(res => {
-			if(res && res.id && res.coursesList && res.membres && res.nom){
-				return res;
-			} else if(!app.pullState.groupe) UI.offlineMsg(app, res)	
-		 	else UI.message(
+			data: { groupe: idGroupe }
+		})
+		.then(res => {
+			if(res.status == 200){
+				if(res.payload && res.payload.id && res.payload.coursesList && res.payload.membres && res.payload.nom){
+					return res.payload;
+				} else if(!app.pullState.groupe) UI.offlineMsg(app, res)
+			} else if (res.status == "Offline") UI.message(
 				"Vous êtes hors ligne", 
 				"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
 				null, 3000);
 		});
 	}
-	static course(app, idCourse){
+	static course(idCourse){
 		return fetcher({
 			method: 'POST',
 			url: 'serveur/pull.php',
-			data: {course: idCourse}
+			data: { course: idCourse }
 		}).then(res => {
-			if(res && res.id) {
-				return res;
-			} else if (!app.pullState.course) UI.offlineMsg(app, res)
-			else UI.message(
+			if(res.status == 200){
+				return res.payload;
+			}
+			else if(res.status == 204 || res.status == 403) throw "Course Not Found"
+			else if(res.status == 204) throw "Course Not Found"
+			else if (res.status == "Offline") UI.message(
 				"Vous êtes hors ligne", 
 				"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
 				null, 3000);

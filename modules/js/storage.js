@@ -22,7 +22,7 @@ class LocalStorage{
 let db;
 
 class IndexedDbStorage{
-	static openDB(dbVer = 2, dbName = "offlineDb"){
+	static openDB(dbVer = 4, dbName = "offlineDb"){
 		return new Promise((resolve, reject) => {
 			
 			if(!db){
@@ -65,6 +65,14 @@ class IndexedDbStorage{
 							itemsStore.createIndex("course", "course", {unique: false});
 							
 							[requestsStore, coursesStore, itemsStore].map(objStore => completeEvents.push(objStore));
+					
+						case 2:
+							if (!coursesStore) coursesStore = event.target.transaction.objectStore("courses");
+							coursesStore.createIndex("groupe", "groupe", {unique: false});
+						case 3:
+							if (!groupesStore) groupesStore = event.target.transaction.objectStore("groupes");
+							groupesStore.createIndex("user", "user", {unique: false});
+
 						/* case 1: DO NOT DELETE, expamles of db update processes
 							itemsStore = db.createObjectStore("items", { keyPath: "id" });
 							completeEvents.push(itemsStore);
@@ -109,7 +117,6 @@ class IndexedDbStorage{
 			.then(db => {
 				const request = db.transaction([objStore], "readwrite").objectStore(objStore).delete(key);
 				request.onsuccess = event => {
-				/* 	db.close(); */
 					resolve();
 				};
 				request.onerror = event => reject("Transaction failed");
@@ -122,7 +129,6 @@ class IndexedDbStorage{
 			.then(db => {
 				const request = db.transaction(objStore).objectStore(objStore).get(key);
 				request.onsuccess = event => {
-				/* 	db.close(); */
 					resolve(event.target.result);
 				};
 				request.onerror = event => reject("Transaction failed");
@@ -135,7 +141,6 @@ class IndexedDbStorage{
 			.then(db => {
 				const request = db.transaction(objStore).objectStore(objStore).getAll();
 				request.onsuccess = event => {
-				/* 	db.close(); */
 					resolve(event.target.result)
 				};
 				request.onerror = event => reject("Transaction failed for getAll");
@@ -163,7 +168,6 @@ class IndexedDbStorage{
 						
 						cursor.continue();
 					} else {
-					/* 	db.close(); */
 						resolve(results);
 					}
 
@@ -189,7 +193,6 @@ class IndexedDbStorage{
 						if(!filterFunction(cursor.value)) cursor.delete();
 						cursor.continue();
 					} else {
-					/* 	db.close(); */
 						resolve(results);
 					}
 					

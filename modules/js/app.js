@@ -2,12 +2,14 @@ import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
 import { LocalStorage, IndexedDbStorage } from './storage.js';
-import { jsonEqual, fetcher } from './tools.js';
+import { jsonEqual, fetcher, QueueHandler } from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
+import Groupe from './groupe.js';
+import Structure from './structure.js';
 
 class App{
-	constructor(user){
+	constructor(userId){
 	
 
 		UI.openPanel('panier');
@@ -15,23 +17,20 @@ class App{
 		document.getElementById('preload').classList.add('close');
 		
 		// LocalStorage.setItem('userConnectionData', user);
+		this.queue = new QueueHandler();
 		this.buttonState;
 		this.buttons = "hide";
-		this.structure;
-		this.usedGroupe;
+		this.user;
+		this.groupe;
 		this.chartContent;
 		this.course;
-		this.userId = user.id;
-		this.user = user;
+		this.user = new Structure(userId);
 		this.pullState;
 		this.pending; // Avoid collisions
 		this.swipeBinaryState = 0;
 		this.setParameters();
-		this.pull("open");
+		this.queue.enqueue(() => this.pull("open"));
 		
-	}
-	setUser(user){
-		this.user = user;
 	}
 	setParameters(){
 		let toChange = document.querySelectorAll('.prixFlex, .setPrixFlex, .article h3, .preview h3, #calcul p');
@@ -81,17 +80,13 @@ class App{
 		Pull.invitations(this);
 		let pull = Pull.structure(this)
 		.then(data => {
-			if(data){
-				// Update app
-				this.pullState.structure = true;
-				console.log('Network structure fetched:', data);
-				update = this.updateApp(data, true);
-				if(update){
-					idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
-					// Pull further
-					return Pull.groupe(this, idGroupe);
-				}
-			} throw "no App data"
+			this.pullState.structure = true;
+			console.log('Network structure fetched:', data);
+
+			if(this.updateApp(data, true)){
+				idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
+				return Pull.groupe(this, idGroupe);
+			}
 		})
 		.then(data => {
 			if(data){
@@ -100,9 +95,9 @@ class App{
 				console.log('Network groupe fetched:', data);
 				update = this.updateGroupe(data, true);
 				if(update){
-					idCourse = idCourse || LocalStorage.getItem('usedCourse') || data.coursesList[0].id;
-					// if(!idCourse) idCourse = this.usedGroupe.coursesList.length != 0 ? this.usedGroupe.coursesList[0].id : null;
-					return Pull.course(this, idCourse);
+					idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.groupe.courses[0].id;
+					// if(!idCourse) idCourse = this.groupe.coursesList.length != 0 ? this.groupe.coursesList[0].id : null;
+					return Pull.course(idCourse);
 				}
 			} throw "no Groupe data"
 		})
@@ -182,27 +177,28 @@ class App{
 		}
 	} */
 	deleteCourse(id){
-		$('.loader').addClass('opened');
+		document.querySelector('.loader').classList.add('opened');
 		$.ajax({
 			method: "POST",
 			url: "serveur/push.php",
-			data: { deleteCourse: true, id: id, groupe: this.usedGroupe.id}
-		}).then(() => {
-			$('.loader').removeClass('opened');
-			IndexedDbStorage.delete("courses", id);
-			LocalStorage.removeItem("usedCourse");
-			this.pull("open");
-			UI.hideOptions();
+			data: { deleteCourse: true, id: id, groupe: this.groupe.id}
+		}).then(res => {
+			document.querySelector('.loader').classList.remove('opened');
+			if(res.status == 200){
 
-		}).catch(res => {
-			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
-			} else {
-				$('.loader').removeClass('opened');
-				UI.offlineMsg(this, err);
-			}
+				LocalStorage.removeItem("usedCourse");
+				this.groupe.removeCourse(res.payload.id);
+
+				IndexedDbStorage.delete("courses", res.payload.id)
+				.then(() => this.queue.enqueue(() => this.pull("open")));
+
+			} else if (status == "Offline") throw "Offline"
+			else throw res
+
+		}).catch(err => {
+			if (err == "Offline") UI.offlineMsg(this, err);
+			else if(err == 404) UI.erreur("La course demandée est introuvable", "Rechargez la page et réessayez");
+			else UI.erreur("Il y a eu un problème", "Rechargez la page et réessayez")
 		});
 	}
 	deleteArticle(index){
@@ -221,7 +217,7 @@ class App{
 			if ('serviceWorker' in navigator && 'SyncManager' in window) {
 				IndexedDbStorage.put("requests", {
 					type: "delArticle",
-					data: { id: index, prix: item.prix, groupe: this.usedGroupe.id }
+					data: { id: index, prix: item.prix, groupe: this.groupe.id }
 				}).then(() => {
 					let rank = this.course.items.articles.indexOf(item);
 
@@ -241,7 +237,7 @@ class App{
 				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
-					data: { deleteArticle: 'true', id: index, groupe: this.usedGroupe.id}
+					data: { deleteArticle: 'true', id: index, groupe: this.groupe.id}
 				}).then(data => {
 					$('.loader').removeClass('opened');
 					let displayedIndex = this.course.items.articles.indexOf(item);
@@ -284,7 +280,7 @@ class App{
 				
 				IndexedDbStorage.put("requests", {
 					type: "delPreview",
-					data: { id: index, groupe: this.usedGroupe.id }
+					data: { id: index, groupe: this.groupe.id }
 				}).then(() => {
 					let rank = this.course.items.previews.indexOf(item);
 
@@ -304,7 +300,7 @@ class App{
 				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
-					data: { deletePreview: 'true', id: index, groupe: this.usedGroupe.id}
+					data: { deletePreview: 'true', id: index, groupe: this.groupe.id}
 				}).then(data => {
 					$('.loader').removeClass('opened');
 					let displayedIndex = this.course.items.previews.indexOf(item);
@@ -329,17 +325,17 @@ class App{
 		}
 	}
 	leaveGrp(){
-		if(this.usedGroupe && this.usedGroupe.id){
+		if(this.groupe && this.groupe.id){
 			$('.loader').addClass('opened');
 			$.ajax({
 				method: "POST",
 				url: "serveur/push.php",
-				data: { leaveGroup: 'true', groupe: this.usedGroupe.id }
+				data: { leaveGroup: 'true', groupe: this.groupe.id }
 			}).then(() => {
 				$('.loader').removeClass('opened');
 				UI.closeModal();
-				this.usedGroupe.coursesList.forEach(el => IndexedDbStorage.delete("courses", el.id));
-				IndexedDbStorage.delete("groupes", this.usedGroupe.id);
+				this.groupe.coursesList.forEach(el => IndexedDbStorage.delete("courses", el.id));
+				IndexedDbStorage.delete("groupes", this.groupe.id);
 				this.pull("refresh");
 			}).catch(res => {
 				if (res.responseJSON && res.responseJSON.notAuthed){
@@ -366,7 +362,7 @@ class App{
 	
 		
 				if (!this.course.started) {
-					document.getElementsByName('activate')[0].click();
+					document.querySelector('.activate').click();
 					timer = 1000;
 				}
 				
@@ -411,7 +407,7 @@ class App{
 					data: {
 						titre: item.titre,
 						prix: prix,
-						groupe: this.usedGroupe.id,
+						groupe: this.groupe.id,
 						color: this.user.color
 					}
 				})
@@ -432,7 +428,7 @@ class App{
 					data: {
 						id: item.id,
 						prix: prix,
-						groupe: this.usedGroupe.id
+						groupe: this.groupe.id
 					}
 				})
 				.then(res => IndexedDbStorage.get("requests", res))
@@ -455,7 +451,7 @@ class App{
 						buyPreview: true,
 						id: item.id,
 						prix: prix,
-						groupe: this.usedGroupe.id
+						groupe: this.groupe.id
 					}
 				}).then(res => {
 					$('.loader').removeClass('opened');
@@ -520,93 +516,38 @@ class App{
 		}
 	}
 	updateApp(data, save){
-		if(data && data.nom && data.id && data.groupes){
-			if(!this.structure || !jsonEqual(this.structure, data)){
-				document.querySelector('#compte em').innerHTML = data.nom;
-				// Save in IDB in structure objectStore
-				if(save) IndexedDbStorage.put("structures", {groupes: data.groupes, nom: data.nom, id: data.id})
-
-				// Display UI
-				if(data.groupes.length != 0){
-					UI.closeModal();
-					if(!this.structure || !jsonEqual(this.structure.groupes, data.groupes)){
-						$('.groupe').remove();
-						data.groupes.forEach(grp => {
-							$('#groupes').append(Generate.groupe(this, grp.id, grp.nom, grp.membres));
-						});
-
-						if(this.usedGroupe && this.usedGroupe.id) $(`.groupe[key=${this.usedGroupe.id}]`).addClass('opened');
-						
-				
-					}
-
-					this.structure = data;
-					return true;
-				} else {
-					$('.groupe').remove();
-					this.course = new Course();
-					UI.modal(this, 'noGroupe');
-
-					this.structure = data;
-					return false;
-				}
-
-			} else return data.groupes.length != 0;
+		if(!this.user || !jsonEqual(this.user, data)){
+			this.user = new Structure(data.id);
 		}
+
+	
+		document.querySelector('#compte em').innerHTML = data.nom;
+		this.user.update(data);
+		console.log(data, data.groupes);
+		this.user.updateGroupes(data.groupes, save);
+
+		return data.groupes.length != 0;
 	}
 	updateGroupe(groupe, save){
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
-			if(!this.usedGroupe || this.usedGroupe.id != groupe.id || !jsonEqual(this.usedGroupe.membres, groupe.membres)){
+			if(!this.groupe || !jsonEqual(this.groupe.membres, groupe.membres)){
 
-				if(this.usedGroupe) console.log(!jsonEqual(this.usedGroupe.membres, groupe.membres));
-				// Save in IDB in structure objectStore
-				if(save) IndexedDbStorage.put("groupes", groupe)
-
-				if(this.usedGroupe && groupe.id != this.usedGroupe.id) LocalStorage.setItem('usedCourse', null)
+				if(save) IndexedDbStorage.put("groupes", {
+					id: groupe.id,
+					membres: groupe.membres,
+					nom: groupe.nom
+				})
+				if(this.groupe && groupe.id != this.groupe.id) LocalStorage.setItem('usedCourse', null)
 
 				LocalStorage.setItem('usedGroupe', groupe.id);
-		
-				// UPD UI parametres
-				Array.from(document.querySelectorAll('.groupe')).forEach(node => {
-					node.classList.remove("opened");
-					if(node.getAttribute('key') == groupe.id) node.classList.add('opened')
-				});
-				Array.from(document.querySelectorAll('.noCourse')).forEach(node => node.remove());
-				this.course = new Course();
-				UI.closeModal();
 				
 				// UPD CourseList
-				if(groupe.coursesList && groupe.coursesList.length != 0){ // Il y a une course
-					if(!(this.usedGroupe && this.usedGroupe.coursesList) || !jsonEqual(this.usedGroupe.coursesList, groupe.coursesList)){
-						Array.from(document.querySelectorAll('#menu .course')).forEach(node => node.remove());
-
-						// Update Chart
-						const chartLen = 6,
-							monthStamp = 60*60*24*30,
-							timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
-							dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
-						document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
-						this.chartContent = new Array(chartLen).fill(0);
-						groupe.coursesList.forEach((el) => {
-							for (let i = 0; i < chartLen; i++) {
-								if(el.date > timeMarker-(monthStamp*(i+1)) && el.date < timeMarker-(monthStamp*i))  this.chartContent[chartLen-i-1] += parseFloat(el.prix)
-							}
-							document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
-						});
-						this.chartContent = this.chartContent.map(el => parseFloat(el.toFixed(2)));
-					}
-					this.usedGroupe = groupe;
-					return true;
-				} else {
-					Array.from(document.querySelectorAll('#menu .course')).forEach(node => node.remove());
-					Array.from(document.querySelectorAll('.main ul')).forEach(node => node.prepend(Generate.noCourse()));
-					this.buttons = "hide";
-		
-					this.usedGroupe = groupe;
-					return false;
-				}
+				this.groupe = new Groupe();
 
 			}
+			this.groupe.update(groupe);
+			this.groupe.updateCourses(this, groupe.coursesList, save);
+
 			
 			return (groupe.coursesList && groupe.coursesList.length != 0);
 
@@ -615,28 +556,20 @@ class App{
 	updateCourse(data, save){
 		if(data && data.id && data.nom && data.items){
 			//if(!jsonEqual(this.course.export(), data)){
-				// HERE INTEGRATE THE REQUESTS
+				if(!this.course) this.course = new Course();
 
-				if(save) IndexedDbStorage.put("courses", {
-					id: data.id,
-					dateStart: data.dateStart,
-					groupe: data.groupe,
-					maxPrice: data.maxPrice,
-					nom: data.nom,
-					taxes: data.taxes,
-					total: data.total
-				})
+				
 
 				// app.course = new Course();
 				UI.closeModal();
-				Array.from(document.querySelectorAll('.course')).forEach(node => node.classList.remove('opened'));
 
 				document.getElementById('cTaxes').value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
-				this.course.updateSelf(this, data, save);
+				this.course.updateSelf(this, data);
+				Array.from(document.getElementsByClassName('promptActivation')).forEach(node => node.remove());
 
-
-				Array.from(document.getElementsByClassName('course')).forEach(el => {
-					if(el.getAttribute('dbindex') == data.id) el.classList.add('opened')
+				this.groupe.coursesNodeList.forEach(node => {
+					if (node.getAttribute('dbindex') == data.id) node.classList.add('opened')
+					else node.classList.remove('opened')
 				});
 
 				if (this.course.old) {
@@ -647,7 +580,7 @@ class App{
 					this.buttons = "show";
 
 					if (data.dateStart == 0) {
-						$('#panier ul').prepend(Generate.activate());
+						document.querySelector('#panier ul').prepend(Generate.activate());
 
 						this.buttons = "listmode";
 					}
@@ -773,9 +706,9 @@ class App{
 		}
 		$('#totalDep').html(total.toFixed(2) + this.params.currency);
 		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
-		$('#moiDep').html(this.usedGroupe.monthCost.toFixed(2) + this.params.currency);
-		$('#moiPrev').html((totalTax * this.usedGroupe.coef).toFixed(2) + this.params.currency);
-		$('#anPrev').html((totalTax * this.usedGroupe.coef * 12).toFixed(2) + this.params.currency);
+		$('#moiDep').html(this.groupe.monthCost.toFixed(2) + this.params.currency);
+		$('#moiPrev').html((totalTax * this.groupe.coef).toFixed(2) + this.params.currency);
+		$('#anPrev').html((totalTax * this.groupe.coef * 12).toFixed(2) + this.params.currency);
 		if(this.course.maxPrice < totalTax){
 			$('#panier').css({'--color-theme': 'linear-gradient(-45deg, #CA5010, #E81123)'});
 		}
@@ -830,7 +763,7 @@ class App{
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
 					});
-					document.querySelector(".adder").classList.add("hide");
+					document.getElementById("addArt").classList.add("hide");
 					this.buttonState = "listmode";
 			}
 		} 

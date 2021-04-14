@@ -148,6 +148,7 @@
 	border-radius: 5px;
 	padding: 30px 10px;
 	text-align: center;
+	white-space: break-spaces;
 }
 
 .promptEmpty{
@@ -224,6 +225,10 @@
 
 	box-sizing: border-box;
 	transition: all 200ms var(--ease-sortir);
+
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
 }
 
 #modal.noGroupe{

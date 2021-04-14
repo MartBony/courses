@@ -5,29 +5,51 @@ import UI from './UI.js';
 class Offline{
 	static async pull(app, idGroupe, idCourse){
 		let update,
+			structure,
+			groupe,
 			course;
-		IndexedDbStorage.get("structures", app.userId)
+			
+		IndexedDbStorage.get("structures", app.user.id)
 		.then(data => {
 			if(!app.pullState.structure && data){ // If data hasn't been loaded via the network
-				console.log('Local structure fetched:', data);
+				structure = data;
+				console.log('Fetching groupes');
+				return IndexedDbStorage.getCursorwise("groupes", "user", data.id, "prev");
+			} else throw new Error('HaltGroupesFetch');
+		})
+		.then(groupes => {
+			groupes = groupes.sort((i1,i2) => i2.id - i1.id);
+			if(!app.pullState.structure){
+				structure.groupes = groupes || {};
+
+				console.log('Local structure fetched:', structure);
 				app.pullState.structure = "idb";
-				update = app.updateApp(data);
+				update = app.updateApp(structure);
 				if(update){
-					idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
-					return IndexedDbStorage.get("groupes", idGroupe);
+					idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || structure.groupes[0].id;
+					return IndexedDbStorage.get("groupes", parseInt(idGroupe));
 				}
 			} else throw new Error('HaltStructure');
 		})
 		.then(data => {
 			if(!app.pullState.groupe && data){
-				console.log('Local groupe fetched:', data);
+				groupe = data;
+				console.log('Fetching courses');
+				return IndexedDbStorage.getCursorwise("courses", "groupe", data.id, "prev");
+			} else throw new Error('HaltCoursesFetch');
+		})
+		.then(courses => {
+			courses = courses.sort((i1,i2) => i2.id - i1.id);
+			if(!app.pullState.groupe){
+				groupe.coursesList = courses || {};
+			
+				console.log('Local groupe fetched:', groupe);
 				app.pullState.groupe = "idb";
-				update = app.updateGroupe(data);
+				update = app.updateGroupe(groupe);
 				if(update){
-					idCourse = idCourse || LocalStorage.getItem('usedCourse') || Math.max(...app.usedGroupe.coursesList.map(course => course.id));
-					idCourse = Number(idCourse);
-					// if(!idCourse) idCourse = app.usedGroupe.coursesList.length != 0 ? app.usedGroupe.coursesList[0].id : null;
-					return IndexedDbStorage.get("courses", idCourse);
+					idCourse = idCourse || LocalStorage.getItem('usedCourse') || Math.max(...app.groupe.courses.map(course => course.id));
+					// if(!idCourse) idCourse = app.groupe.coursesList.length != 0 ? app.groupe.coursesList[0].id : null;
+					return IndexedDbStorage.get("courses", parseInt(idCourse));
 				}
 			} else throw new Error('HaltGroupe');
 		})
@@ -36,7 +58,7 @@ class Offline{
 				course = data;
 				console.log('Fetching articles');
 				return IndexedDbStorage.getCursorwise("items", "course", data.id, "prev");
-			} else throw new Error('HaltCourses');
+			} else throw new Error('HaltItemsFetch');
 		})
 		.then(items => {
 			items = items.sort((i1,i2) => i2.id - i1.id);
@@ -58,29 +80,29 @@ class Offline{
 			app.course.updateItemsModern(app, items.articles, items.previews, false)
 		})
 		.catch(err => {
-			if(!["HaltItems", "HaltCourses", "HaltGroupe", "HaltStructure"].includes(err.message)){
+			if(!["HaltItems", "HaltItemsFetch", "HaltCourses", "HaltCoursesFetch", "HaltGroupe", "HaltGroupesFetch", "HaltStructure"].includes(err.message)){
 				console.error(err);
 				UI.erreur("Problème de cache local", "Nous n'avons pas pu acceder au stockage local du téléphone, certaines fonctionnalités hors ligne peuvent être affectées");
-			}
+			}// else console.log(err);
 		});
 	}
-	static async updateRequests(app){
+	/* static async updateRequests(app){
 		return IndexedDbStorage.getAll("requests")
 		.then(reqs => {
 			reqs.forEach(req => {
 				switch(req.type){
 					case "preview":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							app.course.pushPreview({id: -req.reqId, titre: req.data.titre, color: req.data.color});
 						}
 						break;
 					case "article":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							app.course.pushArticle(app, {id: -req.reqId, titre: req.data.titre, color: req.data.color, prix: req.data.prix});
 						}
 						break;
 					case "delArticle":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							let item = app.course.items.articles.filter(item => item.id == req.data.id)[0];
 							if(item){
 								let rank = app.course.items.articles.indexOf(item);
@@ -89,7 +111,7 @@ class Offline{
 							}
 						}
 					case "delArticle":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							let item = app.course.items.previews.filter(item => item.id == req.data.id)[0];
 							if(item){
 								let rank = app.course.items.previews.indexOf(item);
@@ -100,14 +122,14 @@ class Offline{
 				}
 			});
 		});
-	}
+	} */
 	static async filterPendingRequests(app, networkItems){
 		return IndexedDbStorage.getAll("requests")
 		.then(reqs => {
 			reqs.forEach(req => {
 				switch(req.type){
 					case "preview":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							networkItems.previews.unshift({
 								id: -req.reqId,
 								titre: req.data.titre,
@@ -116,7 +138,7 @@ class Offline{
 						}
 						break;
 					case "article":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							networkItems.articles.unshift({
 								id: -req.reqId,
 								titre: req.data.titre,
@@ -126,7 +148,7 @@ class Offline{
 						}
 						break;
 					case "buy":
-						if(req.data.groupe == app.usedGroupe.id){
+						if(req.data.groupe == app.groupe.id){
 							const item =  networkItems.previews.filter(preview => preview.id == req.data.id)[0];
 							if(item){
 								networkItems.previews = networkItems.previews.filter(preview => preview.id != req.data.id);

@@ -199,6 +199,8 @@
 }
 
 .article div, .preview div{
+	height: 100%;
+
 	padding: 10px 20px;
 	background: var(--color-theme-secondary);
 	color: var(--color-text-menu);

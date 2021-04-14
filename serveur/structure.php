@@ -70,11 +70,14 @@ function groupes($user, PDO $bdd) {
 
 	}
 
-	http_response_code(200);
 	echo json_encode(array(
-		'groupes' => $groupsInfo,
-		'nom' => $user['nom'],
-		'id' => (int) $user['id']
+		'status' => 200,
+		'payload' => array(
+			'id' => (int) $user['id'],
+			'nom' => $user['nom'],
+			'color' => $user['hueColor'],
+			'groupes' => $groupsInfo
+		)
 	));
 }
 
