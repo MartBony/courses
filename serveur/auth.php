@@ -1,18 +1,10 @@
 <?php
 
-require('../dbConnect.php');
+require_once('../dbConnect.php');
+require_once('checkers/passFunctions.php');
+require_once('checkers/login.php');
 
 header('Content-Type: application/json');
-
-function generateRandomString($length) {
-	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	$charactersLength = strlen($characters);
-	$randomString = '';
-	for ($i = 0; $i < $length; $i++) {
-		$randomString .= $characters[rand(0, $charactersLength - 1)];
-	}
-	return $randomString;
-}
 
 if(isset($_POST['inscript'])){
 
@@ -70,12 +62,38 @@ if(isset($_POST['inscript'])){
 
 } else if (isset($_POST['tryCookiesAuth'])) {
 
-	if(isset($_COOKIE['email']) && isset($_COOKIE['pass'])){
-		$mail = htmlspecialchars($_COOKIE['email']);
-		$pass = $_COOKIE['pass'];
+	login($bdd, function($user, $oldToken) use ($bdd){
 
-		connect($bdd, $mail, $pass);
-	} else echo json_encode(array('status' => 204));
+	
+		$newToken = generateToken();
+		$setToken = $bdd->prepare("
+			UPDATE `tokens` 
+			SET `selector` = :selector, `hashedValidator` = :hashedValidator, `expires` = :expires
+			WHERE `id` = :oldTokenId
+		");
+		$setToken->execute(array(
+			'selector' => $newToken['selector'],
+			'hashedValidator' => $newToken['hashedValidator'],
+			'expires' => $newToken['expires'],
+			'oldTokenId' => $oldToken['id']
+		));
+
+		setcookie("identificationToken", $newToken['validator'], array(
+			'expires' => $newToken['expires'],
+			'path' => '/courses/',
+			'secure' => true,
+			'samesite' => 'strict',
+			'httponly' => true
+		));
+
+		
+		echo json_encode(array(
+			'status' => 200,
+			'payload' => array(
+				'userId' => $user['userId']
+			)
+		));
+	});
 
 } else if (isset($_POST['deconnect'])){
 	/* setcookie("email", "", time() - 3600, '/', null, false, true);
@@ -98,21 +116,16 @@ if(isset($_POST['inscript'])){
 	echo json_encode(array('status' => 200));
 }
 
-function connect(PDO $bdd, $mail, $pass){
-	$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ? AND `deleted` = 0');
-	$reqPreUser->execute(array($mail));
+function connect(PDO $bdd, $mail, $pass, $persistent = false){
+	$reqUser = $bdd->prepare('SELECT * FROM `users` WHERE `mail` = ? AND `deleted` = 0');
+	$reqUser->execute(array($mail));
 
-	if ($reqPreUser->rowCount() == 1) {
-		$preUser = $reqPreUser->fetch();
-		$hash = hash('sha512', $preUser['salage'].$pass);
+	if ($reqUser->rowCount() == 1) {
+		$user = $reqUser->fetch();
 
-		$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ? AND `deleted` = 0');
-		$reqUser->execute(array($mail, $hash));
-
-		if ($reqUser->rowCount() == 1) {
-			$user = $reqUser->fetch();
+		if (verifyPassword($pass, $user['pass'])) {
 			if($user['activated']){
-				setcookie("email", $user['mail'], array(
+				/* setcookie("email", $user['mail'], array(
 					'expires' => time() + 31*24*3600,
 					'path' => '',
 					'secure' => true,
@@ -125,12 +138,33 @@ function connect(PDO $bdd, $mail, $pass){
 					'secure' => true,
 					'samesite' => 'strict',
 					'httponly' => true
+				)); */
+
+				$token = generateToken();
+				$setToken = $bdd->prepare("
+					INSERT INTO `tokens` 
+					(`selector`, `hashedValidator`, `userId`, `expires`) 
+					VALUES (:selector, :hashedValidator, :userId, :expires)
+				");
+				$setToken->execute(array(
+					'selector' => $token['selector'],
+					'hashedValidator' => $token['hashedValidator'],
+					'userId' => $user['id'],
+					'expires' => $token['expires']
+				));
+
+				setcookie("identificationToken", $token['validator'], array(
+					'expires' => $token['expires'],
+					'path' => '/courses/',
+					'secure' => true,
+					'samesite' => 'strict',
+					'httponly' => true
 				));
 				
 				echo json_encode(array(
 					'status' => 200,
 					'payload' => array(
-						'userId' => (int) $user['id']
+						'userId' => $user['userId']
 					)
 				));
 			} else {
@@ -170,23 +204,20 @@ function connect(PDO $bdd, $mail, $pass){
 				echo json_encode(array('status' => 403, 'err' => 'nonActivated','sent' => $send)); // ATTENTION remove URL
 			}
 		} else echo json_encode(array('status' => 401, 'err' => 'credential'));
-		$reqUser->closeCursor();
 
 	} else echo json_encode(array('status' => 401, 'err' => 'noEmail'));
-	$reqPreUser->closeCursor();
+	$reqUser->closeCursor();
 }
 
 function inscrire(PDO $bdd, $mail, $pass, $nom){
-	$salage = generateRandomString(3);
-	$salted = $salage.$pass;
-	$hash = hash('sha512', $salted);
-
 	$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND `deleted` = 0');
 	$reqUser->execute(array($mail));
 	$user = $reqUser->fetch();
 
 	if ($reqUser->rowCount() == 0) {
-		$clef = generateRandomString(30);
+		$pass = hashPassword($pass);
+		$userId = generateRandomString(10);
+		$clef = generateRandomString();
 
 		$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)'); // Create groupe
 		$insertGroupe->execute(array("Groupe de ".$nom));
@@ -196,14 +227,14 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 		$groupe = $reqGroupe->fetch();
 
 		$setUser = $bdd->prepare('INSERT INTO `users`
-			(`mail`, `pass`, `salage`, `nom`, `clef`, `activated`, `hueColor`, `groupe`, `inviteKey`, `pending`, `deleted`)
-			VALUES (:mail,:pass,:salage,:nom,:clef, 0,:hueColor,:groupe,:inviteKey,"",0)');
+			(`mail`, `pass`, `userId`, `nom`, `clef`, `activated`, `hueColor`, `groupe`, `inviteKey`, `pending`, `deleted`)
+			VALUES (:mail,:pass,:userId,:nom,:clef, 0,:hueColor,:groupe,:inviteKey,"",0)');
 		$setUser->execute(array(
 			'mail' => $mail,
-			'pass' => $hash,
-			'salage' => $salage,
+			'pass' => $pass,
+			'userId' => $userId,
 			'nom' => $nom,
-			'clef' => hash('sha512', $clef),
+			'clef' => hashPassword($clef),
 			'hueColor' => rand(0,359),
 			'groupe' => "[".$groupe['id']."]",
 			'inviteKey' => rand(0, 999999)

@@ -1,3 +1,5 @@
+import Animations from "./animations.js";
+
 export default class Generate{
 	static course(id, nom){
 		let button = document.createElement('button'),
@@ -58,6 +60,8 @@ export default class Generate{
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});
+
+		if(animation) Animations[animation](li)
 		
 		return li;
 	}
@@ -78,6 +82,8 @@ export default class Generate{
 		childrens.forEach(child => {
 			li.appendChild(child);
 		});
+
+		if(animation) Animations[animation](li)
 
 		return li;
 	

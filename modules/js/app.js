@@ -208,7 +208,7 @@ class App{
 			.then(() => {
 				let rank = this.course.items.articles.indexOf(item);
 
-				UI.remove("article", rank);
+				UI.removeItem(item.id);
 				this.course.deleteArticle(this, {id: index, prix: item.prix});
 
 			});
@@ -221,7 +221,7 @@ class App{
 				}).then(() => {
 					let rank = this.course.items.articles.indexOf(item);
 
-					UI.remove("article", rank);
+					UI.removeItem(item.id);
 					this.course.deleteArticle(this, {id: index, prix: item.prix});
 
 					return navigator.serviceWorker.ready;
@@ -243,7 +243,7 @@ class App{
 					let displayedIndex = this.course.items.articles.indexOf(item);
 
 					this.total -= data.prix;
-					UI.remove("article", displayedIndex);
+					UI.removeItem(item.id);
 
 					this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
 					IndexedDbStorage.put("courses", this.course.export());
@@ -270,7 +270,7 @@ class App{
 			.then(() => {
 				let rank = this.course.items.previews.indexOf(item);
 
-				UI.remove("preview", rank);
+				UI.removeItem(item.id);
 				this.course.deletePreview(index);
 
 			});
@@ -284,7 +284,7 @@ class App{
 				}).then(() => {
 					let rank = this.course.items.previews.indexOf(item);
 
-					UI.remove("preview", rank);
+					UI.removeItem(item.id);
 					this.course.deletePreview(index);
 
 					return navigator.serviceWorker.ready;
@@ -306,7 +306,7 @@ class App{
 					let displayedIndex = this.course.items.previews.indexOf(item);
 
 					$('.article, .preview').removeClass('ready');
-					UI.remove("preview", displayedIndex);
+					UI.removeItem(item.id);
 
 					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
 					IndexedDbStorage.put("courses", this.course.export());
@@ -373,7 +373,7 @@ class App{
 				UI.closeModernForms();
 				
 				this.course.deletePreview(idPreview);
-				UI.remove("preview", displayedIndex);
+				UI.removeItem(item.id);
 
 
 
@@ -475,7 +475,7 @@ class App{
 					UI.closeModernForms();
 					
 					app.course.deletePreview(idPreview);
-					UI.remove("preview", displayedIndex);
+					UI.removeItem(item.id);
 	
 	
 	

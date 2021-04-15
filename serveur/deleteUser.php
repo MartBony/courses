@@ -62,7 +62,7 @@ login($bdd, function($user) use ($bdd){
 		
 		}
 
-		$updUser = $bdd->prepare('UPDATE `users` SET `nom` = "", `mail` = "", `pass` = "", `salage` = "", `clef` = "", `inviteKey` = 0, `activated` = 0, `pending` = "", `groupe` = "", `deleted` = 1 WHERE `id` = ?');
+		$updUser = $bdd->prepare('UPDATE `users` SET `nom` = "", `mail` = "", `pass` = "", `userId` = "", `clef` = "", `inviteKey` = 0, `activated` = 0, `pending` = "", `groupe` = "", `deleted` = 1 WHERE `id` = ?');
 		$updUser->execute(array($user['id']));
 
 		echo json_encode(array('status' => 200));

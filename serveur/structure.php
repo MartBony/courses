@@ -73,7 +73,7 @@ function groupes($user, PDO $bdd) {
 	echo json_encode(array(
 		'status' => 200,
 		'payload' => array(
-			'id' => (int) $user['id'],
+			'id' => $user['userId'],
 			'nom' => $user['nom'],
 			'color' => $user['hueColor'],
 			'groupes' => $groupsInfo

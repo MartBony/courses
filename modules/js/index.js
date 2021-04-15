@@ -157,7 +157,8 @@ function authenticateCookies(){
 					}
 				}
 			]);
-		} else throw "Require auth"
+		}
+		throw "Require auth"
 	})
 	.then(userId => {
 		LocalStorage.setItem('userId', userId);

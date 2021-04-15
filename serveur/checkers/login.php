@@ -1,43 +1,49 @@
 <?php
 
-function login( PDO $bdd, $callback){
-	if(isset($_COOKIE['email']) && isset($_COOKIE['pass'])){
-		$mail = htmlspecialchars($_COOKIE['email']);
-		$pass = $_COOKIE['pass'];
+require_once('passFunctions.php');
 
-		$reqPreUser = $bdd->prepare('SELECT `salage` FROM `users` WHERE `mail` = ? AND `deleted` = 0');
-		$reqPreUser->execute(array($mail));
+function login( PDO $bdd, $callback){ // Rewite responses
+	if(isset($_COOKIE['identificationToken'])){
+		$validator = $_COOKIE['identificationToken'];
+		$selector = substr($validator, 0, 5);
 
-		if ($reqPreUser->rowCount() == 1) {
-			$preUser = $reqPreUser->fetch();
-			$hash = hash('sha512', $preUser['salage'].$pass);
 
-			$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND pass = ? AND `deleted` = 0');
-			$reqUser->execute(array($mail, $hash));
+		$reqToken = $bdd->prepare('SELECT * FROM `tokens` WHERE `selector` = ?');
+		$reqToken->execute(array($selector));
 
-			if ($reqUser->rowCount() == 1) {
-				$user = $reqUser->fetch();
-				if($user['activated']){
-					call_user_func($callback, $user);
+		if($reqToken->rowCount() == 1){
+			$token = $reqToken->fetch();
+
+			if(time() < $token['expires'] && verifyPassword($validator, $token['hashedValidator'])){
+				$reqUser = $bdd->prepare("SELECT * FROM `users` WHERE id = ? AND  `deleted` = 0");
+				$reqUser->execute(array($token['userId']));
+
+				if ($reqUser->rowCount() == 1) {
+					$user = $reqUser->fetch();
+
+
+					if($user['activated']){
+						call_user_func($callback, $user, $token);
+					} else {
+						echo json_encode(array('status' => 403 ,'payload' => array('err' => 'User Not Activated')));
+					}
+
 				} else {
-					http_response_code(403);
-					echo json_encode(array('notAuthed' => true, 'err' => 'authNonActivated','sent' => $send));
+					echo json_encode(array('status' => 401 ,'payload' => array('err' => 'User Not Found')));
 				}
+				$reqUser->closeCursor();
+				
 			} else {
-				http_response_code(401);
-				echo json_encode(array('err' => 'authCredential'));
+				echo json_encode(array('status' => 401 ,'payload' => array('err' => 'Bad Token (Whrong or Expired)')));
 			}
-			$reqUser->closeCursor();
 
 		} else {
-			http_response_code(401);
-			echo json_encode(array('err' => 'authNoEmail'));
+			echo json_encode(array('status' => 401 ,'payload' => array('err' => 'Token Not Found')));
 		}
-		$reqPreUser->closeCursor();
+		$reqToken->closeCursor();
 		
 	} else {
-		http_response_code(204);
-		echo json_encode(array('notAuthed' => true, 'err' => 'authCookies'));
+		echo json_encode(array('status' => 401 ,'payload' => array('err' => 'User Token Not Found, requires cookies')));
 	}
 
 }

@@ -1,4 +1,5 @@
 import Touch from "./touch.js";
+import Animations from "./animations.js";
 
 export default class UI {
 	static message(titre, texte, buttons, timer = 7000){
@@ -286,7 +287,7 @@ export default class UI {
 		$('#addGroupe').css({'display':'', 'opacity':'', 'transform':''});
 		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
-	static remove(type, index){ // To rewrite
+	/* static remove(type, index){
 		let selector = "."+ type,
 			olds = new Array(),
 			news = new Array();
@@ -363,6 +364,12 @@ export default class UI {
 
 
 		}, 400+(olds.length)*32);
+	} */
+	static removeItem(index){
+		const el = document.querySelector(`li[idItem="${index}"]`),
+		anim = Animations.removeItem(el).then(() => {
+			setTimeout(() => el.remove(), 100);
+		});
 	}
 	static promptAddFriend(app){
 		$('#invitation span').html(app.groupe.nom);

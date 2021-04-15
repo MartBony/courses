@@ -224,7 +224,7 @@ export default class Course{
 	}
 	insertArticle(app, index, item, animate = true){ // Inserts an article in the UI
 		if(item && item.id && item.titre && item.color && item.prix){
-			const animation = animate ? 'animateSlideIn' : 'animateSlideInLight',
+			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
 			article = item.id < 0 ? 
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync') :
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation);
@@ -244,7 +244,7 @@ export default class Course{
 	}
 	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
 		if(item && item.id && item.titre && item.color){
-			const animation = animate ? 'animateSlideIn' : 'animateSlideInLight',
+			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
 			preview = item.id < 0 ? 
 				Generate.preview(item.id, item.titre, item.color, animation, 'sync') :
 				Generate.preview(item.id, item.titre, item.color, animation);
