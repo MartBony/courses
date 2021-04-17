@@ -2,11 +2,11 @@
 	require('dbConnect.php');
 
 	// Require https
-/* 	if ($_SERVER['HTTPS'] != "on") {
+	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != "on" && $_SERVER['SERVER_NAME'] != "localhost") {
 		$url = "https://". $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
 		header("Location: $url");
 		exit;
-	} */
+	}
 
 ?>
 <!DOCTYPE html>

@@ -1,6 +1,7 @@
 import App from './app.js';
+import Pull from './requests.js';
 import UI from './UI.js';
-import { installSW, initPwaEvents } from './pwa.js';
+import { installSW } from './pwa.js';
 import initEvents from './controls.js';
 import { IndexedDbStorage, LocalStorage } from './storage.js';
 import { fetcher } from './tools.js';
@@ -8,7 +9,12 @@ import { fetcher } from './tools.js';
 let app;
 
 console.log("Index loaded");
-installSW().then(authenticateCookies);
+installSW()
+.then(directAuthenticaction)
+.catch(err => {
+	console.error(err);
+	UI.erreur("Navigateur non compatible", "Un problème est survenu lors du chargement de l'application, mettez à jour votre navigateur")
+});
 
 
 // Auth
@@ -106,74 +112,26 @@ async function cssReady(){
 	}
 }
 
-function startApp(user){
+function startApp(user, offline = false){
 	if(!app){
-		initPwaEvents()
-		app = new App(user);
+		app = new App(user, offline);
 		initEvents(app);
 	}
 }
 
-async function getLocalUserData(){
+async function directAuthenticaction(){
 	const userId = LocalStorage.getItem('userId');
 	if(userId){
 		await cssReady();
-		startApp(userId);
+		return startApp(userId, true);
 	}
-	Promise.resolve();
-}
-
-function authenticateCookies(){
-	getLocalUserData()
-	.then(() => fetcher({
-		method: "POST",
-		url: "serveur/auth.php",
-		data: { tryCookiesAuth: true }
-	}))
-	.then(res => {
-		if(res.status == 200 && res.payload && res.payload.userId){
-			return res.payload.userId;
-		} else if(res.status && res.status == "offline"){
-			if(!app) throw "Require auth";
-			else throw "Working on Cache"
-		}
-		else if (res.status == 401) {
-			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-				{
-					texte:"Se connecter", 
-					action : () => {
-						document.getElementById('authContainer').classList.add('opened');
-						UI.closeMessage();
-					}
-				}
-			]);
-		} else if (res.status == 403) {
-			UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-				{
-					texte:"Se connecter", 
-					action : () => {
-						document.getElementById('authContainer').classList.add('opened');
-						UI.closeMessage();
-					}
-				}
-			]);
-		}
-		throw "Require auth"
-	})
-	.then(userId => {
+	try{
+		let userId = await Pull.authRequest();
 		LocalStorage.setItem('userId', userId);
-		return cssReady().then(() => startApp(userId));
-	})
-	.catch(err => {
+		await cssReady()
+		return startApp(userId);
+	} catch(err) {
 		console.error(err);
-		if(err == "Require auth") UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-			{
-				texte:"Se connecter", 
-				action : () => {
-					document.getElementById('authContainer').classList.add('opened');
-					UI.closeMessage();
-				}
-			}
-		]);
-	});
+		if(err == "Require auth") UI.requireAuth();
+	}
 }

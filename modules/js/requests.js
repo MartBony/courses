@@ -10,9 +10,7 @@ class Pull{
 			if(res.status == 200 && res.payload && res.payload.groupes && res.payload.id && res.payload.nom){
 				return res.payload;
 			} else if (res.status == 401) {
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+				UI.requireAuth();
 				throw "Not Athenticated"
 			} else {
 				UI.message(
@@ -65,11 +63,25 @@ class Pull{
 		}).then(data => app.updateInvites(data))
 		.catch(res => {
 			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+				UI.requireAuth();
 			} else $('#invitations div').html('Un problème est survenu');
 		});
+	}
+	static async authRequest(){
+		const res = await fetcher({
+				method: "POST",
+				url: "serveur/auth.php",
+				data: { tryCookiesAuth: true }
+			})
+			
+			if(res.status == 200 && res.payload && res.payload.userId){
+				return res.payload.userId;
+			} else if(res.status && res.status == "offline"){
+				throw "Offline"
+			}
+
+			throw "Require auth";
+
 	}
 }
 

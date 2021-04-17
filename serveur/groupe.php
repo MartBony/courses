@@ -6,26 +6,28 @@ require_once('checkers/checkGroupe.php');
 header("Content-Type: application/json");
 
 login($bdd, function($user) use ($bdd){
-	checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
-		$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC');
-		$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users`');
-
-		$coursesList = array();
-		$membresGp = array();
+	checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
 
 		// Pulling membres for specified group
-		$reqAllUsers->execute();
-		while($scanedUser = $reqAllUsers->fetch()){
-			if (strpos($scanedUser['groupe'], '['. $groupe['id'] .']') !== false) {
-				array_push($membresGp, $scanedUser['nom']);
-			}
+		$reqMembres = $bdd->prepare('SELECT u.nom 
+			FROM `users` u
+			INNER JOIN `gulinks` l
+			ON u.id = l.userId
+			WHERE l.groupeId = ?
+		');
+		$reqMembres->execute(array($groupe['id']));
+		$membres = array();
+		while($resMembres = $reqMembres->fetch()){
+			array_push($membres, $resMembres['nom']);
 		}
-		$reqAllUsers->closeCursor();
 
 		// Pulling courses + Get additionnal data
 
 		$firstDate = time();
 
+		$coursesList = array();
+	
+		$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC');
 		$reqAllCourses->execute(array($groupe['id']));
 		while($resCoursesGp = $reqAllCourses->fetch()){
 			
@@ -50,7 +52,7 @@ login($bdd, function($user) use ($bdd){
 				'id' => (int) $groupe['id'],
 				'nom' => $groupe['nom'],
 				'coursesList' => $coursesList,
-				'membres' => $membresGp
+				'membres' => $membres
 			)
 		));
 	});

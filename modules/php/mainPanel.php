@@ -15,6 +15,7 @@
 		<header class="phones">
 			<h1 class="noselect">Liste</h1>
 		</header>
+		<button id="recycle">Reprendre la liste</button>
 		<ul></ul> 
 		<article class="options">
 			<i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i>

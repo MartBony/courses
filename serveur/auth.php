@@ -66,11 +66,9 @@ if(isset($_POST['inscript'])){
 
 	
 		$newToken = generateToken();
-		$setToken = $bdd->prepare("
-			UPDATE `tokens` 
+		$setToken = $bdd->prepare("UPDATE `tokens` 
 			SET `selector` = :selector, `hashedValidator` = :hashedValidator, `expires` = :expires
-			WHERE `id` = :oldTokenId
-		");
+			WHERE `id` = :oldTokenId");
 		$setToken->execute(array(
 			'selector' => $newToken['selector'],
 			'hashedValidator' => $newToken['hashedValidator'],
@@ -80,7 +78,7 @@ if(isset($_POST['inscript'])){
 
 		setcookie("identificationToken", $newToken['validator'], array(
 			'expires' => $newToken['expires'],
-			'path' => '/courses/',
+			'path' => '',
 			'secure' => true,
 			'samesite' => 'strict',
 			'httponly' => true
@@ -98,14 +96,14 @@ if(isset($_POST['inscript'])){
 } else if (isset($_POST['deconnect'])){
 	/* setcookie("email", "", time() - 3600, '/', null, false, true);
 	setcookie("pass", "", time() - 3600, '/', null, false, true); */
-	setcookie("email", "", array(
-		'expires' => time() - 3600,
-		'path' => '',
-		'secure' => true,
-		'samesite' => 'strict',
-		'httponly' => true
-	));
-	setcookie("pass", "", array(
+	
+	login($bdd, function($user, $oldToken) use ($bdd){
+		$deleteToken = $bdd->prepare("DELETE FROM `tokens` 
+			WHERE `id` = ?");
+		$deleteToken->execute(array($oldToken['id']));
+	});
+
+	setcookie("identificationToken", "", array(
 		'expires' => time() - 3600,
 		'path' => '',
 		'secure' => true,
@@ -155,7 +153,7 @@ function connect(PDO $bdd, $mail, $pass, $persistent = false){
 
 				setcookie("identificationToken", $token['validator'], array(
 					'expires' => $token['expires'],
-					'path' => '/courses/',
+					'path' => '',
 					'secure' => true,
 					'samesite' => 'strict',
 					'httponly' => true
@@ -226,9 +224,19 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 		$reqGroupe->execute(array("Groupe de ".$nom));
 		$groupe = $reqGroupe->fetch();
 
+		$createGroupLink = $bdd->prepare('
+			INSERT INTO `gulinks`
+			(`userId`, `groupeId`, `active`)
+			VALUES (:userId, :groupeId, 1)
+		');
+		$createGroupLink->execute(array(
+			"userId" => $user['id'],
+			"groupeId" => $groupe['id']
+		));
+
 		$setUser = $bdd->prepare('INSERT INTO `users`
-			(`mail`, `pass`, `userId`, `nom`, `clef`, `activated`, `hueColor`, `groupe`, `inviteKey`, `pending`, `deleted`)
-			VALUES (:mail,:pass,:userId,:nom,:clef, 0,:hueColor,:groupe,:inviteKey,"",0)');
+			(`mail`, `pass`, `userId`, `nom`, `clef`, `activated`, `hueColor`, `inviteKey`, `pending`, `deleted`)
+			VALUES (:mail,:pass,:userId,:nom,:clef, 0,:hueColor,:inviteKey,"",0)');
 		$setUser->execute(array(
 			'mail' => $mail,
 			'pass' => $pass,
@@ -236,7 +244,6 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 			'nom' => $nom,
 			'clef' => hashPassword($clef),
 			'hueColor' => rand(0,359),
-			'groupe' => "[".$groupe['id']."]",
 			'inviteKey' => rand(0, 999999)
 		));
 

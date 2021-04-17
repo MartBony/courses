@@ -34,6 +34,7 @@ const assets = [
 	"./modules/js/storage.js",
 	"./modules/js/touch.js",
 	"./modules/js/UI.js",
+	"./modules/js/animations.js",
 	"./modules/js/offline.js",
 	// RSC
 	"./images/logo72.png",

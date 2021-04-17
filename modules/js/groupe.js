@@ -1,5 +1,5 @@
 import Generate from './generate.js';
-import { IndexedDbStorage } from './storage.js';
+import { IndexedDbStorage, LocalStorage } from './storage.js';
 import UI from './UI.js';
 
 export default class Groupe{
@@ -13,6 +13,8 @@ export default class Groupe{
 		this.id = parseInt(groupe.id);
 		this.nom = groupe.nom;
 		this.membres = groupe.membres;
+
+		LocalStorage.setItem('usedGroupe', this.id);
 
 		// UI
 		Array.from(document.querySelectorAll('.groupe')).forEach(node => {
@@ -59,27 +61,13 @@ export default class Groupe{
 		Array.from(document.getElementsByClassName('noCourse')).forEach(node => node.remove());
 		UI.closeModal();
 
+		const monthStamp = 60*60*24*30,
+		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
+		dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
 
-		if(courses.length != 0){ // Il y a une course
+		document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
 
-			// Update Chart
-			const chartLen = 6,
-			monthStamp = 60*60*24*30,
-			timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
-			dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
-
-			document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
-			app.chartContent = new Array(chartLen).fill(0);
-			courses.forEach((el) => {
-				if(el.date) console.error("Inproper course", el);
-				for (let i = 0; i < chartLen; i++) {
-					if(el.dateStart > timeMarker-(monthStamp*(i+1)) && el.dateStart < timeMarker-(monthStamp*i))  app.chartContent[chartLen-i-1] += parseFloat(el.total)
-				}
-				// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
-			})
-			app.chartContent = app.chartContent.map(el => parseFloat(el.toFixed(2)));
-			
-		} else {
+		if(!courses.length) {
 			// Array.from(document.querySelectorAll('#menu .course')).forEach(node => node.remove());
 			Array.from(document.querySelectorAll('.main ul')).forEach(node => node.prepend(Generate.noCourse()));
 			app.buttons = "hide";
@@ -87,7 +75,6 @@ export default class Groupe{
 			// this.usedGroupe = groupe;
 			return false;
 		}
-
 
 	}
 	filterCourse(course){
@@ -128,5 +115,21 @@ export default class Groupe{
 	}
 	get coursesNodeList(){
 		return Array.from(document.getElementsByClassName("course"));
+	}
+	get graphData(){
+		// Update Chart
+		const monthStamp = 60*60*24*30,
+		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
+
+		let result = new Array(6).fill(0);
+
+		this.courses.forEach((course) => {console.log(course);
+			if(course.date) console.error("Inproper course", course);
+			for (let i = 0; i < result.length; i++) {
+				if(course.dateStart > timeMarker-(monthStamp*(i+1)) && course.dateStart < timeMarker-(monthStamp*i))  result[result.length-i-1] += parseFloat(course.total)
+			}
+			// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
+		})
+		return result.map(valeur => parseFloat(valeur.toFixed(2)));
 	}
 }

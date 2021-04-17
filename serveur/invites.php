@@ -6,7 +6,7 @@ require_once('checkers/checkGroupe.php');
 
 header('Content-Type: application/json');
 
-function pushCousesIndependent($user, PDO $bdd){
+function pushCousesIndependent($user, PDO $bdd){ // REWRITE
 	if(isset($_POST['getInviteKey'])) {
 		$id = rand(0, 999999);
 		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ? WHERE id = ?');
@@ -196,7 +196,7 @@ function pushGroupeDependent($user, $groupe, PDO $bdd){
 
 login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($user, $bdd)){
-		checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
+		checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
 			pushGroupeDependent($user, $groupe, $bdd);
 		});
 	}

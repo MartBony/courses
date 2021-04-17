@@ -156,9 +156,7 @@ export default function initEvents(app){
 
 				}).catch(res => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
+						UI.requireAuth();
 					} else { // TODO
 						UI.erreur("Un problème sur le serveur est survenu, réessayez");
 					document.getElementsByClassName('loader')[0].classList.remove('opened');
@@ -250,9 +248,7 @@ export default function initEvents(app){
 					.catch(res => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-							]);
+							UI.requireAuth();
 						} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
 							UI.erreur("Le prix doit être positif")
 						} else {
@@ -336,9 +332,7 @@ export default function initEvents(app){
 						
 					}).catch(res => {
 						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-							]);
+							UI.requireAuth();
 						} else {
 							document.getElementsByClassName('loader')[0].classList.remove('opened');
 							UI.offlineMsg(app, err);
@@ -429,15 +423,13 @@ export default function initEvents(app){
 					LocalStorage.clear();
 					UI.closeForms();
 					document.querySelector('.loader').classList.remove('opened');
-					refresh();
+					refreshAsync();
 				}).catch(res => {
 					document.querySelector('.loader').removeClass('opened');
 					if (res.status == 400 && res.responseJSON && res.responseJSON.err && res.responseJSON.err == 'length'){
 						alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
 					} else if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
+						UI.requireAuth();
 					} else UI.offlineMsg(app, res)
 				});
 			}
@@ -468,9 +460,7 @@ export default function initEvents(app){
 					}).catch(res => {
 						$('.loader').removeClass('opened');
 						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-								{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-							]);
+							UI.requireAuth();
 						} else if(res.status == 403) {
 							UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
 						} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "No User Found"}) {
@@ -492,8 +482,9 @@ export default function initEvents(app){
 
 
 	// Service Worker
-	if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+	if ('serviceWorker' in navigator) {
 		navigator.serviceWorker.onmessage = (event) => {
+			console.log("event from SW, ", event);
 			const res = event.data;
 			const payload = res.payload;
 			switch(res.type){
@@ -505,6 +496,7 @@ export default function initEvents(app){
 					break;
 				case "updPreview":
 					const previewUi = document.querySelector(`.preview[iditem="${-payload.id}"]`);
+					console.log("Corresponding UI element, ", previewUi);
 					if(previewUi) {
 						previewUi.setAttribute("iditem", payload.item.id);
 						previewUi.classList.remove('sync');
@@ -515,6 +507,7 @@ export default function initEvents(app){
 					break;
 				case "updArticle":
 					const articleUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
+					console.log("Corresponding UI element, ", articleUi);
 					if(articleUi) {
 						articleUi.setAttribute("iditem", payload.item.id);
 						articleUi.classList.remove('sync');
@@ -525,6 +518,7 @@ export default function initEvents(app){
 					break;
 				case "buy":
 					const buyedUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
+					console.log("Corresponding UI element, ", buyedUi);
 					if(buyedUi) {
 						buyedUi.setAttribute("iditem", payload.item.id);
 						buyedUi.classList.remove('sync');
@@ -664,17 +658,19 @@ export default function initEvents(app){
 		}); */
 
 		el.addEventListener('click', e => {
-			if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
+			if(e.target.id == "recycle") app.recycle();
+			else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
 			else if(e.target.classList.contains('activate')) activate();
-			else if(e.target.parentNode.parentNode.classList.contains('article') || e.target.parentNode.classList.contains('article') || e.target.classList.contains('article')){
-				let article = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
+			else if(e.target.parentNode.parentNode.classList.contains('article')
+				|| e.target.parentNode.classList.contains('article') 
+				|| e.target.classList.contains('article')
+				|| e.target.parentNode.parentNode.classList.contains('preview')
+				|| e.target.parentNode.classList.contains('preview')
+				|| e.target.classList.contains('preview')){
+
+				const element = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				UI.hideOptions();
-				if(!app.course.old) setTimeout(() => UI.showOptions(app, "article", article), 50);
-				
-			}else if(e.target.parentNode.parentNode.classList.contains('preview') || e.target.parentNode.classList.contains('preview') || e.target.classList.contains('preview')){
-				let preview = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
-				UI.hideOptions();
-				if(!app.course.old) setTimeout(() => UI.showOptions(app, "preview", preview), 50);
+				if(!app.course.old) UI.showOptions(app, element)
 				
 			} else if (e.target.parentNode.classList.contains('options')){
 				if(e.target.classList.contains('ms-Icon--Cancel')){
@@ -735,11 +731,11 @@ export default function initEvents(app){
 	document.getElementById("menubar").addEventListener('click', event => {
 		if(event.target.tagName == "IMG" || event.target.getAttribute("linkTo") == "menu") {
 			if(window.innerWidth < 900) UI.openPanel('menu')
-			else UI.openPanel('menu', app.chartContent, app)
+			else UI.openPanel('menu', app)
 		}
 		else if(event.target.getAttribute("linkTo") == "panier" || event.target.parentNode.getAttribute("linkTo") == "panier") UI.openPanel('panier')
 		else if(event.target.getAttribute("linkTo") == "liste" || event.target.parentNode.getAttribute("linkTo") == "liste") UI.openPanel('liste')
-		else if(event.target.getAttribute("linkTo") == "calcul" || event.target.parentNode.getAttribute("linkTo") == "calcul") UI.openPanel('calcul', app.chartContent, app)
+		else if(event.target.getAttribute("linkTo") == "calcul" || event.target.parentNode.getAttribute("linkTo") == "calcul") UI.openPanel('calcul', app)
 	});
 
 
@@ -752,13 +748,13 @@ export default function initEvents(app){
 			} else */ if(el.classList.contains('tablet')) {
 				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenus('mainMenu')
 				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul', app.chartContent, app)
+				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul', app)
 				else if(e.target.classList.contains('ms-Icon--BarChartVertical')){
 					let calcul = document.querySelector('#calcul');
 					if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
 					else calcul.classList.add('opened');
 				} else if(e.target.id == 'headRefresh') {
-					refresh();
+					refreshAsync();
 				}
 			}
 		});
@@ -855,16 +851,7 @@ export default function initEvents(app){
 	// Others
 
 	document.getElementById('refresh').onclick = e => {
-		if(!app.pending){
-			app.pull("refresh");
-		} else {
-			let loop = setInterval(() => {
-				if(!app.pending){
-					app.pull("refresh");
-					clearInterval(loop);
-				}
-			}, 1000);
-		}
+		refreshAsync();
 	};
 
 	$('.install i').click(function(){

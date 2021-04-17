@@ -7,7 +7,7 @@ require_once('checkers/checkGroupe.php');
 header('Content-type: application/json');
 
 function pushCousesIndependent($user, PDO $bdd){
-	if(isset($_POST['newGroupe']) && isset($_POST['titre'])) {
+	if(isset($_POST['newGroupe']) && isset($_POST['titre'])) { // REWRITE
 		if(strlen($_POST['titre']) <= 20 && strlen($_POST['titre']) >= 2){
 			$_POST['titre'] = htmlspecialchars($_POST['titre']);
 
@@ -33,7 +33,7 @@ function pushCousesIndependent($user, PDO $bdd){
 		return true;
 	} else {
 
-		return checkGroupe($bdd, $user, function($user, $groupe) use ($bdd){
+		return checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
 	
 			if(isset($_POST['submitCourse']) && isset($_POST['titre']) && isset($_POST['maxPrice']) && isset($_POST['taxes'])) {
 				$titre = htmlspecialchars($_POST['titre']);
@@ -69,17 +69,12 @@ function pushCousesIndependent($user, PDO $bdd){
 				return true;
 		
 			} else if(isset($_POST['leaveGroup'])) {
-				$membres = 0;
-				$reqAllUsers = $bdd->prepare('SELECT `nom`, `groupe` FROM `users` WHERE `deleted` = 0');
-				$reqAllUsers->execute();
-				while($scanedUser = $reqAllUsers->fetch()){
-					if (strpos($scanedUser['groupe'], "[". $_POST['groupe'] ."]") !== false) {
-						$membres++;
-					}
-				}
-				$reqAllUsers->closeCursor();
+				$reqNbrMembres = $bdd->prepare('SELECT COUNT(*) as nbrMembres FROM `gulinks` WHERE `groupeId` = ?');
+				$reqNbrMembres->execute(array($user['id']));
+				$nbmMembres = $reqNbrMembres->fetch();
+				$nbmMembres = $nbmMembres['nbrMembres'];
 
-				if($membres == 1){
+				if($nbmMembres == 1){
 					$reqAllCourses = $bdd->prepare('SELECT id FROM courses WHERE groupe = ? ORDER BY id DESC');
 					$reqAllCourses->execute(array($_POST['groupe']));
 					while($resCoursesGp = $reqAllCourses->fetch()){
@@ -110,7 +105,7 @@ function pushCousesIndependent($user, PDO $bdd){
 
 			} elseif (isset($_POST['deleteCourse']) && $_POST['id']) {
 				$id = (int) $_POST['id'];
-		
+
 				$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = :index AND `groupe` = :groupe');
 				$reqCourse->bindParam(':index', $id, PDO::PARAM_INT);
 				$reqCourse->bindParam(':groupe', $groupe['id'], PDO::PARAM_INT);
@@ -118,20 +113,14 @@ function pushCousesIndependent($user, PDO $bdd){
 		
 				if($reqCourse->rowCount() == 1){
 					$course = $reqCourse->fetch();
-					/* 
-					if(strpos($user['groupe'], "[". $course['groupe'] ."]") !== false){ */
-						$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
-						$reqDelete->bindParam(':index', $id, PDO::PARAM_INT);
-						$reqDelete->execute();
-						
-						$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
-						$delArticles->execute(array($id));
-		
-						echo json_encode(array('status' => 200, "payload" => array("id" => $id)));
-			/* 		} else {
-						echo json_encode(array('status' => 403));
-					}
-		 */
+					$reqDelete = $bdd->prepare('DELETE FROM `courses` WHERE `id` = :index');
+					$reqDelete->bindParam(':index', $id, PDO::PARAM_INT);
+					$reqDelete->execute();
+					
+					$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+					$delArticles->execute(array($id));
+	
+					echo json_encode(array('status' => 200, "payload" => array("id" => $id)));
 				} else {
 					echo json_encode(array('status' => 404));
 				}
@@ -325,7 +314,7 @@ function push($user, $latestCourse, PDO $bdd){
 
 login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($user, $bdd)){
-		getLatestCourse($user, $bdd, function($user, $latestCourse, $bdd){
+		getLatestCourse($bdd, $user, function($user, $latestCourse) use ($bdd){
 			push($user, $latestCourse, $bdd);
 		});
 	}

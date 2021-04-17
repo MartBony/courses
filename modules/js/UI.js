@@ -53,6 +53,17 @@ export default class UI {
 			});
 		}
 	}
+	static requireAuth(){
+		UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
+			{
+				texte:"Se connecter", 
+				action : () => {
+					document.getElementById('authContainer').classList.add('opened');
+					UI.closeMessage();
+				}
+			}
+		]);
+	}
 	static closeForms(){
 		document.querySelector('#forms').className = "";
 		Array.from(document.querySelectorAll('#forms div, #forms input, #forms label, #forms i, #forms ul')).forEach(el => {
@@ -62,12 +73,12 @@ export default class UI {
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
 	}
-	static openPanel(type, data = null, app = null){
+	static openPanel(type, app = null){
 		document.getElementById('depensesChart').style.opacity = "0";
 		document.getElementById('mainPanel').className = type;
 		document.getElementById('menubar').className = type;
 		document.getElementById('buttons').className = type;
-		if((type == 'calcul' || type == "menu") && data && app) UI.openChart(app, data);
+		if((type == 'calcul' || type == "menu") && app) UI.openChart(app);
 	}
 	static openMenus(type, data = null, app = null){
 		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.classList.add("hide"));
@@ -104,12 +115,14 @@ export default class UI {
 			}
 		});
 	}
-	static openChart(app, data){
+	static openChart(app){
+		const graph = app.groupe.graphData;
+		console.log(graph);
 		document.getElementById('depensesChart').style.opacity = "1";
-		const labels = Array(data.length).fill("");
+		const labels = Array(graph.length).fill("");
 		labels[labels.length-1] = "Mois Actuel";
 		app.chart.data.labels = labels;
-		app.chart.data.datasets.forEach(dataset => dataset.data = data);
+		app.chart.data.datasets.forEach(dataset => dataset.data = graph);
 		app.chart.update();
 	}
 	static modal(app, id, data){
@@ -236,26 +249,6 @@ export default class UI {
 		document.querySelector('#modernForms').className = "";
 		Array.from(document.querySelectorAll(".adder, #addCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
 	}
-	/* static addPrice(app, id){
-		const item = app.course.items.previews.filter(item => item.id == id)[0];
-
-		if(item){
-
-			document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
-			document.getElementById('modernBuyer').setAttribute("key", item.id);
-			document.body.classList.add("formed");
-			const button = document.getElementsByClassName("adder")[0];
-
-			document.body.style.overflow = "hidden";
-			document.getElementById("modernForms").classList.add("opened", "buyForm");
-			document.querySelector(`#modernBuyer input`).focus();
-	
-			button.style.transition = "none";
-			button.style.opacity = "0";
-
-		} else UI.erreur("Un problème est survenu, réessayez")
-
-	} */
 	static closePrice(){
 		UI.closeForms();
 	}
@@ -287,84 +280,6 @@ export default class UI {
 		$('#addGroupe').css({'display':'', 'opacity':'', 'transform':''});
 		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
-	/* static remove(type, index){
-		let selector = "."+ type,
-			olds = new Array(),
-			news = new Array();
-
-			
-		Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = el.clientHeight +'px');
-		
-
-
-		// get all position data
-		$(selector).each(function(e){
-			olds.push({
-				x: $(selector).eq(e).position().left,
-				y: $(selector).eq(e).position().top,
-				width: $(selector).eq(e).outerWidth(),
-				height: $(selector).eq(e).outerHeight()
-			});
-		});
-		$(selector).eq(index).css({
-			'position':'absolute',
-			'top': olds[index].y,
-			'left': olds[index].x,
-			'width': olds[index].width,
-			'height': olds[index].height,
-			'transition':'all 100ms var(--ease-sortir)',
-			'transform':'scale(0.7)',
-			'opacity':'0'
-		});
-		$(selector).each(function(e){
-			news.push({
-				x: $(selector).eq(e).position().left,
-				y: $(selector).eq(e).position().top,
-				width: $(selector).eq(e).outerWidth(),
-				height: $(selector).eq(e).outerHeight()
-			});
-		});
-
-		// Apply transformations
-		$(selector).each(function(e){
-			if(e != index) {
-				$(selector).eq(e).css({
-					'position':'absolute',
-					'top': olds[e].y +"px",
-					'left': olds[e].x +"px",
-					'width': olds[e].width,
-					'height': olds[e].height,
-					'transition': '0s'
-				}); 
-				setTimeout(function(){
-					$(selector).eq(e).css({
-						'top': news[e].y +"px",
-						'left': news[e].x +"px",
-						'width': news[e].width,
-						'height': news[e].height,
-						'transition':'all 180ms var(--ease)'
-					});
-				}, e*30+100);
-			}
-		});
-		setTimeout(function(){	
-
-			Array.from(document.getElementsByClassName('main')).forEach(el => el.style.height = 'auto');
-
-			$(selector).eq(index).remove();
-			$(selector).css({
-				'position':'',
-				'top': '',
-				'left': '',
-				'transition':'',
-				'transform':'',
-				'width':'',
-				'height':''
-			});
-
-
-		}, 400+(olds.length)*32);
-	} */
 	static removeItem(index){
 		const el = document.querySelector(`li[idItem="${index}"]`),
 		anim = Animations.removeItem(el).then(() => {
@@ -389,62 +304,32 @@ export default class UI {
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
 	}
-	static showOptions(app, type, el){
-		let options,
-			childrens,
-			id,
-			rect,
-			padding;
-			
-		switch(type){
-			case "article":
-				options = Array.from(document.getElementsByClassName('options'))[0];
-				childrens = Array.from(options.children);
-				id = el.getAttribute('idItem');
-				rect = el.getBoundingClientRect();
-				padding = 5;
-				
-				let articleData = app.course.items.articles.filter(article => article.id == id)[0];
+	static showOptions(app, el){
+		const optIndex = el.classList.contains('article') ? 0 : 1,
+		optionsElement = document.getElementsByClassName('options')[optIndex],
+		id = el.getAttribute('idItem'),
+		rect = el.getBoundingClientRect(),
+		padding = 5;
 
-				options.classList.add('opened');
-				options.style.top = (el.offsetTop + padding) + "px";
-				options.style.left = (el.offsetLeft + padding) + "px";
-				options.style.width = (rect.width - 2*padding) +"px";
-				options.style.height = (rect.height - 2*padding) +"px";
-				options.setAttribute("key", id);
-				childrens[0].innerHTML = articleData.prix + app.params.currency +" HT";
-				childrens[1].innerHTML = (articleData.prix * (1+app.course.taxes)).toFixed(2) + app.params.currency;
-				break;
-			case "preview":
-				options = Array.from(document.getElementsByClassName('options'))[1];
-				childrens = Array.from(options.children);
-				id = el.getAttribute('idItem');
-				rect = el.getBoundingClientRect();
-				padding = 5;
+		optionsElement.style.setProperty("--top", (el.offsetTop + padding) + "px");
+		optionsElement.style.setProperty("--left", (el.offsetLeft + padding) + "px");
+		optionsElement.style.setProperty("--width", (rect.width - 2*padding) +"px");
+		optionsElement.style.setProperty("--height", (rect.height - 2*padding) +"px");
+		optionsElement.setAttribute("key", id);
+		optionsElement.classList.add('opened');
 
-				options.classList.add('opened');
-				options.style.top = (el.offsetTop + padding) + "px";
-				options.style.left = (el.offsetLeft + padding) + "px";
-				options.style.width = (rect.width - 2*padding) +"px";
-				options.style.height = (rect.height - 2*padding) +"px";
-				options.setAttribute("key", id);
-				break;
+		if(el.classList.contains('article')){
+			const articleData = app.course.items.articles.filter(article => article.id == id)[0],
+			childrens = optionsElement.children;
+
+			childrens[0].innerHTML = articleData.prix + app.params.currency +" HT";
+			childrens[1].innerHTML = (articleData.prix * (1+app.course.taxes)).toFixed(2) + app.params.currency;
 		}
+
 	}
 	static hideOptions(){
 		Array.from(document.getElementsByClassName('options')).forEach(option => {
 			option.classList.remove('opened');
 		});
-	}
-	static setTheme(themeName) {
-		localStorage.setItem('theme', themeName);
-		document.documentElement.className = themeName;
-	}
-	static toggleTheme() {
-		if (localStorage.getItem('theme') === 'theme-dark') {
-			UI.setTheme('theme-light');
-		} else {
-			UI.setTheme('theme-dark');
-		}
 	}
 }

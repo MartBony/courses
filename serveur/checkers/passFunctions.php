@@ -24,9 +24,13 @@ function verifyPassword($input, $storedHash){
 	return password_verify(base64_encode(hash('sha384', $input, true)), $storedHash);
 }
 
-function generateToken($validity = 10){
-	$selector = generateRandomString(5);
-	$validator = $selector . generateRandomString(5);
+function getSelector($tokenValidator, $selectorLength = 12){
+	return substr($tokenValidator, 0, $selectorLength);
+}
+
+function generateToken($validity = 10, $selectorLength = 12, $validatorLength = 40){
+	$selector = generateRandomString($selectorLength);
+	$validator = $selector . generateRandomString($validatorLength-$selectorLength);
 	$hashedValidator = hashPassword($validator);
 	return array(
 		'selector' => $selector,

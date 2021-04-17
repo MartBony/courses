@@ -29,6 +29,17 @@ function fetcher(reqData){
 	.then(res => res.json());
 }
 
+function fetcherBody(reqData){
+	return fetch(reqData.url, {
+		method: reqData.method,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+		},
+		body: new URLSearchParams(reqData.body),
+	})
+	.then(res => res.json());
+}
+
 class QueueHandler { // https://medium.com/@karenmarkosyan/how-to-manage-promises-into-dynamic-queue-with-vanilla-javascript-9d0d1f8d4df5
 	constructor(){
 		this.queue = [];
@@ -79,4 +90,4 @@ class QueueHandler { // https://medium.com/@karenmarkosyan/how-to-manage-promise
 	}
 }
 
-export { $_GET, jsonEqual, fetcher, QueueHandler };
+export { $_GET, jsonEqual, fetcher, fetcherBody, QueueHandler };

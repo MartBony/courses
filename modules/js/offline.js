@@ -18,7 +18,7 @@ class Offline{
 			} else throw new Error('HaltGroupesFetch');
 		})
 		.then(groupes => {
-			groupes = groupes.sort((i1,i2) => i2.id - i1.id);
+			groupes = groupes.sort((i1,i2) => i1.id - i2.id);
 			if(!app.pullState.structure){
 				structure.groupes = groupes || {};
 

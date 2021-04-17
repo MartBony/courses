@@ -24,7 +24,6 @@ export default class Structure { // Structure means the the User
 		groupes.forEach((groupe, index) => {
 			const groupeNode = document.querySelector(`.groupe[idGroupe="${groupe.id}"]`),
 				groupeNodeIndex = this.groupeIndexOf(groupe);
-
 			if(groupeNodeIndex > -1){
 				if(groupeNodeIndex != index) groupeNode.parentNode.insertBefore(groupeNode, groupeNode.parentNode.childNodes[index])
 			} else {
@@ -63,7 +62,11 @@ export default class Structure { // Structure means the the User
 	}
 	groupeIndexOf(groupe){ // Returns the index of the corresponding group node on the UI
 		return this.groupesNodeList
-		.findIndex((groupeNode, index) => parseInt(groupeNode.getAttribute("dbIndex")) == groupe.id);
+		.findIndex((groupeNode, index) => 
+			(parseInt(groupeNode.getAttribute("idGroupe")) == groupe.id
+			&& groupeNode.children[0].innerHTML == groupe.nom
+			&& Array.from(groupeNode.children[1].children).every((li, index) => li.innerHTML == groupe.membres[index]))
+		);
 	}
 	get groupesNodeList(){
 		return Array.from(document.getElementsByClassName("groupe"));

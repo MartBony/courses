@@ -5,13 +5,12 @@ require_once('passFunctions.php');
 function login( PDO $bdd, $callback){ // Rewite responses
 	if(isset($_COOKIE['identificationToken'])){
 		$validator = $_COOKIE['identificationToken'];
-		$selector = substr($validator, 0, 5);
-
+		$selector = getSelector($validator);
 
 		$reqToken = $bdd->prepare('SELECT * FROM `tokens` WHERE `selector` = ?');
 		$reqToken->execute(array($selector));
 
-		if($reqToken->rowCount() == 1){
+		if($reqToken->rowCount() >= 1){
 			$token = $reqToken->fetch();
 
 			if(time() < $token['expires'] && verifyPassword($validator, $token['hashedValidator'])){

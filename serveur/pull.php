@@ -7,7 +7,7 @@ header("Content-Type: application/json");
 
 
 login($bdd, function($user) use($bdd){
-	checkCourse($user, $bdd, function($user, $course) use($bdd){
+	checkCourse($bdd, $user, getPostCourseId(), function($user, $course) use($bdd){
 
 		$articles = array();
 		$previews = array();

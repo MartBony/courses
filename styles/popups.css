@@ -85,29 +85,36 @@
 
 
 .options{
+	--top: 30px;
+	--left: 0;
+	--width: 94%;
+	--heigth: 50px;
+
 	visibility: hidden;
 	opacity: 0;
+	transform: scale(0.8);
 
 	position: absolute;
+	top: var(--top);
+	left: var(--left);
+	width: var(--width);
+	height: var(--height);
+	
 	display: grid;
-	top: 30px;
-	left: 0;
 	grid-template-columns: repeat(4, 1fr);
 	align-items: center;
 	justify-content: center;
 	text-align: center;
 	font-size: 2.5rem;
-	padding: 10px;
 	grid-gap: 10px;
-	width: 94%;
-	height: 50px;
+	padding: 10px;
+
 	background: white;
 	box-shadow: 0 0 15px 6px rgba(0,0,0,0.07);
 	border-radius: 8px;
 	transition-property: opacity, transform, visibility;
 	transition-duration: 50ms;
 	transition-timing-function: var(--ease-sortir);
-	transform: scale(0.8);
 	box-sizing: border-box;
 }
 

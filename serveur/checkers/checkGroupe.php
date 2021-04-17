@@ -1,28 +1,37 @@
 <?php
 
-function checkGroupe(PDO $bdd, $user, $callback) {
+function getPostGroupeId(){
 	if(isset($_POST['groupe']) && !empty($_POST['groupe'])){
-		if(strpos($user['groupe'], "[". $_POST['groupe'] ."]") !== false){
+		return $_POST['groupe'];
+	} else {
+		return NULL;
+	}
+}
+
+function checkGroupe(PDO $bdd, $user, $groupeId, $callback) {
+	if($groupeId){
+		$groupeId = (int) $groupeId;
+		$reqGULink = $bdd->prepare("SELECT `id` FROM `gulinks` WHERE userId = ? AND groupeId = ?");
+		$reqGULink->execute(array($user['id'], $groupeId));
+
+		if($reqGULink->rowCount() == 1){
 			$reqUsedGroupe = $bdd->prepare('SELECT * FROM `groupes` WHERE `id` = ?');
-			$reqUsedGroupe->execute(array($_POST['groupe']));
+			$reqUsedGroupe->execute(array($groupeId));
 			if($reqUsedGroupe->rowCount() == 1){
 				$groupe = $reqUsedGroupe->fetch();
 				return call_user_func($callback, $user, $groupe);
 			} else {
-				http_response_code(404);
-				echo json_encode(array('status' => 404));
+				echo json_encode(array('status' => 404, 'payload' => array('err' => 'Groupe Not Found')));
 				return true;
 			}
 			$reqUsedGroupe->closeCursor();
 			
 		} else {
-			http_response_code(403);
-			echo json_encode(array('status' => 403));
+			echo json_encode(array('status' => 404, 'payload' => array('err' => 'User not linked to requested groupe')));
 			return true;
 		}
 	} else {
-		http_response_code(412);
-		echo json_encode(array('status' => 412));
+		echo json_encode(array('status' => 400, 'payload' => array('err' => 'No groupe id in request')));
 		return true;
 	}
 }

@@ -1,5 +1,5 @@
 import Generate from './generate.js';
-import { IndexedDbStorage } from './storage.js';
+import { IndexedDbStorage, LocalStorage } from './storage.js';
 
 export default class Course{
 	constructor(){
@@ -34,13 +34,13 @@ export default class Course{
 		this.old = data.id != app.groupe.courses[0].id;
 
 		$('#maxprice').html(this.maxPrice + app.params.currency);
-
+	
 		// this.updateItems(app, data.items.articles, data.items.previews, save)
 
 		this.started = data.dateStart != 0;
 
 	}
-	updateItems(app, articles, previews, save = false){
+	/* updateItems(app, articles, previews, save = false){
 		let attribute = this.old ? "disabled" : "",
 			pendings = {
 				put: new Array(),
@@ -135,7 +135,7 @@ export default class Course{
 		setTimeout(function(){
 			$('.article, .preview').removeClass('animateSlideTop');
 		},600);
-	}
+	} */
 	updateItemsModern(app, articles, previews, save = false){
 
 		// Articles

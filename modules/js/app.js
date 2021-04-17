@@ -2,23 +2,23 @@ import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
 import { LocalStorage, IndexedDbStorage } from './storage.js';
-import { jsonEqual, fetcher, QueueHandler } from './tools.js';
+import { jsonEqual, fetcher, fetcherBody, QueueHandler } from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
 import Groupe from './groupe.js';
 import Structure from './structure.js';
 
 class App{
-	constructor(userId){
-	
+	#buttons;
+	constructor(userId, offline){
 
 		UI.openPanel('panier');
 		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
 		
 		// LocalStorage.setItem('userConnectionData', user);
+		this.offline = true;
 		this.queue = new QueueHandler();
-		this.buttonState;
 		this.buttons = "hide";
 		this.user;
 		this.groupe;
@@ -38,13 +38,6 @@ class App{
 		this.params = {
 			currency: "€"
 		};
-		
-		if (localStorage.getItem('theme') === 'theme-dark') {
-			UI.setTheme('theme-dark');
-			document.querySelector("#theme").checked = true;
-		} else {
-			UI.setTheme('theme-light');
-		}
 
 		if(LocalStorage.getItem("currency")){
 			this.params.currency = "$";
@@ -76,9 +69,29 @@ class App{
 			course: action != "open"
 		};
 
+
+		// Load from indexedDB
+		if(action == "open") Offline.pull(this, idGroupe, idCourse)
+
+
 		// Load from network
 		Pull.invitations(this);
-		let pull = Pull.structure(this)
+		if(this.offline){
+			try{
+				let userId = await Pull.authRequest();
+				LocalStorage.setItem('userId', userId);
+				this.offline = false;
+				this.user.id = userId;
+			} catch(err) {
+				console.error(err);
+				if(err == "Require auth") UI.requireAuth()
+				else UI.message(
+					"Vous êtes hors ligne", 
+					"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
+					null, 3000);
+			}
+		}
+		let pull = !this.offline ? Pull.structure(this)
 		.then(data => {
 			this.pullState.structure = true;
 			console.log('Network structure fetched:', data);
@@ -119,10 +132,7 @@ class App{
 			this.pending = false
 			return navigator.serviceWorker.ready
 		})
-		.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')});
-
-		// Load from indexedDB
-		if(action == "open") Offline.pull(this, idGroupe, idCourse)
+		.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')}) : null;
 
 		return pull;
 
@@ -144,38 +154,6 @@ class App{
 			});
 		}
 	}
-	/* setSwipe(swipeBinary){
-		if(window.innerWidth < 900){
-			if (this.swipeBinaryState == !swipeBinary) {
-				switch(swipeBinary){
-					case 1:
-						$('.main#liste').css({'visibility':'visible', 'height':'auto'});
-						$('header h1').html('Liste de course');
-						setTimeout(function(){
-							$('.main > ul').css({'transition':'', 'transform':''});
-							$('body').addClass('bodyPreview');
-							setTimeout(function(){
-								$('.main#panier').css({'visibility':'hidden', 'height':'0'});
-							},310);
-						},10);
-						this.swipeBinaryState = 1;
-						break;
-					case 0:
-						$('.main#panier').css({'visibility':'visible', 'height':'auto'});
-						$('header h1').html('Panier');
-						setTimeout(function(){
-							$('.main > ul').css({'transition':'', 'transform':''});
-							$('body').removeClass('bodyPreview');
-							setTimeout(function(){
-								$('.main#liste').css({'visibility':'hidden', 'height':'0'});
-							},310);
-						},10);
-						this.swipeBinaryState = 0;
-						break;
-				}
-			}
-		}
-	} */
 	deleteCourse(id){
 		document.querySelector('.loader').classList.add('opened');
 		$.ajax({
@@ -250,9 +228,7 @@ class App{
 
 				}).catch(res => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
+						UI.requireAuth();
 					} else {
 						$('.loader').removeClass('opened');
 						UI.offlineMsg(this, res);
@@ -312,9 +288,7 @@ class App{
 					IndexedDbStorage.put("courses", this.course.export());
 				}).catch(err => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
+						UI.requireAuth();
 					} else {
 						$('.loader').removeClass('opened');
 						UI.offlineMsg(this, res);
@@ -339,9 +313,7 @@ class App{
 				this.pull("refresh");
 			}).catch(res => {
 				if (res.responseJSON && res.responseJSON.notAuthed){
-					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-					]);
+					UI.requireAuth();
 				} else {
 					alert("Le serveur a rencontré un problème");
 					$('.loader').removeClass('opened');
@@ -501,9 +473,7 @@ class App{
 				.catch(err => {
 					$('.loader').removeClass('opened');
 					if (err.responseJSON && res.responseJSON.notAuthed){
-						UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-							{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-						]);
+						UI.requireAuth();
 					} else if(err.status == 400 && err.responseJSON && err.responseJSON.indexOf("Negative value") > -1){
 						UI.erreur("Le prix doit être positif")
 					}
@@ -523,7 +493,6 @@ class App{
 	
 		document.querySelector('#compte em').innerHTML = data.nom;
 		this.user.update(data);
-		console.log(data, data.groupes);
 		this.user.updateGroupes(data.groupes, save);
 
 		return data.groupes.length != 0;
@@ -538,8 +507,6 @@ class App{
 					nom: groupe.nom
 				})
 				if(this.groupe && groupe.id != this.groupe.id) LocalStorage.setItem('usedCourse', null)
-
-				LocalStorage.setItem('usedGroupe', groupe.id);
 				
 				// UPD CourseList
 				this.groupe = new Groupe();
@@ -558,6 +525,7 @@ class App{
 			//if(!jsonEqual(this.course.export(), data)){
 				if(!this.course) this.course = new Course();
 
+				document.getElementById('recycle').classList.remove('opened');
 				
 
 				// app.course = new Course();
@@ -573,6 +541,9 @@ class App{
 				});
 
 				if (this.course.old) {
+					if(data.items.previews.length){
+						document.getElementById('recycle').classList.add('opened');
+					}
 					LocalStorage.setItem('usedCourse', data.id);
 					this.buttons = "hide";
 				} else{
@@ -594,6 +565,20 @@ class App{
 		} else UI.offlineMsg(this, "Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
 	
 		return data.items || { articles: new Array(), previews: new Array() };
+	}
+	recycle(){
+		document.querySelector('.loader').classList.add('opened');
+		fetcherBody({
+			url: "serveur/recycle.php",
+			method: "POST",
+			body: { groupe: this.groupe.id, course: this.course.id }
+		})
+		.then(res => {
+			document.querySelector('.loader').classList.remove('opened');
+			if(res.status == "Offline") UI.offlineMsg()
+			LocalStorage.removeItem("usedCourse");
+			this.queue.enqueue(() => this.pull("open"));
+		});
 	}
 	updateInvites(data){
 		if(data.status == 200){
@@ -636,9 +621,7 @@ class App{
 			this.pull("refresh");
 		}).catch(res => {
 			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+				UI.requireAuth();
 			} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "Not Proposed"}){
 				UI.erreur("Action impossible, la requete porte vers un groupe qui ne vous est plus proposé");
 			} else if(res.status == 403 && res.responseJSON && res.responseJSON == {err: "Already present"}) {
@@ -661,9 +644,7 @@ class App{
 				Pull.invitations(this);
 				this.pull("refresh");
 			} else if (data.notAuthed){
-				UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-					{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-				]);
+				UI.requireAuth();
 			}
 		}).catch(err => {
 			console.err(err);
@@ -692,30 +673,6 @@ class App{
 			}
 		});
 	}
-	/* totalPP(constante, reset = false){
-		let total = Number((this.course.total + Number(constante)).toFixed(2)),
-			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
-			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
-		if(!reset){
-			this.course.total = total;
-			this.course.monthCost += Number(constante);
-		}
-		if(index <= 5 && index >= 0) {
-			this.chartContent[this.chartContent.length - index - 1] = parseFloat((this.chartContent[this.chartContent.length - index - 1] + constante)).toFixed(2);
-			this.chartContent[this.chartContent.length - index - 1] = parseFloat(this.chartContent[this.chartContent.length - index - 1]);
-		}
-		$('#totalDep').html(total.toFixed(2) + this.params.currency);
-		$('#totalTaxDep').html(totalTax.toFixed(2) + this.params.currency);
-		$('#moiDep').html(this.groupe.monthCost.toFixed(2) + this.params.currency);
-		$('#moiPrev').html((totalTax * this.groupe.coef).toFixed(2) + this.params.currency);
-		$('#anPrev').html((totalTax * this.groupe.coef * 12).toFixed(2) + this.params.currency);
-		if(this.course.maxPrice < totalTax){
-			$('#panier').css({'--color-theme': 'linear-gradient(-45deg, #CA5010, #E81123)'});
-		}
-		else{
-			$('#panier').css({'--color-theme': ''});
-		}
-	} */
 	generateInviteKey(){
 		$('.loader').addClass('opened');
 		$.ajax({
@@ -729,9 +686,7 @@ class App{
 			$('.loader').removeClass('opened');
 			if(res.responseJSON){	
 				if (res.responseJSON.notAuthed){
-					UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
-						{ texte:"Se connecter", action : () => window.location = "/index.php?auth=courses"}
-					]);
+					UI.requireAuth();
 				} else {
 					$('.loader').removeClass('opened');
 					UI.offlineMsg(this, res.responseJSON);
@@ -742,7 +697,7 @@ class App{
 		});
 	}
 	get buttons(){
-		return this.buttonState;
+		return this.#buttons;
 	}
 	set buttons(type){
 		if(this.buttons != type){
@@ -751,20 +706,20 @@ class App{
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.add("hide");
 					});
-					this.buttonState = "hide";
+					this.#buttons = "hide";
 					break;
 				case "show":
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
 					});
-					this.buttonState = "show";
+					this.#buttons = "show";
 					break;
 				case "listmode": // When course not activated
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
 					});
 					document.getElementById("addArt").classList.add("hide");
-					this.buttonState = "listmode";
+					this.#buttons = "listmode";
 			}
 		} 
 	}
@@ -776,11 +731,6 @@ class App{
 		let total = Number(val.toFixed(2)),
 			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
 			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
-
-		if(index <= 5 && index >= 0) {
-			this.chartContent[this.chartContent.length - index - 1] = parseFloat((this.chartContent[this.chartContent.length - index - 1] + val)).toFixed(2);
-			this.chartContent[this.chartContent.length - index - 1] = parseFloat(this.chartContent[this.chartContent.length - index - 1]);
-		}
 
 		document.getElementById('totalDep').innerHTML = total.toFixed(2) + this.params.currency;
 		document.getElementById('totalTaxDep').innerHTML = totalTax.toFixed(2) + this.params.currency;

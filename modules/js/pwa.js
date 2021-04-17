@@ -2,6 +2,37 @@ import UI from './UI.js';
 
 let deferredPrompt,
 	newWorker;
+
+// Install app
+window.addEventListener('beforeinstallprompt', (e) => {
+	e.preventDefault();
+	deferredPrompt = e;
+	if(window.innerWidth < 900){
+		//UI.showInstall(500);
+	}
+});
+
+document.querySelector('.install button').addEventListener('click', e => {
+	UI.hideInstall();
+	deferredPrompt.prompt();
+	deferredPrompt.userChoice.then((choiceResult) => {
+		if (choiceResult.outcome === 'accepted') {
+			console.log('User accepted the install prompt');
+		} else {
+			console.log('User dismissed the install prompt');
+		}
+	})
+});
+
+let refreshing;
+navigator.serviceWorker.addEventListener('controllerchange', function () {
+	if (refreshing) return;
+	window.location.reload();
+	refreshing = true;
+});
+
+// Update app - https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
+
 /* 
 function addSiteCache(nom, src){
 	caches.open(nom).then(function(cache) { // Cache static parts of site
@@ -38,38 +69,4 @@ function installSW(){
 	} else return Promise.resolve();
 }
 
-function initPwaEvents(){
-
-	// Install app
-	window.addEventListener('beforeinstallprompt', (e) => {
-		e.preventDefault();
-		deferredPrompt = e;
-		if(window.innerWidth < 900){
-			//UI.showInstall(500);
-		}
-	});
-	
-	document.querySelector('.install button').addEventListener('click', e => {
-		UI.hideInstall();
-		deferredPrompt.prompt();
-		deferredPrompt.userChoice.then((choiceResult) => {
-			if (choiceResult.outcome === 'accepted') {
-				console.log('User accepted the install prompt');
-			} else {
-				console.log('User dismissed the install prompt');
-			}
-		})
-	});
-
-	let refreshing;
-	navigator.serviceWorker.addEventListener('controllerchange', function () {
-		if (refreshing) return;
-		window.location.reload();
-		refreshing = true;
-	});
-
-	// Update app - https://deanhume.com/displaying-a-new-version-available-progressive-web-app/
-	
-}
-
-export { installSW, initPwaEvents, deferredPrompt };
+export { installSW, deferredPrompt };
