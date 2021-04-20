@@ -24,18 +24,7 @@ function fetcher(reqData){
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
 		},
-		body: new URLSearchParams(reqData.data),
-	})
-	.then(res => res.json());
-}
-
-function fetcherBody(reqData){
-	return fetch(reqData.url, {
-		method: reqData.method,
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-		},
-		body: new URLSearchParams(reqData.body),
+		body: new URLSearchParams(reqData.body || reqData.data),
 	})
 	.then(res => res.json());
 }
@@ -90,4 +79,4 @@ class QueueHandler { // https://medium.com/@karenmarkosyan/how-to-manage-promise
 	}
 }
 
-export { $_GET, jsonEqual, fetcher, fetcherBody, QueueHandler };
+export { $_GET, jsonEqual, fetcher, QueueHandler };

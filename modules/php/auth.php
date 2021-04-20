@@ -1,8 +1,17 @@
 <section id="authContainer">
-	<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
-	<h1>S'inscrire</h1>
-	<h1>Se connecter</h1>
-	<form class="inscipt">
+	<img draggable="false"  src="images/logos/logo72.png" alt="Logo de l'application.">
+	<form class="login">
+		<h2>Se connecter</h2>
+		<label>Email
+			<input required type="email" name="email" autocomplete="email">
+		</label>
+		<label for="cPass">Mot de passe
+			<input required type="password" name="password" autocomplete="current-password">
+		</label>
+		<button class="submit">Envoyer</button>
+	</form>
+	<form class="signup">
+		<h2>S'inscrire</h2>
 		<label for="iEmail">Email</label>
 		<input required type="email" id="iEmail" autocomplete="email">
 		<label for="iPass">Mot de passe</label>
@@ -11,13 +20,6 @@
 		<input required type="password" id="iPassConf" autocomplete="new-password">
 		<label for="iNom">Votre nom</label>
 		<input required minlength="2" maxlength="20" type="text" id="iNom" autocomplete="name">
-		<button class="submit">Envoyer</button>
-	</form>
-	<form class="connect">
-		<label for="cEmail">Email</label>
-		<input required type="email" id="cEmail" autocomplete="email">
-		<label for="cPass">Mot de passe</label>
-		<input required type="password" id="cPass" autocomplete="current-password">
 		<button class="submit">Envoyer</button>
 	</form>
 </section>

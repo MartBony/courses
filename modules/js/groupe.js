@@ -123,7 +123,7 @@ export default class Groupe{
 
 		let result = new Array(6).fill(0);
 
-		this.courses.forEach((course) => {console.log(course);
+		this.courses.forEach((course) => {
 			if(course.date) console.error("Inproper course", course);
 			for (let i = 0; i < result.length; i++) {
 				if(course.dateStart > timeMarker-(monthStamp*(i+1)) && course.dateStart < timeMarker-(monthStamp*i))  result[result.length-i-1] += parseFloat(course.total)

@@ -2,7 +2,7 @@ import UI from './UI.js';
 import Offline from './offline.js';
 import Course from './course.js';
 import { LocalStorage, IndexedDbStorage } from './storage.js';
-import { jsonEqual, fetcher, fetcherBody, QueueHandler } from './tools.js';
+import { jsonEqual, fetcher, QueueHandler } from './tools.js';
 import Pull from './requests.js';
 import Generate from './generate.js';
 import Groupe from './groupe.js';
@@ -76,22 +76,8 @@ class App{
 
 		// Load from network
 		Pull.invitations(this);
-		if(this.offline){
-			try{
-				let userId = await Pull.authRequest();
-				LocalStorage.setItem('userId', userId);
-				this.offline = false;
-				this.user.id = userId;
-			} catch(err) {
-				console.error(err);
-				if(err == "Require auth") UI.requireAuth()
-				else UI.message(
-					"Vous êtes hors ligne", 
-					"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
-					null, 3000);
-			}
-		}
-		let pull = !this.offline ? Pull.structure(this)
+	
+		let pull = Pull.structure(this)
 		.then(data => {
 			this.pullState.structure = true;
 			console.log('Network structure fetched:', data);
@@ -126,13 +112,13 @@ class App{
 			this.course.updateItemsModern(this, items.articles, items.previews, true)
 		})
 		.catch(err => {
-			console.error(err);
+			UI.erreur(err.payload ? err.payload.title : null)
 		})
 		.then(() => {
 			this.pending = false
 			return navigator.serviceWorker.ready
 		})
-		.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')}) : null;
+		.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')});
 
 		return pull;
 
@@ -186,7 +172,7 @@ class App{
 			.then(() => {
 				let rank = this.course.items.articles.indexOf(item);
 
-				UI.removeItem(item.id);
+				UI.removeArticle(this.course, item.id, rank);
 				this.course.deleteArticle(this, {id: index, prix: item.prix});
 
 			});
@@ -199,7 +185,7 @@ class App{
 				}).then(() => {
 					let rank = this.course.items.articles.indexOf(item);
 
-					UI.removeItem(item.id);
+					UI.removeArticle(this.course, item.id, rank);
 					this.course.deleteArticle(this, {id: index, prix: item.prix});
 
 					return navigator.serviceWorker.ready;
@@ -221,7 +207,7 @@ class App{
 					let displayedIndex = this.course.items.articles.indexOf(item);
 
 					this.total -= data.prix;
-					UI.removeItem(item.id);
+					UI.removeArticle(this.course, item.id, displayedIndex);
 
 					this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
 					IndexedDbStorage.put("courses", this.course.export());
@@ -246,7 +232,7 @@ class App{
 			.then(() => {
 				let rank = this.course.items.previews.indexOf(item);
 
-				UI.removeItem(item.id);
+				UI.removePreview(this.course, item.id, rank);
 				this.course.deletePreview(index);
 
 			});
@@ -260,7 +246,7 @@ class App{
 				}).then(() => {
 					let rank = this.course.items.previews.indexOf(item);
 
-					UI.removeItem(item.id);
+					UI.removePreview(this.course, item.id, rank);
 					this.course.deletePreview(index);
 
 					return navigator.serviceWorker.ready;
@@ -282,7 +268,7 @@ class App{
 					let displayedIndex = this.course.items.previews.indexOf(item);
 
 					$('.article, .preview').removeClass('ready');
-					UI.removeItem(item.id);
+					UI.removePreview(this.course, item.id, displayedIndex);
 
 					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
 					IndexedDbStorage.put("courses", this.course.export());
@@ -531,7 +517,7 @@ class App{
 				// app.course = new Course();
 				UI.closeModal();
 
-				document.getElementById('cTaxes').value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
+				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
 				this.course.updateSelf(this, data);
 				Array.from(document.getElementsByClassName('promptActivation')).forEach(node => node.remove());
 
@@ -568,7 +554,7 @@ class App{
 	}
 	recycle(){
 		document.querySelector('.loader').classList.add('opened');
-		fetcherBody({
+		fetcher({
 			url: "serveur/recycle.php",
 			method: "POST",
 			body: { groupe: this.groupe.id, course: this.course.id }

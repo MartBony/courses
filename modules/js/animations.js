@@ -1,6 +1,12 @@
-const easeSortir = "cubic-bezier(0.7 , 0 , 1 , 0.5)";
+const easeSortir = "cubic-bezier(0.7 , 0 , 1 , 0.5)",
+ease =  "cubic-bezier(0.8 , 0 , 0.2 , 1)";
 
 class Animations {
+	static ease = {
+		out: "cubic-bezier(0.7 , 0 , 1 , 0.5)",
+		move: "cubic-bezier(0.8 , 0 , 0.2 , 1)"
+	}
+
 	static animateScaleIn(node){
 		const anim = node.animate([
 			{ transform: "scale(1.05)" },
@@ -31,10 +37,8 @@ class Animations {
 			anim.cancel();
 		});
 	}
-	static removeItem(el){
-		return new Promise((resolve, reject) => {
-			
-			const anim = el.animate([
+	static async removeItem(el){
+		await Animations.createAnimation(el, [
 				{ transform: "scale(1)", opacity: 1 },
 				{ transform: "scale(0.7)", opacity: 0.1 }
 			],{
@@ -42,15 +46,24 @@ class Animations {
 				fill: 'forwards',
 				easing: easeSortir
 			});
+		return null;
+	}
+
+	static createAnimation(el, animationArray, animationData){
+		return new Promise((resolve, reject) => {
+			const anim = el.animate(animationArray, animationData);
 			
 			anim.addEventListener('finish', () => {
-				if("commitStyles" in anim) anim.commitStyles();
+				try{
+					if("commitStyles" in anim) anim.commitStyles();
+				} catch(err) {
+					console.log("Animation error", err);
+				}
 				anim.cancel();
-				resolve();
+				resolve(el);
 			});
 
 		})
-		
 	}
 }
 

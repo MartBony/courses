@@ -46,22 +46,25 @@
 		</h3>
 		<form>
 			<div class="formflex">	
-				<label for="titreC">Titre de la course</label>
-				<input maxlength="15" id="titreC" type="text" name="titreC" required />
+				<label>Titre de la course
+					<input maxlength="15" type="text" name="titre" required />
+				</label>
 			</div>
 			<div class="formflex">	
-				<label for="maxPrice">Budget</label>
-				<div class="prixFlex">
-					<input id="maxPrice" type="double" name="maxPrice" required />
-					€
-				</div>
+				<label>Budget
+					<div class="prixFlex">
+						<input type="double" name="prixMax" required />
+						€
+					</div>
+				</label>
 			</div>
 			<div class="formflex">	
-				<label for="cTaxes">Taxes</label>
-				<div class="prixFlex">
-					<input id="cTaxes" type="double" name="cTaxes" value="0" required />
-					%
-				</div>
+				<label>Taxes
+					<div class="prixFlex">
+						<input type="double" name="taxes" value="0" required />
+						%
+					</div>
+				</label>
 			</div>
 			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 		</form>

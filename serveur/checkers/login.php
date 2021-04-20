@@ -24,25 +24,25 @@ function login( PDO $bdd, $callback){ // Rewite responses
 					if($user['activated']){
 						call_user_func($callback, $user, $token);
 					} else {
-						echo json_encode(array('status' => 403 ,'payload' => array('err' => 'User Not Activated')));
+						echo json_encode(array('status' => 403, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Votre compte n'est pas encore actif, connectez-vous pour recevoir un email de confirmation.")));
 					}
 
 				} else {
-					echo json_encode(array('status' => 401 ,'payload' => array('err' => 'User Not Found')));
+					echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous ne reconnaissons pas votre compte, connectez-vous de nouveau.")));
 				}
 				$reqUser->closeCursor();
 				
 			} else {
-				echo json_encode(array('status' => 401 ,'payload' => array('err' => 'Bad Token (Whrong or Expired)')));
+				echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'MSG', 'title' => "Pour votre sécurité, connectez-vous de nouveau")));
 			}
 
 		} else {
-			echo json_encode(array('status' => 401 ,'payload' => array('err' => 'Token Not Found')));
+			echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous n'arrivons pas à vous identifier, connectez-vous de nouveau.")));
 		}
 		$reqToken->closeCursor();
 		
 	} else {
-		echo json_encode(array('status' => 401 ,'payload' => array('err' => 'User Token Not Found, requires cookies')));
+		echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous n'arrivons pas à vous identifier, activez vos cookies et connectez-vous de nouveau.")));
 	}
 
 }

@@ -54,17 +54,12 @@ if(isset($_POST['inscript'])){
 } else if (isset($_POST['connect'])) {
 
 	if(isset($_POST['mail']) && isset($_POST['pass'])){
-		$mail = htmlspecialchars($_POST['mail']);
-		$pass = $_POST['pass'];
-
-		connect($bdd, $mail, $pass);
-	} else echo json_encode(array('status' => 400, 'err' => 'manquant'));
+		connect($bdd, $_POST['mail'], $_POST['pass']);
+	} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'title' => 'Email ou mot de passe manquant')));
 
 } else if (isset($_POST['tryCookiesAuth'])) {
 
 	login($bdd, function($user, $oldToken) use ($bdd){
-
-	
 		$newToken = generateToken();
 		$setToken = $bdd->prepare("UPDATE `tokens` 
 			SET `selector` = :selector, `hashedValidator` = :hashedValidator, `expires` = :expires
@@ -114,7 +109,8 @@ if(isset($_POST['inscript'])){
 	echo json_encode(array('status' => 200));
 }
 
-function connect(PDO $bdd, $mail, $pass, $persistent = false){
+function connect(PDO $bdd, $mail, $pass){
+	$mail = htmlspecialchars($mail);
 	$reqUser = $bdd->prepare('SELECT * FROM `users` WHERE `mail` = ? AND `deleted` = 0');
 	$reqUser->execute(array($mail));
 
@@ -161,11 +157,10 @@ function connect(PDO $bdd, $mail, $pass, $persistent = false){
 				
 				echo json_encode(array(
 					'status' => 200,
-					'payload' => array(
-						'userId' => $user['userId']
-					)
+					'payload' => array('userId' => $user['userId'])
 				));
 			} else {
+				$isSent = false;
 				$clef = generateRandomString(30);
 
 				$updateClef = $bdd->prepare('UPDATE `users` SET clef = ? WHERE id = ?');
@@ -193,17 +188,18 @@ function connect(PDO $bdd, $mail, $pass, $persistent = false){
 				$message .= '</body></html>';
 					
 				// Sending email
-				if(mail($to, $subject, $message, $headers)){ */
-					$send = true;
-			/* 	} else{
-					$send = false;
+				if(mail($to, $subject, $message, $headers)){
+					$isSent = true;
+			 	} else{
+					$isSent = false;
 				} */
 		
-				echo json_encode(array('status' => 403, 'err' => 'nonActivated','sent' => $send)); // ATTENTION remove URL
+				if($isSent) echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'title' => 'Votre compte n\'est pas encore actif, nous vous envoyons un email pour confirmez votre identité.')));
+				else echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'title' => 'Votre compte n\'est pas encore actif mais l\'envoi d\'un email de confirmation à échoué.')));
 			}
-		} else echo json_encode(array('status' => 401, 'err' => 'credential'));
+		} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'title' => 'Votre mot de passe est incorrect.')));
 
-	} else echo json_encode(array('status' => 401, 'err' => 'noEmail'));
+	} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'title' => 'Cet email n\'est pas rensignée sur notre site.')));
 	$reqUser->closeCursor();
 }
 

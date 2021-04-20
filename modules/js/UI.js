@@ -28,11 +28,10 @@ export default class UI {
 			});
 		}
 	}
-	static erreur(titre, texte, buttons){
+	static erreur(titre = "Un problème est survenu.", texte, buttons){
 		document.querySelector('#erreur').classList.add('opened');
 
-		if(titre) document.querySelector('#erreur h2').innerHTML = titre
-		else document.querySelector('#erreur h2').style.display = "none"
+		document.querySelector('#erreur h2').innerHTML = titre;
 
 		if(texte) document.querySelector('#erreur p').innerHTML = texte
 		else document.querySelector('#erreur p').style.display = "none"
@@ -52,6 +51,9 @@ export default class UI {
 				}
 			});
 		}
+	}
+	static msgIsOffline(){
+		UI.message("Vous êtes hors ligne", "Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement", null, 3000);
 	}
 	static requireAuth(){
 		UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
@@ -117,7 +119,6 @@ export default class UI {
 	}
 	static openChart(app){
 		const graph = app.groupe.graphData;
-		console.log(graph);
 		document.getElementById('depensesChart').style.opacity = "1";
 		const labels = Array(graph.length).fill("");
 		labels[labels.length-1] = "Mois Actuel";
@@ -152,22 +153,9 @@ export default class UI {
 	static closeModal(){
 		document.querySelector('#modal').className = '';
 	}
-	static offlineMsg(app, err, msg){
-		msg = msg || "Le réseau est déconnecté ou insuffisant, la requète à été annulée. Cliquez sur \"me notifier\" pour être averti une fois le réseau de retour";
-
-		UI.erreur("Pas de réseau", msg, [
-			{ texte: "Me notifier", class:'errorGradient',
-				action: () => {
-					app.notificationHandler(function(){
-						navigator.serviceWorker.ready.then(function(swRegistration) {
-							return swRegistration.sync.register('pushOnline');
-						});	
-					});
-					UI.closeMessage();
-				} 
-			},
-			{ texte:"Fermer", action : () => UI.closeMessage(), class: 'greyish'}
-		]);
+	static offlineMsg(app, msg){
+		msg = msg || "Cette requête n'a pas pu aboutir, connectez-vous et réessayez.";
+		UI.erreur("Le réseau est indisponible.", msg);
 	}
 	static acc(app){
 		UI.closeModernForms();
@@ -284,6 +272,72 @@ export default class UI {
 		const el = document.querySelector(`li[idItem="${index}"]`),
 		anim = Animations.removeItem(el).then(() => {
 			setTimeout(() => el.remove(), 100);
+		});
+	}
+	static removeArticle(course, itemIndex, rank = 0){
+		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
+		positions = course.articlesNodeList.map(el => [el, el.getBoundingClientRect()]),
+		anim = Animations.removeItem(selectedElement).then(() => {
+			selectedElement.remove();
+			positions.forEach((elData, index) => {
+				const el = elData[0],
+				oldPos = elData[1],
+				newPos = el.getBoundingClientRect();
+
+				Animations.createAnimation(el, [
+					{
+						width: `${oldPos.width}px`,
+						height: `${oldPos.height}px`,
+						transform: `translate(${-(newPos.left - oldPos.left)}px, ${-(newPos.top - oldPos.top)}px)`
+					},
+					{
+						width: `${newPos.width}px`,
+						height: `${newPos.height}px`,
+						transform: `translate(0,0)`
+					}
+				], {
+					duration: 200 + (index-rank)*20,
+					fill: 'forwards',
+					easing: Animations.ease.move
+				}).then(el => {
+					el.style.width = "";
+					el.style.height = "";
+					el.style.transform = "";
+				});
+			});
+		});
+	}
+	static removePreview(course, itemIndex, rank = 0){
+		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
+		positions = course.previewsNodeList.map(el => [el, el.getBoundingClientRect()]),
+		anim = Animations.removeItem(selectedElement).then(() => {
+			selectedElement.remove();
+			positions.forEach((elData, index) => {
+				const el = elData[0],
+				oldPos = elData[1],
+				newPos = el.getBoundingClientRect();
+
+				Animations.createAnimation(el, [
+					{
+						width: `${oldPos.width}px`,
+						height: `${oldPos.height}px`,
+						transform: `translate(${-(newPos.left - oldPos.left)}px, ${-(newPos.top - oldPos.top)}px)`
+					},
+					{
+						width: `${newPos.width}px`,
+						height: `${newPos.height}px`,
+						transform: `translate(0,0)`
+					}
+				], {
+					duration: 200 + (index-rank)*20,
+					fill: 'forwards',
+					easing: Animations.ease.move
+				}).then(el => {
+					el.style.width = "";
+					el.style.height = "";
+					el.style.transform = "";
+				});
+			});
 		});
 	}
 	static promptAddFriend(app){

@@ -18,7 +18,7 @@ installSW()
 
 
 // Auth
-document.querySelector('form.inscipt').onsubmit = e => {
+document.querySelector('form.signup').onsubmit = e => {
 	e.preventDefault();
 	let mail = document.querySelector('#iEmail').value,
 		pass = document.querySelector('#iPass').value,
@@ -62,37 +62,19 @@ document.querySelector('form.inscipt').onsubmit = e => {
 	});
 }
 
-document.querySelector('form.connect').onsubmit = e => {
+document.querySelector('form.login').onsubmit = e => {
 	e.preventDefault();
-	let mail = document.querySelector('#cEmail').value,
-		pass = document.querySelector('#cPass').value;
+	const form = e.target;
 	fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
-		data: { connect: true, mail: mail, pass: pass }
+		body: { connect: true, mail: form.email.value, pass: form.password.value }
 	})
 	.then(res => {
 		if(res && res.status == 200) {
 			LocalStorage.setItem('userId', res.payload.userId);
 			return cssReady().then(() => startApp(res.payload.userId));
-		} else if((res.status == 400 || res.status == 401 || (res.status == 403 && data.sent)) && data.err){
-			switch(data.err){
-				case "manquant":
-					alert('Il faut remplir tous les champs');
-					break;
-				case "noEmail":
-					alert('L\'email renseignée est inconnue');
-					break;
-				case "nonActivated":
-					alert('Un email vous a été envoyé pour confirmer votre identité');
-					break;
-				case "credential":
-					alert('Mot de passe incorrect');
-					break;
-			}
-		} else if(res.status == 403 && !data.sent && data.err) {
-			if(data.err == "nonActivated") alert('Votre compte requiert une activation, mais nos serveurs n\'ont pas pu envoyer l\'email de confirmation');
-		} else console.log(res);
+		} else UI.erreur(res.payload ? res.payload.title : null);
 	});
 }
 
@@ -125,6 +107,7 @@ async function directAuthenticaction(){
 		await cssReady();
 		return startApp(userId, true);
 	}
+	document.getElementById("preload").children[1].innerHTML = "Connection ...";
 	try{
 		let userId = await Pull.authRequest();
 		LocalStorage.setItem('userId', userId);
@@ -132,6 +115,7 @@ async function directAuthenticaction(){
 		return startApp(userId);
 	} catch(err) {
 		console.error(err);
-		if(err == "Require auth") UI.requireAuth();
+		if(err.action && err.action == "authenticate") document.getElementById('authContainer').classList.add('opened');
+		else window.location = "/courses/offline.html";
 	}
 }

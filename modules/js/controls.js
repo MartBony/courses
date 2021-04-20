@@ -356,19 +356,17 @@ export default function initEvents(app){
 		},
 		addCourse = e => {
 			e.preventDefault();
-			const inputTitre = document.querySelector('#modernCourseAdder #titreC'),
-			inputPrice = document.querySelector('#modernCourseAdder #maxPrice'),
-			inputTaxes = document.querySelector('#modernCourseAdder #cTaxes');
-			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value) {
+			const form = e.target;
+			if (!isNaN(parseFloat(form.prixMax.value.replace(',','.'))) && form.titre.value) {
 				document.getElementsByClassName('loader')[0].classList.add('opened');
 				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
 					data: {
 						submitCourse: true,
-						titre: inputTitre.value,
-						maxPrice: inputPrice.value.replace(',','.'),
-						taxes: inputTaxes.value.replace(',','.') | "0",
+						titre: form.titre.value,
+						maxPrice: form.prixMax.value.replace(',','.'),
+						taxes: form.taxes.value.replace(',','.') | "0",
 						groupe: app.groupe.id
 					}
 				}).then(res => {
@@ -387,22 +385,20 @@ export default function initEvents(app){
 						app.groupe.pushCourse(course);
 
 						UI.acc(app);
-						inputTitre.value = "";
-						inputPrice.value = "";
-						inputTaxes.value = "0";
+						form.titre.value = "";
+						form.prixMax.value = "";
+						form.taxes.value = "0";
 
 						LocalStorage.setItem('usedCourse', null);
 						app.queue.enqueue(() => app.pull("open", null, course.id))
-					} else if(res.status == "Offline") throw "Offline"
-					else throw res
+					} else throw res
 					
 				}).catch(err => {
 					console.log(err);
-					if (err.status == 403){
-						UI.erreur('Erreur',"Le groupe demandé est innaccessible depuis votre compte");
-					} else {
-						UI.offlineMsg(app, err);
-					}
+					if (err.status == "Offline") UI.offlineMsg(app);
+					else UI.erreur(err.payload? err.payload.title: null)
+
+					if(err.action && err.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
 				});
 
 			} else {
