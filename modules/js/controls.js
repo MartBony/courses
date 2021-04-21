@@ -494,7 +494,7 @@ export default function initEvents(app){
 					const previewUi = document.querySelector(`.preview[iditem="${-payload.id}"]`);
 					console.log("Corresponding UI element, ", previewUi);
 					if(previewUi) {
-						previewUi.setAttribute("iditem", payload.item.id);
+						previewUi.content = ({ id: payload.item.id });
 						previewUi.classList.remove('sync');
 					}
 					app.course.items.previews.forEach(preview => {
@@ -505,7 +505,7 @@ export default function initEvents(app){
 					const articleUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
 					console.log("Corresponding UI element, ", articleUi);
 					if(articleUi) {
-						articleUi.setAttribute("iditem", payload.item.id);
+						articleUi.content = ({ id: payload.item.id });
 						articleUi.classList.remove('sync');
 					}
 					app.course.items.articles.forEach(article => {
@@ -516,7 +516,7 @@ export default function initEvents(app){
 					const buyedUi = document.querySelector(`.article[iditem="${-payload.id}"]`);
 					console.log("Corresponding UI element, ", buyedUi);
 					if(buyedUi) {
-						buyedUi.setAttribute("iditem", payload.item.id);
+						buyedUi.content = ({ id: payload.item.id });
 						buyedUi.classList.remove('sync');
 					}
 					app.course.items.articles.forEach(article => {

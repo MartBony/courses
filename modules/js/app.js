@@ -682,6 +682,12 @@ class App{
 			}
 		});
 	}
+	applyTaxes(prix){
+		return (Number(prix)*(1+this.course.taxes)).toFixed(2);
+	}
+	parseUnit(prix){
+		return prix + this.params.currency
+	}
 	get buttons(){
 		return this.#buttons;
 	}

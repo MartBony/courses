@@ -1,5 +1,73 @@
 import Generate from './generate.js';
 import { IndexedDbStorage, LocalStorage } from './storage.js';
+import Animations from "./animations.js";
+
+class CourseItem extends HTMLLIElement{
+	itemContent = {
+		type: 'article',
+		id: null,
+		titre: "",
+		prix: 0,
+		couleur: "",
+		animation: null
+	};
+	constructor(content){
+		super();
+		const { type = this.itemContent.type, id, titre, prix, couleur, animation } = content;
+		this.itemContent = { type, id, titre, prix, couleur, animation };
+	}
+	connectedCallback(){
+		Array.from(this.children).forEach(child => child.remove());
+		let div = document.createElement('div'),
+			h2 = document.createElement('h2'),
+			h3 = document.createElement('h3'),
+			i = document.createElement('i');
+
+		i.classList.add('ms-Icon', 'ms-Icon--StatusCircleSync');
+		i.setAttribute('aria-hidden', 'true');
+		this.className = this.itemContent.type;
+		//li.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
+		//li.setAttribute("idItem", id);
+		//h2.innerHTML = titre;
+		//h3.innerHTML = (Number(prix)*(1+app.course.taxes)).toFixed(2) + app.params.currency;
+		div.appendChild(h2);
+		div.appendChild(h3);
+		[div, i].forEach(child => {
+			this.appendChild(child);
+		});
+
+		this.content = this.itemContent;
+		
+	}
+	get content(){
+		return this.itemContent;
+	}
+	set content(item){
+		if(this.isConnected){
+			const { 
+				id = this.itemContent.id, 
+				titre = this.itemContent.titre, 
+				prix = this.itemContent.prix, 
+				couleur = this.itemContent.couleur, 
+				animation = null 
+			} = item;
+
+			if(id){
+				if(id < 0) this.classList.add('sync');
+				else this.classList.remove('sync')
+				this.setAttribute("idItem", id);
+			}
+			if(titre) this.firstChild.firstChild.innerHTML = titre;
+			if(prix && this.firstChild.children.length) this.firstChild.lastChild.innerHTML = prix;
+			if(couleur) this.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
+			if(animation) Animations[animation](this)
+
+			this.itemContent = { id, titre, prix, couleur };
+		}
+	}
+}
+
+customElements.define('course-item', CourseItem, { extends: 'li' });
 
 export default class Course{
 	constructor(){
@@ -225,9 +293,16 @@ export default class Course{
 	insertArticle(app, index, item, animate = true){ // Inserts an article in the UI
 		if(item && item.id && item.titre && item.color && item.prix){
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
-			article = item.id < 0 ? 
-				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync') :
-				Generate.article(app, item.id, item.titre, item.color, item.prix, animation);
+			/* article = item.id < 0 ? 
+				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync'):
+				Generate.article(app, item.id, item.titre, item.color, item.prix, animation); */
+			article = new CourseItem({
+				id: item.id,
+				titre: item.titre,
+				prix: app.parseUnit(app.applyTaxes(item.prix)),
+				couleur: item.color,
+				animation: animation
+			});
 
 			if(index) document.querySelector('#panier ul').insertBefore(article, this.articlesNodeList[index]);
 			else document.querySelector('#panier ul').prepend(article);
@@ -245,10 +320,17 @@ export default class Course{
 	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
 		if(item && item.id && item.titre && item.color){
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
-			preview = item.id < 0 ? 
+			/* preview = item.id < 0 ? 
 				Generate.preview(item.id, item.titre, item.color, animation, 'sync') :
-				Generate.preview(item.id, item.titre, item.color, animation);
-			
+				Generate.preview(item.id, item.titre, item.color, animation); */
+			preview = new CourseItem({
+				type: 'preview',
+				id: item.id,
+				titre: item.titre,
+				couleur: item.color,
+				animation: animation
+			});
+		
 			if(index) document.querySelector('#liste ul').insertBefore(preview, this.previewsNodeList[index]);
 			else document.querySelector('#liste ul').prepend(preview);
 			
