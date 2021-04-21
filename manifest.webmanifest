@@ -1,7 +1,7 @@
 {
 	"name" : "Courses",
 	"short_name" : "Courses",
-	"start_url" : "/courses/index.php",
+	"start_url" : "/courses/",
 	"display" : "standalone",
 	"background_color" : "#ffffff",
 	"theme_color" : "#022d6f",

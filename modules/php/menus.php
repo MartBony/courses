@@ -11,7 +11,7 @@
 		<li linkTo="panier"><i class="ms-Icon ms-Icon--ShoppingCart" aria-hidden="true"></i></li>
 		<li linkTo="liste"><i class="ms-Icon ms-Icon--ShopServer" aria-hidden="true"></i></li>
 		<li linkTo="calcul"><i class="ms-Icon ms-Icon--Calculator" aria-hidden="true"></i></li>
-		<li linkTo="menu"><img src="images/logo144.png" alt="Logo du site"></li>
+		<li linkTo="menu"><img src="images/logos/logo144.png" alt="Logo du site"></li>
 	</ul>
 </div>
 <div id="menus">

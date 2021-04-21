@@ -100,25 +100,25 @@
 #mainPanel.panier #panier{
 	visibility: visible;
 	max-height: none;
-	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+	animation: 300ms show 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
 }
 
 #mainPanel.liste #liste{
 	visibility: visible;
 	max-height: none;
-	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+	animation: 300ms show 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
 }
 
 #mainPanel.calcul #calcul{
 	visibility: visible;
 	max-height: none;
-	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+	animation: 300ms show 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
 }
 
 #mainPanel.menu #menu{
 	visibility: visible;
 	max-height: none;
-	animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
+	animation: 300ms show 200ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
 }
 
 @keyframes show{
@@ -132,35 +132,22 @@
 	}
 }
 
-/* Listes */
-button.adder{
-	position: fixed;
-	bottom: 90px;
-	right: 10px;
-	height: 50px;
-	border-radius: 5px;
-	padding: 10px 20px;
-	margin: 0;
-
+#recycle{
+	background: var(--color-theme-complement);
+	color: white;
 	font-size: 2rem;
-	text-align: center;
-	font-weight: bold;
-
-	border: none;
-	outline: none;
-	cursor: pointer;
-	background: var(--color-theme);
-	color: var(--color-text-menu);
-	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	box-sizing: border-box;
-
-	opacity: 0;
+	padding: 10px;
+	font-weight: 700;
+	border-radius: 2px;
+	margin: 10px 10px 5px 10px;
+	display: none;
 }
 
-#mainPanel.liste #liste .adder, #mainPanel.panier #panier .adder{
-	opacity: 1;
-	transition: 100ms all 400ms linear;
+#recycle.opened{
+	display: block;
 }
+
+/* Listes */
 
 .article, .preview
 {
@@ -176,7 +163,59 @@ button.adder{
 	box-sizing: border-box;
 }
 
+.article h2
+{
+	font-size: 2rem;
+	margin: 0px;
+}
+
+.preview h2
+{
+	font-size: 2rem;
+	margin: 10px;
+}
+
+.article h3
+{
+	color: var(--colorLightText);
+	font-size: 1.5rem;
+	margin: 0px;
+}
+
+.article i, .preview i
+{
+	display: none;
+	margin: 3px;
+	padding: 0 0 2px 2px;
+	border-radius: 100px;
+	background: var(--color-theme-secondary);
+	font-size: 30px;
+	position: absolute;
+	z-index: 0;
+	font-size: 30px;
+	right: 10px;
+	top: 0;
+	box-sizing: border-box;
+	animation: spin 10s linear infinite;
+}
+
+.article.sync i, .preview.sync i
+{
+	display: block;
+}
+
+@keyframes spin{
+	0%{
+		transform: rotate(0);
+	}
+	100%{
+		transform: rotate(360deg);
+	}
+}
+
 .article div, .preview div{
+	height: 100%;
+
 	padding: 10px 20px;
 	background: var(--color-theme-secondary);
 	color: var(--color-text-menu);
@@ -255,41 +294,6 @@ section#calcul
 	position: relative;
 	margin: 10px 20px;
 	font-size: 2rem;
-}
-
-#menu > button
-{
-	position: fixed;
-	bottom: 90px;
-	right: 10px;
-	height: 50px;
-	border-radius: 5px;
-	padding: 10px 20px;
-	margin: 0;
-
-	font-size: 2rem;
-	text-align: center;
-	font-weight: bold;
-
-	border: none;
-	outline: none;
-	color: white;
-	cursor: pointer;
-	background: var(--color-theme);
-	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
-	box-sizing: border-box;
-	opacity: 0;
-
-	
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-webkit-user-select: none;
-	user-select: none;
-}
-
-.menu #menu > button{
-	opacity: 1;
-	transition: 100ms all 400ms linear;
 }
 
 #menu .course
@@ -388,16 +392,6 @@ section#calcul
 		max-height: none;
 		animation: 300ms show 90ms cubic-bezier(0.1 , 0.9 , 0.2 , 1) forwards;
 	}
-
-	#menu > button, button.adder
-	{
-		position: absolute;
-	}
-
-	#mainPanel.liste .adder, #mainPanel.panier .adder, .menu #menu > button{
-		opacity: 1;
-		transition: 100ms all 400ms linear;
-	}
 }
 
 @media screen and (min-width: 1300px){
@@ -406,6 +400,7 @@ section#calcul
 		grid-template-columns: 1fr 1fr;
 	}
 }
+
 
 /* The switch - the box around the slider */
 .switch {
@@ -467,6 +462,7 @@ input:focus + .slider {
 input:checked + .slider:before {
 	transform: translateX(20px);
 }
+
 
 :root{
 	--padding-param: 1rem;
@@ -786,6 +782,7 @@ article#conn{
 	}
 }
 
+
 .loader
 {
 	font-size: 3rem;
@@ -873,29 +870,36 @@ article#conn{
 
 
 .options{
+	--top: 30px;
+	--left: 0;
+	--width: 94%;
+	--heigth: 50px;
+
 	visibility: hidden;
 	opacity: 0;
+	transform: scale(0.8);
 
 	position: absolute;
+	top: var(--top);
+	left: var(--left);
+	width: var(--width);
+	height: var(--height);
+	
 	display: grid;
-	top: 30px;
-	left: 0;
 	grid-template-columns: repeat(4, 1fr);
 	align-items: center;
 	justify-content: center;
 	text-align: center;
 	font-size: 2.5rem;
-	padding: 10px;
 	grid-gap: 10px;
-	width: 94%;
-	height: 50px;
+	padding: 10px;
+
 	background: white;
 	box-shadow: 0 0 15px 6px rgba(0,0,0,0.07);
 	border-radius: 8px;
 	transition-property: opacity, transform, visibility;
 	transition-duration: 50ms;
 	transition-timing-function: var(--ease-sortir);
-	transform: scale(0.8);
 	box-sizing: border-box;
 }
 
@@ -936,6 +940,7 @@ article#conn{
 	border-radius: 5px;
 	padding: 30px 10px;
 	text-align: center;
+	white-space: break-spaces;
 }
 
 .promptEmpty{
@@ -1012,6 +1017,10 @@ article#conn{
 
 	box-sizing: border-box;
 	transition: all 200ms var(--ease-sortir);
+
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
 }
 
 #modal.noGroupe{
@@ -1161,14 +1170,14 @@ article#conn{
 	flex-direction: column;
 	align-items: center;
 	visibility: hidden;
-	
-	z-index: 7;
+	 
+	z-index: 10;
 	border-radius: 15px;
 	background: white;
 	color: black;
 	opacity: 0;
 	transform: translateY(100px);
-	box-shadow: 0 0 0 0px rgba(0,0,0,0.4);
+	box-shadow: 0 0 10px rgba(0,0,0,0.18);
 	transition: all 100ms var(--ease-sortir);
 }
 
@@ -1176,15 +1185,15 @@ article#conn{
 	opacity: 1;
 	visibility: visible;
 	transform: translateY(0);
-	box-shadow: var(--shadow2);
 	transition: all 300ms var(--ease-enter);
 }
 
 .notification h2{
 	color: #00ad56;
 	font-size: 2.3rem;
-	margin: 10px 0 0 0;
+	margin: 10px;
 	font-weight: 700;
+	text-align: center;
 }
 
 #erreur h2{
@@ -1246,6 +1255,17 @@ button.greyish{
 	}
 }
 
+@supports (backdrop-filter: blur(20px)){
+
+	.notification{
+		background: rgba(255, 255, 255, 0.93);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+	}
+
+}
+
+
 :root{
 	--form-shadow: 0 0 0 0 rgba(0,0,0,0);
 	--form-radius: 0;
@@ -1275,7 +1295,7 @@ button.greyish{
 	box-shadow: var(--form-shadow);
 }
 
-#forms #addPreview{
+/* #forms #addPreview{
 	background-image: url('../images/melons.webp');
 }
 
@@ -1293,9 +1313,9 @@ button.greyish{
 
 #forms #addPreview{
 	background-image: url('../images/melons.webp');
-}
+} */
 
-.fromContainer{
+#forms .fromContainer{
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -1329,7 +1349,7 @@ button.greyish{
 	background: #a0aeb2;
 }
 
-.fromContainer > .blur{
+#forms .fromContainer > .blur{
 	z-index: 0;
 	position: fixed;
 	top: 0;
@@ -1343,7 +1363,7 @@ button.greyish{
 
 }
 
-.fromContainer > h1
+#forms .fromContainer > h1
 {
 	color: var(--color-text);
 	font-size: 2.5rem;
@@ -1558,7 +1578,7 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		--form-radius: 10px;
 	}
 
-	.fromContainer{
+	#forms .fromContainer{
 		width: 400px;
 		height: 300px;
 		left: calc(50% - 200px);
@@ -1573,25 +1593,323 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		top: calc(50% - 200px);
 	}
 
-	#invitation, #addCourse{
+/* 	#invitation, #addCourse{
 		height: 500px;
 		top: calc(50% - 250px);
-	}
+	} */
 
 	#prices{
 		height: 90%;
 		top: 5%;
 	}
 
-	.titrePrice{
+	#forms .titrePrice{
 		width: 310px;
 	}
 }
+
+
+#modernForms{
+	z-index: 5;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	background: rgba(0,0,0,0);
+	backdrop-filter: blur(0px);
+	visibility: hidden;
+	overflow: hidden;
+	transition: background 10ms linear, backdrop-filter 0 linear;
+}
+
+#modernForms.opened{
+	visibility: visible;
+	background: rgba(0,0,0,0.6);
+	transition: background 50ms linear, backdrop-filter 50ms linear;
+}
+
+#modernForms h2{
+	font-size: 2rem;
+	color: black;
+	font-weight: bold;
+	width: 100%;
+	text-align: left;
+}
+
+#modernForms .formContainer{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	height: 100%;
+	max-height: 600px;
+	overflow: auto;
+	z-index: 2;
+	transform-origin: 50% 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+#modernForms #modernArticleAdder{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(70px, 100px) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.articleForm #modernArticleAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernCourseAdder{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(70px, 100px) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.courseForm #modernCourseAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernPreviewAdder{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(70px, 100px) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.previewForm #modernPreviewAdder{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernBuyer{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(0, 0) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.buyForm #modernBuyer{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+
+
+
+.modernFormTitle{
+	position: relative;
+	--pad: 10px;
+	width: 90%;
+	max-width: 300px;
+	background: var(--color-theme);
+	color: var(--color-text-menu);
+	padding: var(--pad);
+	margin: 0;
+	text-align: center;
+	font-size: 2rem;
+	border-radius: var(--rad) var(--rad) 0 0;
+	z-index: 2;
+	user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+
+	box-sizing: border-box;
+}
+
+.modernFormTitle i{
+	position: absolute;
+	left: 0;
+	top: 0;
+	padding: var(--pad);
+	font-size: 2.7rem;
+}
+
+#modernForms form{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin: 0;
+	width: 90%;
+	max-width: 300px;
+	height: auto;
+	padding: 20px;
+	padding-bottom: 40px;
+	padding-top: 10px;
+	background: rgba(250, 248, 245, 0.95);
+	border-radius: 0 0 var(--rad) var(--rad);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+	box-sizing: border-box;
+}
+
+#modernForms .formflex{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	width: 100%;
+	margin: 10px 0 10px 0;
+}
+
+#modernForms label
+{
+	font-size: 1.6rem;
+	margin-left: 10px;
+	box-sizing: border-box;
+}
+
+#modernForms input{
+	width: 100%;
+	border-radius: 5px;
+	border: 1px solid black;
+	outline: none;
+	font-size: 1.5rem;
+	padding: 3px;
+	transform: scale(0.98);
+	box-sizing: border-box;
+}
+
+#modernForms input:focus{
+	transform: scale(1);
+}	
+
+.prixFlex{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 1.5rem;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 30px;
+	opacity: 1;
+	box-sizing: border-box;
+}
+
+
+
+#modernForms input.submit
+{
+	width: 80px;
+	font-weight: 600;
+	margin-top: 20px;
+	background: var(--color-theme);
+	color: white;
+	border: none;
+	outline: none;
+	padding: 5px;
+}
+
+
+@media screen and (min-width: 900px){
+	#modernForms #modernArticleAdder{
+		transform: translate(0, 0) scale(0.7);
+	}
+
+	#modernForms #modernPreviewAdder{
+		transform: translate(0, 0) scale(0.7);
+	}
+
+	#modernForms #modernCourseAdder{
+		transform: translate(0, 0) scale(0.7);
+	}
+	
+		
+
+	#modernForms .formContainer{
+		transform-origin: 50% 50%;
+	}
+}
+
+@supports (backdrop-filter: blur(20px)){
+
+	#modernForms.opened{
+		background: rgba(0,0,0,0.2);
+		backdrop-filter: blur(20px);
+	}
+
+	#modernForms form{
+		background: rgba(250, 248, 245, 0.88);
+	}
+
+	#modernTransitionner .modernFormTitle{
+		border-radius: var(--rad);
+		box-shadow: none;
+	}
+
+}
+
 
 :root{
 	--menu-radius: 15px;
 }
 
+/* Buttons */
+
+#buttons{
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	z-index: 3;
+}
+
+#buttons > button{
+	position: fixed;
+	bottom: 90px;
+	right: 10px;
+	height: 50px;
+	border-radius: 5px;
+	padding: 10px 20px;
+	margin: 0;
+
+	font-size: 2rem;
+	text-align: center;
+	font-weight: bold;
+
+    border: white solid 2px;
+	outline: none;
+	cursor: pointer;
+	background: var(--color-theme);
+	color: var(--color-text-menu);
+	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
+	box-sizing: border-box;
+
+	touch-action: none;
+	visibility: hidden;
+
+	opacity: 0;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#buttons.liste #addPrev, #buttons.panier #addArt, #buttons.menu #addCourse{
+	opacity: 1;
+	visibility: visible;
+	transition: 100ms all 400ms linear;
+}
+
+/* Menubar */
 #menubar{
 	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
@@ -1765,11 +2083,29 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 
 
 
-
+@media screen and (max-height: 550px){
+	.formed #menubar, .formed #refresh{
+		opacity: 0;
+	}
+}
 
 @media screen and (min-width: 900px){
 	:root{
 		--menu-radius: 8px;
+	}
+
+	#buttons > button{
+		bottom: 10px;
+	}
+
+	button#addArt, button#addCourse{
+		right: 50%;
+	}
+
+	#buttons.liste .adder, #buttons.panier .adder, #buttons.menu #addCourse, #buttons.calcul #addCourse{
+		opacity: 1;
+		visibility: visible;
+		transition: 100ms all 400ms linear;
 	}
 
 	#menubar.panier li:nth-child(2),
@@ -1780,17 +2116,19 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 		animation: circleBGMB 1s forwards cubic-bezier(0.1 , 0.9 , 0.2 , 1);
 	}
 
-	#refresh{
+	#refresh, .formed #refresh{
 		top: 10px;
 		left: 220px;
+		opacity: 1;
 	}
 
-	#menubar{
+	#menubar, .formed #menubar{
 		bottom: auto;
 		right: auto;
 		top: 5px;
 		left: 5px;
 		width: 200px;
+		opacity: 1;
 	}
 
 	#menubar li:nth-child(1), #menubar li:nth-child(3){
@@ -1804,21 +2142,20 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	
 }
 
+
 #authContainer{
 	position: absolute;
-	top: 5px;
-	left: 5px;
-	right: 5px;
-	bottom: 5px;
-	max-height: 90vh;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	z-index: 8;
 
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	visibility: collapse;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr 15fr;
 	gap: 20px;
-	padding: 30px 20px 20px 20px;
 	transform: scale(0.9);
 	background: #fafafa;
 	border-radius: 4px;
@@ -1832,15 +2169,15 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	transition: all 200ms var(--ease-enter) 10ms;
 }
 
-#authContainer i{
-	position: absolute;
-	top: 0;
-	left: 0;
-	padding: 10px;
-	font-size: 2rem;
+#authContainer img{
+	margin: 10px;
+	width: 72px;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
 }
 
-#authContainer h1{
+#authContainer h2{
 	border-bottom: 2px solid rgba(0,0,0,0);
 	border-bottom: 2px solid black;
 	padding-left: 10px;
@@ -1851,6 +2188,8 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 }
 
 #authContainer form{
+	width: 100%;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -1858,6 +2197,7 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	border-radius: 5px;
 	padding: 15px;
 	overflow-y: auto;
+	box-sizing: border-box;
 }
 
 #authContainer label{
@@ -1917,21 +2257,6 @@ input#iColor{
 		border-radius: 10px;
 	}
 
-	#authContainer .inscipt{
-		grid-row: 4/5;
-	}
-
-	#authContainer .connect{
-		grid-row: 2/3;
-	}
-
-	#authContainer h1{
-		grid-row: 1/2;
-	}
-
-	#authContainer h1:nth-child(2){
-		grid-row: 3/4;
-	}
 }
 
 
@@ -2006,6 +2331,12 @@ body{
 	background: var(--colorMain);
 	margin: 0;
   	min-height: -webkit-fill-available;
+}
+
+button{
+	background: none;
+	border: none;
+	outline: none;
 }
 
 .hide{
@@ -2190,7 +2521,7 @@ img{
 	user-select: none;
 }
 
-.animateSlideIn
+/*.animateSlideIn
 {
 	animation: animateSlideIn 500ms cubic-bezier(0.1, 0.9, 0, 1) forwards;
 }
@@ -2204,14 +2535,19 @@ img{
 	}
 }
 
+.animateSlideInLight
+{
+	animation: animateSlideInLight 500ms cubic-bezier(0.1, 0.9, 0, 1) forwards;
+}
+
 @keyframes animateSlideInLight{
 	0%{
-		transform: scale(0.9);
+		transform: scale(1.05);
 	}
 	100%{
 		transform: scale(1);
 	}
-}
+}*/
 
 .animateSlideTop
 {
@@ -2239,122 +2575,6 @@ header h1
 	color: inherit;
 }
 
-
-.bgCards
-{
-	z-index: 0;
-	position: absolute;
-	top: -30px;
-	right: 0;
-	bottom: -30px;
-	width: 0;
-	border-radius: 100px 0 0 100px;
-	box-shadow: -2px 0px 15px -8px rgba(0,0,0,0);
-	background: #CA5010;
-	transition: all 100ms cubic-bezier(0.9, 0.1, 1, 0);
-}
-
-.ready .bgCards
-{
-	width: 40%;
-	box-shadow: -2px 0px 15px -4px rgba(0,0,0,0.2);
-	transition: all 100ms cubic-bezier(0.1, 0.9, 0, 1);
-}
-
-.article.disabled
-{
-	background: var(--colorMainLight2);
-}
-
-.article h2
-{
-	font-size: 2rem;
-	margin: 0px;
-}
-
-.preview h2
-{
-	font-size: 2rem;
-	margin: 10px;
-}
-
-.article h3
-{
-	color: var(--colorLightText);
-	font-size: 1.5rem;
-	margin: 0px;
-}
-
-.article i, .preview i
-{
-	background: var(--colorArticleButton);
-	margin: 0;
-	padding: 10px;
-	position: absolute;
-	z-index: 1;
-	font-size: 30px;
-	right: 0;
-	top: calc(50% - 25px);
-	box-sizing: border-box;
-	border-radius: 50%;
-	transition: all 100ms cubic-bezier(0.1, 0.9, 0, 1);
-}
-
-.article.disabled i, .preview.disabled i
-{
-	display: none;
-}
-
-.article i.Security, .preview i.Security
-{
-	margin: 10px;
-	padding: 0;
-	background: none;
-	opacity: 0;
-	transform: scale(0);
-	color: white;
-	transition: all 100ms cubic-bezier(0.9, 0.1, 1, 0);
-}
-
-.article i.noDelete, .preview i.noDelete
-{
-	background: none;
-	visibility: hidden;
-	right: 50px;
-	opacity: 0;
-	transform: translateX(50px);
-	color: white;
-	transition: all 80ms cubic-bezier(0.9, 0.1, 1, 0);
-}
-
-.preview i.buy
-{
-	background: none;
-	right: 50px;
-	transition: all 80ms cubic-bezier(0.9, 0.1, 1, 0);
-}
-
-.ready i
-{
-	opacity: 0;
-	transform: scale(0);
-	transition: all 100ms cubic-bezier(0.9, 0.1, 1, 0);
-}
-
-.ready i.Security
-{
-	opacity: 1;
-	transform: scale(1);
-	transition: all 100ms cubic-bezier(0.1, 0.9, 0, 1) 50ms;
-}
-
-.ready i.noDelete
-{
-	visibility: visible;
-	opacity: 1;
-	transform: translateX(0);
-	transition: all 100ms cubic-bezier(0.1, 0.9, 0.9, 1.1);
-}
 
 
 

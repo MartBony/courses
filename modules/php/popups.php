@@ -11,19 +11,19 @@
 <section class="install">
 	<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
 	<div class="logo">
-		<img src="images/logo_bg.png">
-		<img src="images/logo_bt.png">
-		<img src="images/logo_md.png">
-		<img src="images/logo_tp.png">
+		<img src="images/logos/logo_bg.png">
+		<img src="images/logos/logo_bt.png">
+		<img src="images/logos/logo_md.png">
+		<img src="images/logos/logo_tp.png">
 	</div>
 	<button>Télécharger l'application</button>
 </section>
 <section class="loader">
 	<div class="logo">
-		<img src="images/logo_bg.png">
-		<img src="images/logo_bt.png">
-		<img src="images/logo_md.png">
-		<img src="images/logo_tp.png">
+		<img src="images/logos/logo_bg.png">
+		<img src="images/logos/logo_bt.png">
+		<img src="images/logos/logo_md.png">
+		<img src="images/logos/logo_tp.png">
 	</div>
 	<h1>En cours</h1>
 </section>

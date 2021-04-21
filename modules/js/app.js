@@ -142,7 +142,7 @@ class App{
 	}
 	deleteCourse(id){
 		document.querySelector('.loader').classList.add('opened');
-		$.ajax({
+		fetcher({
 			method: "POST",
 			url: "serveur/push.php",
 			data: { deleteCourse: true, id: id, groupe: this.groupe.id}
@@ -287,7 +287,7 @@ class App{
 	leaveGrp(){
 		if(this.groupe && this.groupe.id){
 			$('.loader').addClass('opened');
-			$.ajax({
+			fetcher({
 				method: "POST",
 				url: "serveur/push.php",
 				data: { leaveGroup: 'true', groupe: this.groupe.id }
@@ -598,7 +598,7 @@ class App{
 	}
 	acceptInvite(id){
 		
-		$.ajax({
+		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
 			data: { accept: true, id: id }
@@ -621,7 +621,7 @@ class App{
 	}
 	rejectInvite(id){
 		
-		$.ajax({
+		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
 			data: { reject: true, id: id }
@@ -639,7 +639,7 @@ class App{
 
 	}
 	deleteUser(){
-		$.ajax({
+		fetcher({
 			method: "POST",
 			url: "serveur/deleteUser.php",
 			data: { deleteUser: true }
@@ -661,7 +661,7 @@ class App{
 	}
 	generateInviteKey(){
 		$('.loader').addClass('opened');
-		$.ajax({
+		fetcher({
 			method: "POST",
 			url: "serveur/invites.php",
 			data: { getInviteKey: true }

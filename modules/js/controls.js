@@ -209,7 +209,7 @@ export default function initEvents(app){
 					
 				} else {
 					document.getElementsByClassName('loader')[0].classList.add('opened');
-					$.ajax({
+					fetcher({
 						method: "POST",
 						url: "serveur/push.php",
 						data: {
@@ -299,7 +299,7 @@ export default function initEvents(app){
 					
 				} else {
 					document.getElementsByClassName('loader')[0].classList.add('opened');
-					$.ajax({
+					fetcher({
 						method: "POST",
 						url: "serveur/push.php",
 						data: {
@@ -409,7 +409,7 @@ export default function initEvents(app){
 			e.preventDefault();
 			if (document.querySelector('#addGroupe #titreG').value && document.querySelector('#addGroupe #titreG').value != '') {
 				document.querySelector('.loader').classList.remove('opened');
-				$.ajax({
+				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
 					data: { newGroupe: true, titre: document.querySelector('#addGroupe #titreG').value }
@@ -440,7 +440,7 @@ export default function initEvents(app){
 				if ($('#invitation #keyInv').val() && $('#invitation #keyInv').val() != '') {
 			
 					document.getElementsByClassName('loader')[0].classList.add('opened');
-					$.ajax({
+					fetcher({
 						method: "POST",
 						url: "serveur/invites.php",
 						data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.groupe.id }
