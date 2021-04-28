@@ -65,10 +65,23 @@
 }
 
 #modernForms.courseForm #modernCourseAdder{
-	transition: opacity 300ms ease;
 	visibility: visible;
 	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
+	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernGroupeAdder{
+	--rad: 10px;
+	opacity: 0;
+	transform: scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.groupeForm #modernGroupeAdder{
+	visibility: visible;
+	transform: scale(1);
+	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
 	opacity: 1;
 }
 
@@ -95,6 +108,21 @@
 }
 
 #modernForms.buyForm #modernBuyer{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernInviteur{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(0, 0) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.inviteForm #modernInviteur{
 	transition: opacity 300ms ease;
 	visibility: visible;
 	transform: translate(0, 0) scale(1);
@@ -196,7 +224,7 @@
 
 
 
-#modernForms input.submit
+#modernForms input[type="submit"]
 {
 	width: 80px;
 	font-weight: 600;

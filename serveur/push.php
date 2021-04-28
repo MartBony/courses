@@ -9,6 +9,15 @@ header('Content-type: application/json');
 function pushCousesIndependent($user, PDO $bdd){
 	if(isset($_POST['newGroupe']) && isset($_POST['titre'])) { // REWRITE
 		if(strlen($_POST['titre']) <= 20 && strlen($_POST['titre']) >= 2){
+			if(!$user['premium']){
+				$recNbrGroupes = $bdd->prepare('SELECT COUNT(*) AS nbr FROM `gulinks` WHERE userId = ? AND `active` = 1');
+				$recNbrGroupes->execute(array($user['id']));
+				$resNbrGroupes = $recNbrGroupes->fetch();
+				if($resNbrGroupes['nbr'] > 2) {
+					echo json_encode(array('status' => 400, "payload" => array("type" => "ERROR", "message" => "Vous avez atteind votre limite de groupes. Passez en premium pour cela.")));
+					return true;
+				}
+			}
 			$_POST['titre'] = htmlspecialchars($_POST['titre']);
 
 			$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (`nom`) VALUES (?)');
@@ -18,16 +27,14 @@ function pushCousesIndependent($user, PDO $bdd){
 			$reqGroupe->execute(array($_POST['titre']));
 			$groupe = $reqGroupe->fetch();
 
-			$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-			$insertUser->execute(array(( "[". $groupe['id'] ."]". $user['groupe']), $user['id']));
+			$createLink = $bdd->prepare('INSERT INTO `gulinks` (`groupeId`, `userId`, `active`) VALUES (?,?, 1)');
+			$createLink->execute(array($groupe['id'], $user['id']));
 
 			
-			http_response_code(200);
-			echo json_encode(array());
+			echo json_encode(array('status' => 200, "payload" => $groupe));
 
 		} else {
-			http_response_code(400);
-			echo json_encode(array('err' => 'length'));
+			echo json_encode(array('status' => 400, "payload" => array("type" => "ERROR", "message" => "Votre titre ne respecte pas la longeur autorisée (entre 2 et 20 caractères).")));
 		}
 
 		return true;
@@ -76,30 +83,27 @@ function pushCousesIndependent($user, PDO $bdd){
 
 				if($nbmMembres == 1){
 					$reqAllCourses = $bdd->prepare('SELECT id FROM courses WHERE groupe = ? ORDER BY id DESC');
-					$reqAllCourses->execute(array($_POST['groupe']));
+					$reqAllCourses->execute(array($groupe['id']));
 					while($resCoursesGp = $reqAllCourses->fetch()){
 						$delArticles = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
 						$delArticles->execute(array($resCoursesGp['id']));
 					}
 					$reqAllCourses->closeCursor();
+					
 					$delCourses = $bdd->prepare('DELETE FROM `courses` WHERE `groupe` = ?');
-					$delCourses->execute(array($_POST['groupe']));
+					$delCourses->execute(array($groupe['id']));
 					$delCourses->closeCursor();
 
 					$delgroupe = $bdd->prepare('DELETE FROM `groupes` WHERE `id` = ?');
-					$delgroupe->execute(array($_POST['groupe']));
+					$delgroupe->execute(array($groupe['id']));
 					$delgroupe->closeCursor();
 				}
 
-				$newString = str_replace("[". $_POST['groupe'] ."]","",$user['groupe']);
-
-				$updateUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-				$updateUser->execute(array($newString, $user['id']));
+				$updateLink = $bdd->prepare('DELETE FROM `gulinks` WHERE `userId` = ? AND `groupeId` = ?');
+				$updateLink->execute(array($user['id'], $groupe['id']));
 
 				
-				http_response_code(200);
-				echo json_encode(array());
-
+				echo json_encode(array('status' => 200));
 
 				return true;
 

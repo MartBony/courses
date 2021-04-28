@@ -12,14 +12,14 @@
 	</form>
 	<form class="signup">
 		<h2>S'inscrire</h2>
-		<label for="iEmail">Email</label>
-		<input required type="email" id="iEmail" autocomplete="email">
-		<label for="iPass">Mot de passe</label>
-		<input required minlength="6" type="password" id="iPass" autocomplete="new-password">
-		<label for="iPassConf">Confirmez le mot de passe</label>
-		<input required type="password" id="iPassConf" autocomplete="new-password">
-		<label for="iNom">Votre nom</label>
-		<input required minlength="2" maxlength="20" type="text" id="iNom" autocomplete="name">
+		<label>Email
+		<input required type="email" name="email" autocomplete="email"></label>
+		<label>Mot de passe
+		<input required minlength="6" type="password" name="password" autocomplete="new-password"></label>
+		<label>Confirmez le mot de passe
+		<input required type="password" name="passwordVer" autocomplete="new-password"></label>
+		<label for="iNom">Votre nom
+		<input required minlength="2" maxlength="20" type="text" name="nom" autocomplete="name"></label>
 		<button class="submit">Envoyer</button>
 	</form>
 </section>

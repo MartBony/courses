@@ -50,6 +50,11 @@ export default function initEvents(app){
 				}, 1000);
 			}
 		},
+		openAsync = async () => {
+			LocalStorage.removeItem("usedGroupe");
+			LocalStorage.removeItem("usedCourse");
+			return app.queue.enqueue(() => app.pull("open"));
+		},
 		noLoaderRefresh = () => {
 			console.log(app);
 			if(!app.pending){
@@ -407,26 +412,26 @@ export default function initEvents(app){
 		},
 		addGroupe = e => {
 			e.preventDefault();
-			if (document.querySelector('#addGroupe #titreG').value && document.querySelector('#addGroupe #titreG').value != '') {
+			const form = e.target;
+			if (form.titre.value && form.titre.value != '') {
 				document.querySelector('.loader').classList.remove('opened');
 				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
-					data: { newGroupe: true, titre: document.querySelector('#addGroupe #titreG').value }
-				}).then(data => {
-					document.querySelector('.loader').removeClass('opened');
-					document.querySelector('#addGroupe #titreG').value = "";
-					LocalStorage.clear();
-					UI.closeForms();
+					data: { newGroupe: true, titre: form.titre.value }
+				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
-					refreshAsync();
-				}).catch(res => {
-					document.querySelector('.loader').removeClass('opened');
-					if (res.status == 400 && res.responseJSON && res.responseJSON.err && res.responseJSON.err == 'length'){
-						alert("La longeur du titre d'un groupe doit être comprise entre 2 et 20 charactères");
-					} else if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else UI.offlineMsg(app, res)
+					if(res.status == 200){
+						form.titre.value = "";
+						LocalStorage.clear();
+						UI.closeModernForms();
+						refreshAsync();
+					} else if(res.payload) {
+						UI.erreur(res.payload.message);
+					}  else throw "La réponse du serveur n'est pas correcte. Redemmarez l'application et réessayez.";
+					
+				}).catch(err => {
+					UI.erreur(err);
 				});
 			}
 			else
@@ -434,44 +439,69 @@ export default function initEvents(app){
 				alert('Il faut donner un nom à la course 😑');
 			}
 		},
-		invitation = e => {
+		submitInvitation = e => {
 			e.preventDefault();
-			if ($('#invitation #nomInv').val() && $('#invitation #nomInv').val() != '') {
-				if ($('#invitation #keyInv').val() && $('#invitation #keyInv').val() != '') {
-			
-					document.getElementsByClassName('loader')[0].classList.add('opened');
-					fetcher({
-						method: "POST",
-						url: "serveur/invites.php",
-						data: { invite: true, nom: $('#invitation #nomInv').val(), key:  $('#invitation #keyInv').val(), groupe: app.groupe.id }
-					}).then(function(data){
-						$('.loader').removeClass('opened');
-							$('#invitation #nomInv').val('');
-							$('#invitation #keyInv').val('');
-							UI.closeForms();
-							UI.message('Réussi', "L'invitation est envoyée, surveillez les paramètres de l'invité", [
-								{ texte:"C'est noté", action : () => UI.closeMessage()}
-							]);
-				
-					}).catch(res => {
-						$('.loader').removeClass('opened');
-						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.requireAuth();
-						} else if(res.status == 403) {
-							UI.erreur('Erreur',"Impossible d'envoyer l'invitation, l'invité est déja membre du groupe ou bien est déja invité à le rejoindre");
-						} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "No User Found"}) {
-							UI.erreur('Erreur',"Les informations entrées ne correspondent à aucun utilisateur, réessayez");
-						} else UI.offlineMsg(app, res);
-					});
-				}
-				else{
-					alert('Rensignez la clef générée par l\'utilisateur');
-				}
+			const form = e.target;
+			if (form.nom.value && form.code.value) {
+				document.querySelector('.loader').classList.add('opened');
+				fetcher({
+					method: "POST",
+					url: "serveur/invites.php",
+					data: {
+						createInvitation: true,
+						nom: form.nom.value,
+						code:  form.code.value,
+						groupe: app.groupe.id 
+					}
+				}).then(res => {
+					document.querySelector('.loader').classList.remove('opened');
+					if(res.status == 200){
+						form.nom.value = '';
+						form.code.value = '';
+						UI.closeModernForms();
+						UI.message('Envoi réussi', "L'invitation est envoyée, rendez vous dans les paramêtres du destinataire pour confirmer.");
+					} else if (res.status == "offline"){
+						UI.offlineMsg();
+					} else if(res.payload){
+						UI.erreur(res.payload.message);
+					} else UI.erreur();
+				});
 			}
 			else
 			{
-				alert('Renseignez le nom de l\'utilisateur');
+				UI.erreur('Veuillez renseigner tous les champs');
 			}
+		},
+		leaveGroupe = e => {
+			if(app.groupe && app.groupe.id){
+				const groupeId = app.groupe.id;
+				document.querySelector('.loader').classList.add('opened');
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					body: { leaveGroup: 'true', groupe: app.groupe.id }
+				}).then(res => {
+					document.querySelector('.loader').classList.remove('opened');
+					if(res.status == 200){
+						UI.closeModal();
+						Promise.all([
+							IndexedDbStorage.filterCursorwise("courses", null, null, (course) => {
+								if(course.groupe == groupeId) return false;
+								return true;
+							}),
+							IndexedDbStorage.delete("groupes", groupeId)
+						]).then(openAsync);
+					}
+				}).catch(err => {
+					console.log(err);
+					if (err.responseJSON && err.responseJSON.notAuthed){
+						UI.requireAuth();
+					} else {
+						alert("Le serveur a rencontré un problème");
+						UI.offlineMsg(app, err);
+					}
+				});
+			} else UI.erreur("Une erreur est survenue, selectionnez ou créez un groupe dans les paramêtre pour continuer.");
 		};
 
 
@@ -563,7 +593,7 @@ export default function initEvents(app){
 		}
 		if(e.target.classList.contains('groupe')
 			|| e.target.parentNode.classList.contains('groupe')
-			|| e.target.parentNode.parentNode.classList.contains('groupe')) {
+			|| e.target.parentNode.parentNode.classList.contains('groupe')) { // when clicked on a button
 			let btGroupe;
 			switch(true){
 				case e.target.classList.contains('groupe'):
@@ -576,6 +606,16 @@ export default function initEvents(app){
 				btGroupe = e.target.parentNode.parentNode;
 				break;
 			}
+			
+			if(e.target.classList.contains('ms-Icon--Leave')) {
+				UI.modal('leaveGroupe', btGroupe.innerHTML);
+				return null;
+			}
+			else if(e.target.classList.contains('ms-Icon--AddFriend')) {
+				UI.openModernForm("inviter");
+				return null;
+			}
+
 			app.queue.enqueue(() => app.pull("open", btGroupe.getAttribute("idGroupe")));
 		}
 		else if(e.target.id == "deconnect") {
@@ -605,16 +645,13 @@ export default function initEvents(app){
 			
 		} else if (e.target.id == "supprCompte") UI.modal(app, 'deleteAll')
 		else if (e.target.id == 'generateId') app.generateInviteKey()
-		else if (e.target.id == 'newgroupe') UI.openAddGroup()
-		else if (e.target.parentNode.tagName == "BUTTON"){
-			if(e.target.classList.contains('ms-Icon--Leave')) UI.modal(app, 'leaveGroupe')
-			else if(e.target.classList.contains('ms-Icon--AddFriend')) UI.promptAddFriend(app)
-		} else if (e.target.parentNode.id == "invitations"){
+		else if (e.target.id == 'newgroupe') UI.openModernForm('groupe')
+		else if (e.target.parentNode.id == "invitations"){
 			if(e.target.tagName == "BUTTON") Pull.invitations(app)
 		}
 	});
 
-	document.querySelector('#params').addEventListener('change', e => {
+	document.getElementById('params').addEventListener('change', e => {
 		if(e.target.id === 'currency'){
 			if(LocalStorage.getItem('currency')){
 				LocalStorage.setItem('currency',"");
@@ -631,8 +668,9 @@ export default function initEvents(app){
 	// Modal
 
 	document.getElementById('modal').addEventListener('click', e => {
+		e.preventDefault();
 		if(e.target.classList.contains("back")) UI.closeModal()
-		else if (e.target.classList.contains("leaveGrp")) app.leaveGrp()
+		else if (e.target.classList.contains("confirmLeaveGroupe")) leaveGroupe()
 		else if (e.target.classList.contains("lienParams")) UI.openMenus('params')
 		else if (e.target.classList.contains("supprConf")) app.deleteUser()
 		else if (e.target.classList.contains("supprConfCourse") && document.getElementById("deleteCourse").getAttribute("idCourse")){
@@ -709,7 +747,7 @@ export default function initEvents(app){
 		}
 		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
 			const id = event.target.parentNode.getAttribute("dbIndex");
-			if(id) UI.modal(app, 'deleteCourse', id);
+			if(id) UI.modal('deleteCourse', id);
 		}
 	});
 
@@ -781,10 +819,16 @@ export default function initEvents(app){
 			case "modernBuyer": 
 				if(e.target.tagName == "FORM") buyForm(e)
 				break;
+			case "modernGroupeAdder": 
+				if(e.target.tagName == "FORM") addGroupe(e)
+				break;
+			case "modernInviteur": 
+				if(e.target.tagName == "FORM") submitInvitation(e)
+				break;
 		}
 	});
 
-	document.getElementById('forms').addEventListener('click', e => {
+/* 	document.getElementById('forms').addEventListener('click', e => {
 		if (e.target.tagName == "I" && e.target.classList.contains("ms-Icon--Back")){
 			if(e.target.parentNode.id == "prices") UI.closePrice()
 			else UI.closeForms()
@@ -812,14 +856,15 @@ export default function initEvents(app){
 				if(e.target.tagName == "FORM") invitation(e)
 				break;
 		}
-	});
+	}); */
 
 	let inputsForms = new Array(
 		Array.from(document.querySelectorAll('#addArticle input')),
 		Array.from(document.querySelectorAll('#addCourse input')),
 		Array.from(document.querySelectorAll('#modernBuyer input')),
 		Array.from(document.querySelectorAll('#modernArticleAdder input')),
-		Array.from(document.querySelectorAll('#modernCourseAdder input'))
+		Array.from(document.querySelectorAll('#modernCourseAdder input')),
+		Array.from(document.querySelectorAll('#modernInviteur input'))
 	);
 
 	inputsForms.forEach(inputsList => {

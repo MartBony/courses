@@ -6,7 +6,7 @@ require_once('checkers/login.php');
 
 header('Content-Type: application/json');
 
-if(isset($_POST['inscript'])){
+if(isset($_POST['inscription'])){
 
 
 	if(isset($_POST['mail']) && isset($_POST['pass']) && isset($_POST['passConf']) && isset($_POST['nom'])){
@@ -20,11 +20,11 @@ if(isset($_POST['inscript'])){
 				if($pass == $passConf){
 					if(preg_match("/^[a-zA-Z0-9._-áàäâéèëêòôóöîïûúùü]{2,20}$/", $nom)){
 						inscrire($bdd, $mail, $pass, $nom);
-					} else echo json_encode(array('status' => 400, 'err' => 'nom'));
-				} else echo json_encode(array('status' => 400, 'err' => 'diff'));
-			} else echo json_encode(array('status' => 400, 'err' => 'pass'));
-		} else echo json_encode(array('status' => 400, 'err' => 'mail'));
-	} else echo json_encode(array('status' => 400, 'err' => 'manquant'));
+					} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Votre nom contient des caractères interdits.')));
+				} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Vous mots de passe ne correspondent pas.')));
+			} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Votre mot de passe est trop court.')));
+		} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Veuillez entrer un email valide.')));
+	} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Le formulaire n\'est pas entièrement rempli.')));
 
 
 } else if (isset($_POST['confirm'])) {
@@ -55,7 +55,7 @@ if(isset($_POST['inscript'])){
 
 	if(isset($_POST['mail']) && isset($_POST['pass'])){
 		connect($bdd, $_POST['mail'], $_POST['pass']);
-	} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'title' => 'Email ou mot de passe manquant')));
+	} else echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Email ou mot de passe manquant')));
 
 } else if (isset($_POST['tryCookiesAuth'])) {
 
@@ -92,21 +92,22 @@ if(isset($_POST['inscript'])){
 	/* setcookie("email", "", time() - 3600, '/', null, false, true);
 	setcookie("pass", "", time() - 3600, '/', null, false, true); */
 	
-	login($bdd, function($user, $oldToken) use ($bdd){
+	if(login($bdd, function($user, $oldToken) use ($bdd){
 		$deleteToken = $bdd->prepare("DELETE FROM `tokens` 
 			WHERE `id` = ?");
 		$deleteToken->execute(array($oldToken['id']));
-	});
+	})){
 
-	setcookie("identificationToken", "", array(
-		'expires' => time() - 3600,
-		'path' => '',
-		'secure' => true,
-		'samesite' => 'strict',
-		'httponly' => true
-	));
+		setcookie("identificationToken", "", array(
+			'expires' => time() - 3600,
+			'path' => '',
+			'secure' => true,
+			'samesite' => 'strict',
+			'httponly' => true
+		));
 
-	echo json_encode(array('status' => 200));
+		echo json_encode(array('status' => 200));
+	}
 }
 
 function connect(PDO $bdd, $mail, $pass){
@@ -194,24 +195,32 @@ function connect(PDO $bdd, $mail, $pass){
 					$isSent = false;
 				} */
 		
-				if($isSent) echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'title' => 'Votre compte n\'est pas encore actif, nous vous envoyons un email pour confirmez votre identité.')));
-				else echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'title' => 'Votre compte n\'est pas encore actif mais l\'envoi d\'un email de confirmation à échoué.')));
+				if($isSent) echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'message' => 'Votre compte n\'est pas encore actif, nous vous envoyons un email pour confirmez votre identité.')));
+				else echo json_encode(array('status' => 403, 'payload' => array('type' => 'ERROR', 'message' => 'Votre compte n\'est pas encore actif mais l\'envoi d\'un email de confirmation à échoué.')));
 			}
-		} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'title' => 'Votre mot de passe est incorrect.')));
+		} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'message' => 'Votre mot de passe est incorrect.')));
 
-	} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'title' => 'Cet email n\'est pas rensignée sur notre site.')));
+	} else echo json_encode(array('status' => 401, 'payload' => array('type' => 'ERROR', 'message' => 'Cet email n\'est pas rensignée sur notre site.')));
 	$reqUser->closeCursor();
 }
 
 function inscrire(PDO $bdd, $mail, $pass, $nom){
 	$reqUser = $bdd->prepare('SELECT * FROM users WHERE mail = ? AND `deleted` = 0');
 	$reqUser->execute(array($mail));
-	$user = $reqUser->fetch();
 
 	if ($reqUser->rowCount() == 0) {
+		// Create unique userID
+		$resUniqueId = -1;
+		$reqUniqueId = $bdd->prepare('SELECT COUNT(*) AS nbr FROM `users` WHERE `userId` = ?');
+		while($resUniqueId != 0){
+			$userId = generateRandomString(10);
+			$reqUniqueId->execute(array($userId));
+			$resUniqueId = ($resUniqueId->fetch())['nbr'];
+			$reqUniqueId->closeCursor();
+		}
+
 		$pass = hashPassword($pass);
-		$userId = generateRandomString(10);
-		$clef = generateRandomString();
+		$clef = generateRandomString(6);
 
 		$insertGroupe = $bdd->prepare('INSERT INTO `groupes` (nom) VALUES (?)'); // Create groupe
 		$insertGroupe->execute(array("Groupe de ".$nom));
@@ -226,7 +235,7 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 			VALUES (:userId, :groupeId, 1)
 		');
 		$createGroupLink->execute(array(
-			"userId" => $user['id'],
+			"userId" => $userId,
 			"groupeId" => $groupe['id']
 		));
 
@@ -243,37 +252,50 @@ function inscrire(PDO $bdd, $mail, $pass, $nom){
 			'inviteKey' => rand(0, 999999)
 		));
 
-	/* 	// Configuration du mail
-		$to = $mail;
-		$subject = "Courses - Activer votre compte" ;
-		$from = 'gestion@mprojects.fr';
-			
-		// To send HTML mail, the Content-type header must be set
-		$headers  = 'MIME-Version: 1.0' . "\r\n";
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-			
-		// Create email headers
-		$headers .= 'From: '.$from."\r\n".
-			'Reply-To: '.$from."\r\n" .
-			'X-Mailer: PHP/' . phpversion();
-			
-		// Compose a simple HTML email message
-		$message = '<html><body>';
+		// Configuration du mail
+		if($_SERVER['SERVER_NAME'] != "localhost"){
+			$to = $mail;
+			$subject = "Courses - Activer votre compte" ;
+			$from = 'gestion@mprojects.fr';
+				
+			// To send HTML mail, the Content-type header must be set
+			$headers  = 'MIME-Version: 1.0' . "\r\n";
+			$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+				
+			// Create email headers
+			$headers .= 'From: '.$from."\r\n".
+				'Reply-To: '.$from."\r\n" .
+				'X-Mailer: PHP/' . phpversion();
+				
+			// Compose a simple HTML email message
+			$message .= '
+				<html><body>
+					<section style="background: #eee;padding: 20px 10px;">
+						<header style="width: 100%;margin-bottom: 20px;">
+							<h1 style="display:inline;margin: 0px;text-transform: uppercase; font-family: Segoe UI,Helvetica Neue,Helvetica,Arial,sans-serif; font-weight: 700; font-size: 2.5em; color: #0078d4;">Courses</h1>
+						</header><br><br><br>
+						<section style="margin-top: 30px;width: 100%;">
+							<p style="margin: 0px;box-sizing: border-box;color: #333;font-family: Segoe UI,Helvetica Neue,Helvetica,Arial,sans-serif; font-weight: 700; font-size: 1.5em;">Vous pouvez des a present acceder a votre compte avec ce lien</p> <br>
 
-		require("templateMail.php");
+							<a style="color: white;font-size: 1.5em;font-weight:600;background: #0078d4;text-decoration: none;font-family: Segoe UI,Helvetica Neue,Helvetica,Arial,sans-serif;padding: 5px;" href="http://mprojects.fr/courses/index.php?mail='.$mail.'&auth='.$clef.'">Cliquez ici</a> <br> <br>
+							<hr> <br>
+							<a style="color: black;font-size: 1.5em;font-family: Segoe UI,Helvetica Neue,Helvetica,Arial,sans-serif; font-weight: 700;color: #666;">Ou copiez/collez ce lien dans votre navigateur http://mprojects.fr/courses/index.php?mail='.$mail.'&auth='.$clef.'</a><br><br><br><br>
+							<span style="display: block;margin-top: 60px;font-style: 1em;">Ceci est un mail automatique, Merci de ne pas y repondre.;</span>
+						</section>
+					</section>
+				</body></html>';
+				
+			// Sending email
+			if(mail($to, $subject, $message, $headers)){
+				echo json_encode(array('status' => 200));
+		 	} else{
+				echo json_encode(array('status' => 200, 'payload' => array('type' => "WARNING", 'message' => 'VOus êtes correctement inscrits mais nous ne parvenons pas à vous envoyer un email de confirmation.')));
+			}
 
-		$message .= '</body></html>';
-			
-		// Sending email
-		if(mail($to, $subject, $message, $headers)){ */
-			$send = true;
-	/* 	} else{
-			$send = false;
-		} */
+		} else echo json_encode(array('status' => 200, 'payload' => array('type' => "WARNING", 'message' => 'Le serveur local ne peut pas envoyer de mail de vérification.')));
 
-		echo json_encode(array('sent' => $send));
 
-	} else echo json_encode(array('status' => 401, 'err' => 'exists'));
+	} else echo json_encode(array('status' => 401, 'payload' => array('type' => "ERROR", 'message' => 'Cet email est déja renseignée.')));
 
 	$reqUser->closeCursor();
 

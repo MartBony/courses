@@ -51,7 +51,7 @@
 				<h4>Nom du compte : <em></em></h4>
 				<h4>Generer une clef pour rejoindre un groupe</h4>
 				<div id="idInvit">
-					<button id="generateId">Generer</button>
+					<button id="generateId">Genérer</button>
 					<h4 id="idPrompt"></h4>
 				</div>
 				

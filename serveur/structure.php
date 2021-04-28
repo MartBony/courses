@@ -12,7 +12,7 @@ function groupes($user, PDO $bdd) {
 		FROM `groupes` g 
 		INNER JOIN `gulinks` l
 		ON g.id = l.groupeId
-		WHERE l.userId = ?
+		WHERE l.userId = ? AND l.active = 1
 	');
 	$reqGroupesOfUser->execute(array($user['id']));
 
@@ -23,7 +23,7 @@ function groupes($user, PDO $bdd) {
 			FROM `users` u
 			INNER JOIN `gulinks` l
 			ON u.id = l.userId
-			WHERE l.groupeId = ?
+			WHERE l.groupeId = ? AND `active` = 1
 		');
 		$reqMembres->execute(array($groupe['id']));
 		$membres = array();

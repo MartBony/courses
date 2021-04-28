@@ -20,42 +20,26 @@ installSW()
 // Auth
 document.querySelector('form.signup').onsubmit = e => {
 	e.preventDefault();
-	let mail = document.querySelector('#iEmail').value,
-		pass = document.querySelector('#iPass').value,
-		passConf = document.querySelector('#iPassConf').value,
-		nom = document.querySelector('#iNom').value;
+	const form = e.target;
 	fetcher({
 		method: "POST",
 		url: "serveur/auth.php",
-		data: { inscript: true, mail: mail, pass: pass, passConf: passConf, nom: nom }
-	}).then(data => {
-		if (data.status == 200){
-			if(data.sent){
-				alert("Votre compte à été créé, un email de confirmation à été envoyé à votre adresse email");
+		body: { 
+			inscription: true, 
+			mail: form.email.value, 
+			pass: form.password.value, 
+			passConf: form.passwordVer.value, 
+			nom: form.nom.value 
+		}
+	}).then(res => {
+		if (res.status == 200){
+			if(res.payload){
+				UI.message(res.payload.message);
 			} else {
-				alert("Il y a eu un problème");
+				alert("Vous êtes inscrits avec succès, nous vous demandons de confirmez votre adresse email avec le message que nous vous avons envoyé.");
 			}
-		} else if((data.status == 400 || data.status == 401) && data.err){
-			switch(data.err){
-				case "manquant":
-					alert('Il faut remplir tous les champs');
-					break;
-				case "mail":
-					alert('L\'email renseigné est incorrect');
-					break;
-				case "pass":
-					alert('Le mot de passe doit faire au moins 6 caractères');
-					break;
-				case "diff":
-					alert('Les mots de passe ne correspondent pas');
-					break;
-				case "nom":
-					alert('Le nom doit contenir entre 2 et 20 lettres, majuscules ou minuscules');
-					break;
-				case "exists":
-					alert('Un compte relié à cette email existe déja, essayez de vous connecter');
-					break;
-			}
+		} else {
+			UI.erreur(res.payload.message);
 		}
 	}).catch(err => {
 		console.log(err);

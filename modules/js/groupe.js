@@ -66,7 +66,7 @@ export default class Groupe{
 		dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
 
 		document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
-
+		Array.from(document.querySelectorAll(".promptActivation, .promptEmpty")).forEach(el => el.remove());
 		if(!courses.length) {
 			// Array.from(document.querySelectorAll('#menu .course')).forEach(node => node.remove());
 			Array.from(document.querySelectorAll('.main ul')).forEach(node => node.prepend(Generate.noCourse()));

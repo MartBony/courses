@@ -2,8 +2,7 @@
 	position: absolute;
 	top: 0;
 	left: 0;
-	right: 0;
-	bottom: 0;
+	width: 100vw;
 	z-index: 8;
 
 	display: flex;
@@ -13,10 +12,16 @@
 	gap: 20px;
 	transform: scale(0.9);
 	background: #fafafa;
-	border-radius: 4px;
+	max-height: 100vh;
+	min-height: 100vh;
+	overflow: hidden;
+
+	box-sizing: border-box;
 }
 
 #authContainer.opened{
+	max-height: none;
+	overflow: visible;
 	visibility: visible;
 	opacity: 1;
 	transform: scale(1);
@@ -92,16 +97,9 @@ input#iColor{
 	box-shadow: none;
 }
 
-@media screen and (max-width: 800px){
+@media screen and (min-width: 800px){
 	#authContainer{
-		border-radius: 12px;
-		grid-template-rows: 0.8fr 6.5fr 0.8fr 10.5fr;
-		bottom: auto;
-		grid-template-columns: 1fr;
-	}
-	
-	#authContainer.opened{
-		height: auto;
+		padding: 5%;
 	}
 
 	#authContainer input{
@@ -110,6 +108,7 @@ input#iColor{
 
 	#authContainer form{
 		border-radius: 10px;
+		width: auto;
 	}
 
 }

@@ -10,8 +10,13 @@ class Pull{
 			if(res.action && res.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
 			if(res.status == 200){
 				return res.payload;
-			} else if (res.status == "offline") UI.msgIsOffline();
-			else throw res;
+			} else if (res.status == "offline") {
+				UI.msgIsOffline();
+				return true;
+			} else {
+				UI.erreur(err.payload ? err.payload.message : null);
+				throw res;
+			}
 		});
 	}
 	static groupe(app, idGroupe){
@@ -24,8 +29,13 @@ class Pull{
 			if(res.action && res.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
 			if(res.status == 200){
 				return res.payload;
-			} else if (res.status == "offline") UI.msgIsOffline();
-			else throw res;
+			} else if (res.status == "offline") {
+				UI.msgIsOffline();
+				return true;
+			} else {
+				UI.erreur(err.payload ? err.payload.message : null);
+				throw res;
+			}
 		});
 	}
 	static course(idCourse){
@@ -37,20 +47,25 @@ class Pull{
 			if(res.action && res.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
 			if(res.status == 200){
 				return res.payload;
-			} else if (res.status == "offline") UI.msgIsOffline();
-			else throw res;
+			} else if (res.status == "offline") {
+				UI.msgIsOffline();
+				return true;
+			} else{
+				UI.erreur(err.payload ? err.payload.message : null);
+				throw res;
+			}
 		});
 	}
 	static invitations(app){
 		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: {pull: true}
-		}).then(data => app.updateInvites(data))
-		.catch(res => {
-			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.requireAuth();
-			} else $('#invitations div').html('Un problème est survenu');
+			body: { pull: true }
+		}).then(res => {
+			if(res.status == 200) app.updateInvites(res.payload)
+			else if(res.payload){
+				UI.erreur(res.payload.message)
+			} else UI.erreur()
 		});
 	}
 	static async authRequest(){
