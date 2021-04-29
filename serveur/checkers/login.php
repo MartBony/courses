@@ -23,26 +23,32 @@ function login( PDO $bdd, $callback){ // Rewite responses
 
 					if($user['activated']){
 						call_user_func($callback, $user, $token);
+						return true;
 					} else {
-						echo json_encode(array('status' => 403, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Votre compte n'est pas encore actif, connectez-vous pour recevoir un email de confirmation.")));
+						echo json_encode(array('status' => 403, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'message' => "Votre compte n'est pas encore actif, connectez-vous pour recevoir un email de confirmation.")));
+						return false;
 					}
 
 				} else {
-					echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous ne reconnaissons pas votre compte, connectez-vous de nouveau.")));
+					echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'message' => "Nous ne reconnaissons pas votre compte, connectez-vous de nouveau.")));
+					return false;
 				}
 				$reqUser->closeCursor();
 				
 			} else {
-				echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'MSG', 'title' => "Pour votre sécurité, connectez-vous de nouveau")));
+				echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'MSG', 'message' => "Pour votre sécurité, connectez-vous de nouveau")));
+				return false;
 			}
 
 		} else {
-			echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous n'arrivons pas à vous identifier, connectez-vous de nouveau.")));
+			echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'message' => "Nous n'arrivons pas à vous identifier, connectez-vous de nouveau.")));
+			return false;
 		}
 		$reqToken->closeCursor();
 		
 	} else {
-		echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'title' => "Nous n'arrivons pas à vous identifier, activez vos cookies et connectez-vous de nouveau.")));
+		echo json_encode(array('status' => 401, 'action' => 'authenticate', 'payload' => array('type' => 'ERROR', 'message' => "Nous n'arrivons pas à vous identifier, activez vos cookies et connectez-vous de nouveau.")));
+		return false;
 	}
 
 }

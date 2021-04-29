@@ -16,7 +16,7 @@ function checkCourse(PDO $bdd, $user, $courseId, $callback) {
 		if($reqCourse->rowCount() == 1){
 			$course = $reqCourse->fetch();
 
-			$reqLink = $bdd->prepare('SELECT * FROM `gulinks` WHERE `userId` = :userId AND `groupeId` = :groupeId');
+			$reqLink = $bdd->prepare('SELECT * FROM `gulinks` WHERE `userId` = :userId AND `groupeId` = :groupeId AND `active` = 1');
 			$reqLink->execute(array(
 				"userId" => $user['id'],
 				"groupeId" => $course['groupe']
@@ -24,15 +24,15 @@ function checkCourse(PDO $bdd, $user, $courseId, $callback) {
 			if($reqLink->rowCount() == 1){
 				call_user_func($callback, $user, $course);
 			} else {
-				echo json_encode(array('status' => 404, 'payload' => array('err' => 'Corresponding groupe not found')));
+				echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'La course demandée est inacessible.')));
 				return true;
 			}
 		} else {
-			echo json_encode(array('status' => 404, 'payload' => array('err' => 'Course not found')));
+			echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'Nous ne trouvons pas votre course.')));
 			return true;
 		}
 	} else {
-		echo json_encode(array('status' => 400, 'payload' => array('err' => 'No Course id in request')));
+		echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Votre requête est invalide. Rechargez la page et réessayez.')));
 		return true;
 	}
 }

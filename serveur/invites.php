@@ -6,198 +6,150 @@ require_once('checkers/checkGroupe.php');
 
 header('Content-Type: application/json');
 
-function pushCousesIndependent($user, PDO $bdd){ // REWRITE
+function pushCousesIndependent(PDO $bdd, $user){
 	if(isset($_POST['getInviteKey'])) {
-		$id = rand(0, 999999);
-		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ? WHERE id = ?');
-		$reqStoreId->execute(array($id, $user['id']));
+		$key = rand(0, 999999);
+		$hashedKey = hash('sha384', $key);
+		$reqStoreId = $bdd->prepare('UPDATE `users` SET `inviteKey` = ? WHERE `id` = ?');
+		$reqStoreId->execute(array($hashedKey, $user['id']));
 
-		http_response_code(200);
 		echo json_encode(array(
-			'id' => $id,
-			'user' => $user['id']
+			'status' => 200,
+			'payload' => array('key' => $key, 'deletethat' => $hashedKey)
 		));
 
 		return true;
 	} else if(isset($_POST['pull'])){
 		$groupes = array();
 
-		$reqPullPendings = $bdd->prepare('SELECT `pending` FROM `users` WHERE `id` = ?');
+		$reqPullPendings = $bdd->prepare('SELECT g.nom, g.id 
+			FROM `gulinks` as lks 
+			INNER JOIN `groupes` as g 
+			ON g.id = lks.groupeId 
+			WHERE lks.userId = ? AND lks.active = 0');
 		$reqPullPendings->execute(array($user['id']));
-		$pullPendings = $reqPullPendings->fetch();
-		$reqPullPendings->closeCursor();
 
-		if($reqPullPendings->rowCount() == 1){
-			$cursor = "outside";
-			$idGroupe = "";
-		
-			foreach(str_split($pullPendings['pending']) as $char ){
-				if($char == "[") {
-					$cursor = "inside";
-				} else if ($char == "]") {
-					$cursor = "outside";
-
-					$reqAskingGroupe = $bdd->prepare('SELECT `nom` FROM `groupes` WHERE `id` = ?');
-					$reqAskingGroupe->execute(array($idGroupe));
-					$groupe = $reqAskingGroupe->fetch();
-					if($reqAskingGroupe->rowCount() == 1){
-						array_push($groupes, array('id' => $idGroupe, 'nom' => $groupe['nom']));
-					}
-					$reqAskingGroupe->closeCursor();
-
-					$idGroupe = "";
-		
-				} else if ($cursor == "inside") {
-					$idGroupe .= $char;
-				}
-			
-			}
-
+		while($groupe = $reqPullPendings->fetch()){
+			array_push($groupes, array('id' => $groupe['id'], 'nom' => $groupe['nom']));
 		}
+		
 
-		http_response_code(200);
 		echo json_encode(array(
-			'groupes' => $groupes
+			'status' => 200,
+			'payload' => array(
+				'groupes' => $groupes
+			)
 		));
 		
 		return true;
-	} else if(isset($_POST['accept']) && isset($_POST['id'])){
-		$id = $_POST['id'];
+	} else if(isset($_POST['accept'])){
 
-		$reqPullPendings = $bdd->prepare('SELECT `pending` FROM `users` WHERE `id` = ?');
-		$reqPullPendings->execute(array($user['id']));
-		$pullPendings = $reqPullPendings->fetch();
-		$reqPullPendings->closeCursor();
-		$gotIt = false;
-
-		if($reqPullPendings->rowCount() == 1){
-
-			$cursor = "outside";
-			$idGroupe = "";
-			foreach(str_split($pullPendings['pending']) as $char ){
-				if($char == "[") {
-					$cursor = "inside";
-				} else if ($char == "]") {
-					$cursor = "outside";
-
-					if($idGroupe == $id){
-						if (strpos($user['groupe'], '['. $id .']') !== false) {
-							$newString = str_replace("[".$id."]","",$pullPendings['pending']);
-							$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
-							$updateUser->execute(array($newString, $user['id']));
-		
-							$insertUser = $bdd->prepare('UPDATE `users` SET `groupe` = ? WHERE `id` = ?');
-							$insertUser->execute(array(( "[". $idGroupe ."]". $user['groupe']), $user['id']));
-		
-							http_response_code(200);
-							echo json_encode(array());
-							$gotIt = true;
-						} else {
-							http_response_code(403);
-							echo json_encode(array('err' => 'Already present'));
-						}
-						break;
-					}
-
-					$idGroupe = "";
-		
-				} else if ($cursor == "inside") {
-					$idGroupe .= $char;
-				}
-			
-			}
-
+		if(!isset($_POST['groupeId'])){
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Votre requête n\'est pas valide, actualisez et réessayez.')));
+			return true;
 		}
 
-		if(!$gotIt){
-			http_response_code(404);
-			echo json_encode(array('err' => 'Not Proposed'));
+		$groupeId = (int) $_POST['groupeId'];
+
+		$reqLink = $bdd->prepare('SELECT `id` FROM `gulinks` WHERE `userId` = ? AND `groupeId` = ? AND `active` = 0');
+		$reqLink->execute(array($user['id'], $groupeId));
+
+		if($reqLink->rowCount() == 1){
+			$link = $reqLink->fetch();
+
+			$updateLink = $bdd->prepare('UPDATE `gulinks` SET `active` = 1 WHERE `id` = ?');
+			$updateLink->execute(array($link['id']));
+
+			echo json_encode(array('status' => 200));
+	
+		}
+		else {
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Nous ne trouvons pas votre invitation. Actualisez et réessayez.')));
 		}
 		
 		return true;
-	} else if(isset($_POST['reject']) && isset($_POST['id'])){
-		$id = $_POST['id'];
+	} else if(isset($_POST['reject'])){
 
-		$reqPullPendings = $bdd->prepare('SELECT `pending` FROM `users` WHERE `id` = ?');
-		$reqPullPendings->execute(array($user['id']));
-		$pullPendings = $reqPullPendings->fetch();
-		$reqPullPendings->closeCursor();
-		$gotIt = false;
-
-		if($reqPullPendings->rowCount() == 1){
-
-			$cursor = "outside";
-			$idGroupe = "";
-			foreach(str_split($pullPendings['pending']) as $char ){
-				if($char == "[") {
-					$cursor = "inside";
-				} else if ($char == "]") {
-					$cursor = "outside";
-
-					if($idGroupe == $id){
-						$newString = str_replace("[". $id ."]","",$pullPendings['pending']);
-						$updateUser = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE `id` = ?');
-						$updateUser->execute(array($newString, $user['id']));
-
-						http_response_code(200);
-						echo json_encode(array());
-						$gotIt = true;
-	
-						break;
-					}
-
-					$idGroupe = "";
-		
-				} else if ($cursor == "inside") {
-					$idGroupe .= $char;
-				}
-			
-			}
-
+		if(!isset($_POST['groupeId'])){
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Votre requête n\'est pas valide, actualisez et réessayez.')));
+			return true;
 		}
 
-		if(!$gotIt){
-			http_response_code(404);
-			echo json_encode(array('err' => 'Not Proposed'));
+		$groupeId = (int) $_POST['groupeId'];
+
+		$reqLink = $bdd->prepare('SELECT `id` FROM `gulinks` WHERE `userId` = ? AND `groupeId` = ? AND `active` = 0');
+		$reqLink->execute(array($user['id'], $groupeId));
+
+		if($reqLink->rowCount() == 1){
+			$link = $reqLink->fetch();
+
+			$updateLink = $bdd->prepare('DELETE FROM `gulinks` WHERE `id` = ?');
+			$updateLink->execute(array($link['id']));
+
+			echo json_encode(array('status' => 200));
+	
+		}
+		else {
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Nous ne trouvons pas votre invitation. Actualisez et réessayez.')));
 		}
 		
 		return true;
 	}
 }
 
-function pushGroupeDependent($user, $groupe, PDO $bdd){
-	if(isset($_POST['invite']) && isset($_POST['nom']) && isset($_POST['key'])) {
+function pushGroupeDependent(PDO $bdd, $user, $groupe){
+	if(isset($_POST['createInvitation'])) {
+		if(!isset($_POST['nom']) || !isset($_POST['code'])){
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Assurez-vous d\'avoir correctement rempli le formulaire.')));
+			return true;
+		}
 
-		$reqInvited = $bdd->prepare('SELECT `pending`, `id`,`groupe` FROM `users` WHERE `inviteKey` = ? AND nom = ?');
-		$reqInvited->execute(array($_POST['key'], $_POST['nom']));
-		$invited = $reqInvited->fetch();
+
+		$reqInvited = $bdd->prepare('SELECT `id`, `premium` FROM `users` WHERE `inviteKey` = ? AND `nom` = ?');
+		$reqInvited->execute(array(hash('sha384', $_POST['code']), $_POST['nom']));
+
 		if($reqInvited->rowCount() == 1){
-			if(strpos($invited['groupe'], "[".$groupe['id']."]") === false && strpos($invited['pending'], "[".$groupe['id']."]") === false){
+			$invited = $reqInvited->fetch();
 
-				$reqInvited->closeCursor();
-				$setPending = $bdd->prepare('UPDATE `users` SET `pending` = ? WHERE id = ?');
-				$setPending->execute(array( "[". $groupe['id'] ."]" . $invited['pending'], $invited['id']));
-				$setPending->closeCursor();
-				http_response_code(200);
-				echo json_encode(array());
+			if(!$invited['premium']){
+				$reqLinksNum = $bdd->prepare('SELECT COUNT(*) AS nbr FROM `gulinks` WHERE `userId` = ? AND `active` = 1');
+				$reqLinksNum->execute(array($invited['id']));
+				$linksNum = $reqLinksNum->fetch();
+				if($linksNum['nbr'] > 2){
+					echo json_encode(array('status' => 400, 'payload' => array('message' => 'L\'utilisateur à atteind son nombre maximal de groupe. Votre invité doit passer en premium ou bien quitter un de ses groupes.')));
+					return true;
+				}
+			}
+
+			$reqNoLink = $bdd->prepare('SELECT COUNT(*) AS nbr FROM `gulinks` WHERE `groupeId` = ? AND `userId` = ?');
+			$reqNoLink->execute(array($groupe['id'], $invited['id']));
+			$noLink = $reqNoLink->fetch();
+			if($noLink["nbr"] == 0){
+
+				$createLink = $bdd->prepare('INSERT INTO `gulinks` (`userId`, `groupeId`, `active`) VALUES (?,?,0)');
+				$createLink->execute(array($invited['id'], $groupe['id']));
+
+				echo json_encode(array('status' => 200));
 
 			} else {
-				http_response_code(403);
-				echo json_encode(array());
+				echo json_encode(array('status' => 400, 'payload' => array('message' => 'L\'invitation n\'a pas pu être envoyée, vérifiez que l\'utilisateur n\'est pas déja invité ou membre du groupe.')));
 			}
 
 		} else {
-			http_response_code(404);
-			echo json_encode(array('err' => 'No User Found'));
+			echo json_encode(array('status' => 400, 'payload' => array('message' => 'Les informations fournies ne correspondent à aucun utilisateur.')));
 		}
+		return true;
 		
 	}
 }
 
 login($bdd, function($user) use($bdd){
-	if(!pushCousesIndependent($user, $bdd)){
+	if(!pushCousesIndependent($bdd, $user)){
 		checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
-			pushGroupeDependent($user, $groupe, $bdd);
+			if(!pushGroupeDependent($bdd, $user, $groupe)){
+				http_response_code(404);
+				echo json_encode(array("status" => 404));
+			}
 		});
 	}
 });

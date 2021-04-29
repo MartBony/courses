@@ -126,28 +126,10 @@ export default class UI {
 		app.chart.data.datasets.forEach(dataset => dataset.data = graph);
 		app.chart.update();
 	}
-	static modal(app, id, data){
-		document.querySelector('#modal').classList.add('opened', id || '');
-		if(id == "leaveGroupe"){
-
-			let h4 = document.createElement('h4'),
-				ul = document.createElement('ul'),
-				childrens = [h4, ul];
-
-			$('#leaveGroupe div').children().remove();
-
-			h4.innerHTML = app.groupe.nom;
-			app.groupe.membres.forEach(membre => {
-				let li = document.createElement('li');
-				li.innerHTML = membre;
-				ul.appendChild(li);
-			});
-
-			childrens.forEach(child => {
-				$('#leaveGroupe div')[0].appendChild(child);
-			});
-
-		} else if (id == "deleteCourse" && data) document.getElementById('deleteCourse').setAttribute("idCourse", data);
+	static modal(action, data){
+		document.querySelector('#modal').classList.add('opened', action || '');
+		if(action == "leaveGroupe" && data)document.querySelector('#leaveGroupe div').innerHTML = data;
+		else if (action == "deleteCourse" && data) document.getElementById('deleteCourse').setAttribute("idCourse", data);
 		
 	}
 	static closeModal(){
@@ -224,6 +206,14 @@ export default class UI {
 					} else UI.erreur("Un problème est survenu, réessayez")
 				}
 				break;
+			case "groupe":
+				document.getElementById("modernForms").classList.add("opened", "groupeForm");
+				setTimeout(() => document.querySelector(`#modernGroupeAdder input`).focus(), 300);
+
+				break;
+			case "inviter":
+				document.getElementById("modernForms").classList.add("opened", "inviteForm");
+				setTimeout(() => document.querySelector(`#modernInviteur input`).focus(), 300);
 		}
 
 		if(button){
@@ -340,7 +330,7 @@ export default class UI {
 			});
 		});
 	}
-	static promptAddFriend(app){
+	/* static promptAddFriend(app){
 		$('#invitation span').html(app.groupe.nom);
 
 		document.getElementById("forms").classList.add('opened','invite');
@@ -357,7 +347,7 @@ export default class UI {
 	static closeInvite(){
 		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
 		$('#invitation label, #invitation input').removeClass('opened');
-	}
+	} */
 	static showOptions(app, el){
 		const optIndex = el.classList.contains('article') ? 0 : 1,
 		optionsElement = document.getElementsByClassName('options')[optIndex],

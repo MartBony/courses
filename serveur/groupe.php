@@ -13,7 +13,7 @@ login($bdd, function($user) use ($bdd){
 			FROM `users` u
 			INNER JOIN `gulinks` l
 			ON u.id = l.userId
-			WHERE l.groupeId = ?
+			WHERE l.groupeId = ? AND l.active = 1
 		');
 		$reqMembres->execute(array($groupe['id']));
 		$membres = array();

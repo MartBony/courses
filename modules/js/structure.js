@@ -19,7 +19,7 @@ export default class Structure { // Structure means the the User
 	}
 	updateGroupes(groupes, save){
 		UI.closeModal();
-		if(!groupes.length) UI.modal(this, 'noGroupe')
+		if(!groupes.length) UI.modal('noGroupe')
 
 		groupes.forEach((groupe, index) => {
 			const groupeNode = document.querySelector(`.groupe[idGroupe="${groupe.id}"]`),

@@ -20,7 +20,7 @@ login($bdd, function($user) use ($bdd){ // REWRITE
 	$groupesOfUser = array();
 	while($groupe = $reqGroupesOfUser->fetch()){
 		
-		$reqNbrMembres = $bdd->prepare('SELECT COUNT(*) as nbrMembres FROM `gulinks` WHERE `groupeId` = ?');
+		$reqNbrMembres = $bdd->prepare('SELECT COUNT(*) as nbrMembres FROM `gulinks` WHERE `groupeId` = ? AND `active` = 1');
 		$reqNbrMembres->execute(array($user['id']));
 		$nbmMembres = $reqNbrMembres->fetch();
 		$nbmMembres = $nbmMembres['nbrMembres'];

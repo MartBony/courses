@@ -238,10 +238,6 @@
 	-webkit-user-select: none;
 }
 
-#modal.noGroupe{
-	z-index: 3;
-}
-
 #modal.leaveGroupe #leaveGroupe{
 	display: flex;
 	opacity: 1;
@@ -307,7 +303,7 @@
 	margin: 0 8%;
 }
 
-#modal .leaveGrp, #noGroupe button, #deleteAll .supprConf, #deleteCourse .supprConfCourse{
+#modal .confirmLeaveGroupe, #noGroupe button, #deleteAll .supprConf, #deleteCourse .supprConfCourse{
 	background: rgb(255, 175, 143);
 	color: white;
 }

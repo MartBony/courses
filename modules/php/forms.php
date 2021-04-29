@@ -90,6 +90,40 @@
 			<input class="submit" type="submit" name="submit" id="setPrice" value="Acheter">
 		</form>
 	</section>
+	<section id="modernGroupeAdder" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Créer un groupe
+		</h3>
+		<form>
+			<div class="formflex">	
+				<label>Titre du groupe
+					<input maxlength="50" type="text" name="titre" required />
+				</label>
+			</div>
+			<input type="submit" name="submit" value="Créer">
+		</form>
+	</section>
+	<section id="modernInviteur" class="formContainer">
+		<h3 class="modernFormTitle">
+			<i class="ms-Icon ms-Icon--Back" aria-hidden="true"></i>
+			Ajouter un membre
+		</h3>
+		<form>
+			<h2>Groupe non défini</h2>
+			<div class="formflex">
+				<label>Nom de l'invité
+					<input type="double" name="nom" required />
+				</label>
+			</div>
+			<div class="formflex">	
+				<label>Code de sécurité (à genérer sur le compte de l'invité)
+					<input type="number" name="code" required/>
+				</label>
+			</div>
+			<input type="submit" value="Envoyer">
+		</form>
+	</section>
 </div>
 <div id="forms">
 	<!-- <section id="prices" class="fromContainer">
@@ -152,7 +186,7 @@
 			</div>
 			<input class="submit" type="submit" name="submitCourse" id="submitCourse" value="Créer">
 		</form>
-	</section> -->
+	</section>
 	<section id="addGroupe" class="fromContainer">
 		<div class="blur"></div>
 		<h1>Créer un groupe</h1>
@@ -184,5 +218,5 @@
 				<li>Confirmez l'invitation sur l'appareil de l'invité</li>
 			</ul>
 		</article>
-	</section>
+	</section> -->
 </div>

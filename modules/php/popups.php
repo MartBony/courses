@@ -33,7 +33,7 @@
 		<p>Si vous étiez le dernier participant, le groupe et toutes les informations de courses liées seront supprimées</p>
 		<div></div>
 		<footer>
-			<button class="leaveGrp">Quitter</button>
+			<button class="confirmLeaveGroupe">Quitter</button>
 			<button class="back">Retour</button>
 		</footer>
 	</article>

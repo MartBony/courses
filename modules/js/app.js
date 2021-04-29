@@ -9,7 +9,7 @@ import Groupe from './groupe.js';
 import Structure from './structure.js';
 
 class App{
-	#buttons;
+	buttonsState;
 	constructor(userId, offline){
 
 		UI.openPanel('panier');
@@ -82,37 +82,35 @@ class App{
 			this.pullState.structure = true;
 			console.log('Network structure fetched:', data);
 
-			if(this.updateApp(data, true)){
-				idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
-				return Pull.groupe(this, idGroupe);
-			}
+			this.updateApp(data, true);
+			idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
+			return Pull.groupe(this, idGroupe);
 		})
 		.then(data => {
-			if(data){
-				// Update Group
-				this.pullState.groupe = true;
-				console.log('Network groupe fetched:', data);
-				update = this.updateGroupe(data, true);
-				if(update){
-					idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.groupe.courses[0].id;
-					// if(!idCourse) idCourse = this.groupe.coursesList.length != 0 ? this.groupe.coursesList[0].id : null;
-					return Pull.course(idCourse);
-				}
-			} throw "no Groupe data"
+			console.log(data);
+		
+			// Update Group
+			this.pullState.groupe = true;
+			console.log('Network groupe fetched:', data);
+			return this.updateGroupe(data, true);
+	
+		})
+		.then(() => {
+			idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.groupe.courses[0].id;
+			// if(!idCourse) idCourse = this.groupe.coursesList.length != 0 ? this.groupe.coursesList[0].id : null;
+			return Pull.course(idCourse);
 		})
 		.then(data => {
-			if(data){
-				this.pullState.course = true;
-				console.log('Network course fetched:', data);
-				const networkItems = this.updateCourse(data, true);
-				return Offline.filterPendingRequests(this, networkItems);
-			} else throw "no Course data"
+			this.pullState.course = true;
+			console.log('Network course fetched:', data);
+			const networkItems = this.updateCourse(data, true);
+			return Offline.filterPendingRequests(this, networkItems);
 		})
 		.then(items => {
 			this.course.updateItemsModern(this, items.articles, items.previews, true)
 		})
 		.catch(err => {
-			UI.erreur(err.payload ? err.payload.title : null)
+			console.log(err.payload ? err.payload : err);
 		})
 		.then(() => {
 			this.pending = false
@@ -282,30 +280,6 @@ class App{
 				});
 				
 			}
-		}
-	}
-	leaveGrp(){
-		if(this.groupe && this.groupe.id){
-			$('.loader').addClass('opened');
-			fetcher({
-				method: "POST",
-				url: "serveur/push.php",
-				data: { leaveGroup: 'true', groupe: this.groupe.id }
-			}).then(() => {
-				$('.loader').removeClass('opened');
-				UI.closeModal();
-				this.groupe.coursesList.forEach(el => IndexedDbStorage.delete("courses", el.id));
-				IndexedDbStorage.delete("groupes", this.groupe.id);
-				this.pull("refresh");
-			}).catch(res => {
-				if (res.responseJSON && res.responseJSON.notAuthed){
-					UI.requireAuth();
-				} else {
-					alert("Le serveur a rencontré un problème");
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(this, err);
-				}
-			});
 		}
 	}
 	buy(idPreview, prix){
@@ -481,7 +455,6 @@ class App{
 		this.user.update(data);
 		this.user.updateGroupes(data.groupes, save);
 
-		return data.groupes.length != 0;
 	}
 	updateGroupe(groupe, save){
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
@@ -501,10 +474,14 @@ class App{
 			this.groupe.update(groupe);
 			this.groupe.updateCourses(this, groupe.coursesList, save);
 
-			
-			return (groupe.coursesList && groupe.coursesList.length != 0);
+			if(groupe.coursesList.length == 0){
+				throw {payload: {type: "MSG", message: "Le groupe ne possède pas de courses."}};
+			}
 
-		} else UI.offlineMsg(this, "Contenu de groupe incomplet", "Le groupe demandé est indisponible pour l'instant")
+		} else {
+			UI.offlineMsg(this, "Contenu de groupe incomplet", "Le groupe demandé est indisponible pour l'instant");
+			throw {payload: new Error("Contenu de groupe incomplet")};
+		}
 	}
 	updateCourse(data, save){
 		if(data && data.id && data.nom && data.items){
@@ -519,7 +496,7 @@ class App{
 
 				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
 				this.course.updateSelf(this, data);
-				Array.from(document.getElementsByClassName('promptActivation')).forEach(node => node.remove());
+				Array.from(document.querySelectorAll('.promptActivation, .promptEmpty')).forEach(node => node.remove());
 
 				this.groupe.coursesNodeList.forEach(node => {
 					if (node.getAttribute('dbindex') == data.id) node.classList.add('opened')
@@ -567,55 +544,48 @@ class App{
 		});
 	}
 	updateInvites(data){
-		if(data.status == 200){
-			$('#invitations div').html('');
-			if(data.groupes.length != 0){
-				data.groupes.forEach(el => {
-					let button = document.createElement('button'),
-						span = document.createElement('span'),
-						accept = document.createElement('i'),
-						deny = document.createElement('i');
-					button.innerHTML = el.nom;
-					accept.className = "ms-Icon ms-Icon--CheckMark";
-					deny.className = "ms-Icon ms-Icon--Cancel";
-					accept.setAttribute("aria-hidden","true");
-					deny.setAttribute("aria-hidden","true");
-					
-					span.appendChild(accept);
-					span.appendChild(deny);
-					button.appendChild(span);
+		$('#invitations div').html('');
+		if(data.groupes.length != 0){
+			data.groupes.forEach(el => {
+				let button = document.createElement('button'),
+					span = document.createElement('span'),
+					accept = document.createElement('i'),
+					deny = document.createElement('i');
+				button.innerHTML = el.nom;
+				accept.className = "ms-Icon ms-Icon--CheckMark";
+				deny.className = "ms-Icon ms-Icon--Cancel";
+				accept.setAttribute("aria-hidden","true");
+				deny.setAttribute("aria-hidden","true");
 				
-					$(accept).on('click',() => {
-						this.acceptInvite(el.id);
-					});
-					$(deny).on('click',() => {
-						this.rejectInvite(el.id);
-					});
-					$('#invitations div').append(button);
+				span.appendChild(accept);
+				span.appendChild(deny);
+				button.appendChild(span);
+			
+				accept.addEventListener('click', () => {
+					this.acceptInvite(el.id);
 				});
-			} else $('#invitations div').html('Rien pour l\'instant')
-		}
+				deny.addEventListener('click', () => {
+					this.rejectInvite(el.id);
+				});
+				$('#invitations div').append(button);
+			});
+		} else $('#invitations div').html('Rien pour l\'instant')
 	}
 	acceptInvite(id){
 		
 		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: { accept: true, id: id }
-		}).then(() =>{
-			Pull.invitations(this);
-			this.pull("refresh");
-		}).catch(res => {
-			if (res.responseJSON && res.responseJSON.notAuthed){
-				UI.requireAuth();
-			} else if(res.status == 404 && res.responseJSON && res.responseJSON == {err: "Not Proposed"}){
-				UI.erreur("Action impossible, la requete porte vers un groupe qui ne vous est plus proposé");
-			} else if(res.status == 403 && res.responseJSON && res.responseJSON == {err: "Already present"}) {
-				UI.erreur("Vous appartenez déja à ce groupe");
-			} else {	
-				console.error(res);
-				$('#invitations div').append('Un problème est survenu');
-			}
+			data: { accept: true, groupeId: id }
+		}).then(res => {
+			if(res.status == 200){
+				Pull.invitations(this);
+				this.pull("refresh");
+			} else if (res.status == "offline"){
+				UI.offlineMsg();
+			} else if (res.payload) {
+				UI.erreur(res.payload.message);
+			} else UI.erreur();
 		});
 
 	}
@@ -624,17 +594,15 @@ class App{
 		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
-			data: { reject: true, id: id }
-		}).then(data =>{
-			if(data.status = 200){
+			data: { reject: true, groupeId: id }
+		}).then(res => {
+			if(res.status == 200){
 				Pull.invitations(this);
-				this.pull("refresh");
-			} else if (data.notAuthed){
-				UI.requireAuth();
-			}
-		}).catch(err => {
-			console.err(err);
-			$('#invitations div').append('Un problème est survenu');
+			} else if (res.status == "offline"){
+				UI.offlineMsg();
+			} else if (res.payload) {
+				UI.erreur(res.payload.message);
+			} else UI.erreur();
 		});
 
 	}
@@ -660,26 +628,21 @@ class App{
 		});
 	}
 	generateInviteKey(){
-		$('.loader').addClass('opened');
+		document.querySelector('.loader').classList.add('opened');
 		fetcher({
 			method: "POST",
 			url: "serveur/invites.php",
 			data: { getInviteKey: true }
-		}).then(data => {
-			$('.loader').removeClass('opened');
-			$('#idInvit h4').html(data.id);
-		}).catch(res => {
-			$('.loader').removeClass('opened');
-			if(res.responseJSON){	
-				if (res.responseJSON.notAuthed){
-					UI.requireAuth();
-				} else {
-					$('.loader').removeClass('opened');
-					UI.offlineMsg(this, res.responseJSON);
-				}
-			} else {
-				UI.offlineMsg(this, "Il y a eu un problème innatendu");
-			}
+		}).then(res => {
+			console.log(res);
+			document.querySelector('.loader').classList.remove('opened');
+			if(res.status == 200 && res.payload){
+				document.querySelector('#idInvit h4').innerHTML = res.payload.key;
+			} else if (res.status == "offline"){
+				UI.offlineMsg();
+			} else if (res.payload){
+				UI.erreur(res.payload.message)
+			} else UI.erreur()
 		});
 	}
 	applyTaxes(prix){
@@ -689,7 +652,7 @@ class App{
 		return prix + this.params.currency
 	}
 	get buttons(){
-		return this.#buttons;
+		return this.buttonsState;
 	}
 	set buttons(type){
 		if(this.buttons != type){
@@ -698,20 +661,20 @@ class App{
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.add("hide");
 					});
-					this.#buttons = "hide";
+					this.buttonsState = "hide";
 					break;
 				case "show":
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
 					});
-					this.#buttons = "show";
+					this.buttonsState = "show";
 					break;
 				case "listmode": // When course not activated
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
 						el.classList.remove("hide");
 					});
 					document.getElementById("addArt").classList.add("hide");
-					this.#buttons = "listmode";
+					this.buttonsState = "listmode";
 			}
 		} 
 	}
