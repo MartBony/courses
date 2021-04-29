@@ -358,7 +358,7 @@ section#calcul
 	}
 
 	#calcul header, #menu header{
-		width: 70%;
+		/* width: 70%; */
 		margin: auto;
 	}
 
@@ -400,7 +400,6 @@ section#calcul
 		grid-template-columns: 1fr 1fr;
 	}
 }
-
 
 /* The switch - the box around the slider */
 .switch {
@@ -713,10 +712,10 @@ article#invitations{
 	text-align: left;
 	border: none;
 	outline: none;
-	background: #f3beb4;
+	background: var(--color-theme-secondary);
 	text-transform: capitalize;
 	font-size: 1.7rem;
-	color: black;
+	color: white;
 	box-shadow: 0 3px 4px -2px rgba(0,0,0, 0.1);
 }
 
@@ -781,7 +780,6 @@ article#conn{
 		box-shadow: 0 0px 20px -5px rgba(0,0,0,0.2);
 	}
 }
-
 
 .loader
 {
@@ -1023,10 +1021,6 @@ article#conn{
 	-webkit-user-select: none;
 }
 
-#modal.noGroupe{
-	z-index: 3;
-}
-
 #modal.leaveGroupe #leaveGroupe{
 	display: flex;
 	opacity: 1;
@@ -1092,7 +1086,7 @@ article#conn{
 	margin: 0 8%;
 }
 
-#modal .leaveGrp, #noGroupe button, #deleteAll .supprConf, #deleteCourse .supprConfCourse{
+#modal .confirmLeaveGroupe, #noGroupe button, #deleteAll .supprConf, #deleteCourse .supprConfCourse{
 	background: rgb(255, 175, 143);
 	color: white;
 }
@@ -1676,10 +1670,23 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 }
 
 #modernForms.courseForm #modernCourseAdder{
-	transition: opacity 300ms ease;
 	visibility: visible;
 	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
+	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernGroupeAdder{
+	--rad: 10px;
+	opacity: 0;
+	transform: scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.groupeForm #modernGroupeAdder{
+	visibility: visible;
+	transform: scale(1);
+	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
 	opacity: 1;
 }
 
@@ -1706,6 +1713,21 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 }
 
 #modernForms.buyForm #modernBuyer{
+	transition: opacity 300ms ease;
+	visibility: visible;
+	transform: translate(0, 0) scale(1);
+	transition: transform 300ms var(--ease-enter);
+	opacity: 1;
+}
+
+#modernForms #modernInviteur{
+	--rad: 10px;
+	opacity: 0;
+	transform: translate(0, 0) scale(0.7);
+	visibility: collapse;
+}
+
+#modernForms.inviteForm #modernInviteur{
 	transition: opacity 300ms ease;
 	visibility: visible;
 	transform: translate(0, 0) scale(1);
@@ -1807,7 +1829,7 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 
 
 
-#modernForms input.submit
+#modernForms input[type="submit"]
 {
 	width: 80px;
 	font-weight: 600;
@@ -1857,7 +1879,6 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	}
 
 }
-
 
 :root{
 	--menu-radius: 15px;
@@ -2142,13 +2163,11 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	
 }
 
-
 #authContainer{
 	position: absolute;
 	top: 0;
 	left: 0;
-	right: 0;
-	bottom: 0;
+	width: 100vw;
 	z-index: 8;
 
 	display: flex;
@@ -2158,10 +2177,16 @@ input#prix, input#maxPrice, input#newPrice, input#cTaxes
 	gap: 20px;
 	transform: scale(0.9);
 	background: #fafafa;
-	border-radius: 4px;
+	max-height: 100vh;
+	min-height: 100vh;
+	overflow: hidden;
+
+	box-sizing: border-box;
 }
 
 #authContainer.opened{
+	max-height: none;
+	overflow: visible;
 	visibility: visible;
 	opacity: 1;
 	transform: scale(1);
@@ -2237,16 +2262,9 @@ input#iColor{
 	box-shadow: none;
 }
 
-@media screen and (max-width: 800px){
+@media screen and (min-width: 800px){
 	#authContainer{
-		border-radius: 12px;
-		grid-template-rows: 0.8fr 6.5fr 0.8fr 10.5fr;
-		bottom: auto;
-		grid-template-columns: 1fr;
-	}
-	
-	#authContainer.opened{
-		height: auto;
+		padding: 5%;
 	}
 
 	#authContainer input{
@@ -2255,6 +2273,7 @@ input#iColor{
 
 	#authContainer form{
 		border-radius: 10px;
+		width: auto;
 	}
 
 }
