@@ -24,15 +24,14 @@ class Offline{
 
 				console.log('Local structure fetched:', structure);
 				app.pullState.structure = "idb";
-				update = app.updateApp(structure);
-				if(update){
-					idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || structure.groupes[0].id;
-					return IndexedDbStorage.get("groupes", parseInt(idGroupe));
-				}
+				app.updateApp(structure);
+				idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || structure.groupes[0].id;
+				return IndexedDbStorage.get("groupes", parseInt(idGroupe));
+				
 			} else throw new Error('HaltStructure');
 		})
 		.then(data => {
-			if(!app.pullState.groupe && data){
+			if(!app.pullState.groupe){
 				groupe = data;
 				console.log('Fetching courses');
 				return IndexedDbStorage.getCursorwise("courses", "groupe", data.id, "prev");
@@ -45,12 +44,11 @@ class Offline{
 			
 				console.log('Local groupe fetched:', groupe);
 				app.pullState.groupe = "idb";
-				update = app.updateGroupe(groupe);
-				if(update){
-					idCourse = idCourse || LocalStorage.getItem('usedCourse') || Math.max(...app.groupe.courses.map(course => course.id));
-					// if(!idCourse) idCourse = app.groupe.coursesList.length != 0 ? app.groupe.coursesList[0].id : null;
-					return IndexedDbStorage.get("courses", parseInt(idCourse));
-				}
+				app.updateGroupe(groupe);
+				idCourse = idCourse || LocalStorage.getItem('usedCourse') || Math.max(...app.groupe.courses.map(course => course.id));
+				// if(!idCourse) idCourse = app.groupe.coursesList.length != 0 ? app.groupe.coursesList[0].id : null;
+				return IndexedDbStorage.get("courses", parseInt(idCourse));
+		
 			} else throw new Error('HaltGroupe');
 		})
 		.then(data => {
@@ -84,6 +82,7 @@ class Offline{
 				console.error(err);
 				UI.erreur("Problème de cache local", "Nous n'avons pas pu acceder au stockage local du téléphone, certaines fonctionnalités hors ligne peuvent être affectées");
 			}// else console.log(err);
+			console.log(err);
 		});
 	}
 	/* static async updateRequests(app){

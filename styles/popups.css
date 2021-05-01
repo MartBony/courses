@@ -82,6 +82,158 @@
 
 
 
+item-options{
+	--color-item: black;
+
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,0.25);
+	z-index: 6;
+
+	transition: 200ms opacity 200ms ease;
+	opacity: 0;
+	visibility: hidden;
+}
+
+item-options.opened{
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 200ms ease;
+}
+item-options article{
+	background: white;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100vw;
+	border-radius: 10px 10px 0 0;
+	box-sizing: border-box;
+}
+
+item-options article > i{
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 2rem;
+	padding: 10px;
+	padding-top: 15px;
+}
+
+item-options h2{
+	font-size: 2.5rem;
+	font-weight: 700;
+	text-align: center;
+	width: 100%;
+	padding: 10px calc(2rem + 20px);
+	margin: 0;
+	box-sizing: border-box;
+}
+
+item-options i#colorEtiquette{
+	display: block;
+	position: absolute;
+	left: auto;
+	right: 0;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	margin: 20px;
+	border-radius: 10px;
+	background-color: hsl(var(--color-item), var(--previewS), var(--previewL));
+}
+
+item-options h3{
+	margin: 0 0 20px 10%;
+	font-size: 2rem;
+}
+
+item-options p{
+	text-align: center;
+	width: 100%;
+	font-size: 1.3rem;
+	display: none;
+}
+
+item-options span{
+	font-weight: 600;
+}
+
+item-options form{
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	width: calc(100% - 30px);
+	margin: auto;
+	box-sizing: border-box;
+}
+
+item-options #msg-action{
+	width: 80px;
+	font-size: 2rem;
+	display: flex;
+	justify-content: space-evenly;
+
+	background: #FFEE92;
+	border-radius: 8px;
+	margin: 7px;
+	
+	display: none;
+}
+
+#msg-action i{
+	padding: 7px;
+}
+
+item-options textarea{
+	resize: none;
+	width: 100%;
+	background: linear-gradient(to bottom,#FFEE92 6px, #FFF6CB 6px);
+	padding: 8px;
+	color: black;
+	border: none;
+	outline: none;
+	border-radius: 8px;
+	box-sizing: border-box;
+}
+
+item-options button{
+	font-size: inherit;
+	margin: 0;
+	padding: 0;
+	border: none;
+	outline: none;
+	box-shadow: 0;
+	display: none;
+}
+
+#msg-action > i{
+	display: none;
+}
+
+item-options ul{
+	width: 100%;
+	margin: 0;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: space-evenly;
+	list-style-type: none;
+	box-sizing: border-box;
+}
+
+item-options ul i{
+	padding: 20px;
+	font-size: 3rem;
+}
+
+item-options ul i.ms-Icon--Delete{
+	color:#d00000;
+}
+
 
 
 .options{

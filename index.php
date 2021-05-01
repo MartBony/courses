@@ -28,12 +28,14 @@
 	<!-- <script src="scripts/jquery-3.5.0.min.js"></script> -->
 	<script src="scripts/chart.js"></script>
 	<script type="module" src="./modules/js/index.js" async></script>
-	<?php require('modules/php/auth.php'); ?>
 	<?php require('modules/php/preload.php'); ?>
-	<?php require('modules/php/popups.php'); ?>
-	<?php require('modules/php/menus.php'); ?>
-	<?php require('modules/php/forms.php'); ?>
-	<?php require('modules/php/mainPanel.php') ?>
-	<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
+	<app-window>
+		<?php require('modules/php/auth.php'); ?>
+		<?php require('modules/php/popups.php'); ?>
+		<?php require('modules/php/menus.php'); ?>
+		<?php require('modules/php/forms.php'); ?>
+		<?php require('modules/php/mainPanel.php') ?>
+		<div id="refresh"><i class="ms-Icon ms-Icon--Refresh" aria-hidden="true"></i></div>
+	</app-window>
 </body>
 </html>

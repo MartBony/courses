@@ -46,6 +46,10 @@
 				<div></div>
 				<button>Actualiser</button>
 			</article>
+			<article id="appHandling">
+				<h3>Paramères avancés</h3>
+				<button id="refreshCache">Actualiser le cache d'application.</button>
+			</article>
 			<article id="compte">
 				<h3>Mon compte</h3>
 				<h4>Nom du compte : <em></em></h4>

@@ -13,8 +13,8 @@ class CourseItem extends HTMLLIElement{
 	};
 	constructor(content){
 		super();
-		const { type = this.itemContent.type, id, titre, prix, couleur, animation } = content;
-		this.itemContent = { type, id, titre, prix, couleur, animation };
+		const { type = this.itemContent.type, id, titre, prix, couleur, animation, message } = content;
+		this.itemContent = { type, id, titre, prix, couleur, animation, message };
 	}
 	connectedCallback(){
 		Array.from(this.children).forEach(child => child.remove());
@@ -49,7 +49,8 @@ class CourseItem extends HTMLLIElement{
 				titre = this.itemContent.titre, 
 				prix = this.itemContent.prix, 
 				couleur = this.itemContent.couleur, 
-				animation = null 
+				animation = null,
+				message = null
 			} = item;
 
 			if(id){
@@ -62,7 +63,7 @@ class CourseItem extends HTMLLIElement{
 			if(couleur) this.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
 			if(animation) Animations[animation](this)
 
-			this.itemContent = { id, titre, prix, couleur };
+			this.itemContent = { type: this.itemContent.type, id, titre, prix, couleur, message };
 		}
 	}
 }
@@ -82,6 +83,7 @@ export default class Course{
 			articles: new Array,
 			previews: new Array
 		};
+		this.cardTotal = document.querySelector("card-total");
 
 		this.started;
 		this.old;
@@ -106,6 +108,7 @@ export default class Course{
 		// this.updateItems(app, data.items.articles, data.items.previews, save)
 
 		this.started = data.dateStart != 0;
+		this.cardTotal.style.display = this.started ? "block" : "none";
 
 	}
 	/* updateItems(app, articles, previews, save = false){
@@ -286,7 +289,7 @@ export default class Course{
 	pushArticle(app, item, animate){ // Appens an article in the logic
 		if(item && item.id && item.titre && item.color && item.prix){
 			this.insertArticle(app, 0, item, animate)
-			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix});
+			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix, message: item.message});
 			app.total += item.prix;
 		} else console.log("Article requirements not fullfilled", item);
 	}
@@ -297,11 +300,13 @@ export default class Course{
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync'):
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation); */
 			article = new CourseItem({
+				type: 'article',
 				id: item.id,
 				titre: item.titre,
 				prix: app.parseUnit(app.applyTaxes(item.prix)),
 				couleur: item.color,
-				animation: animation
+				animation: animation,
+				message: item.message
 			});
 
 			if(index) document.querySelector('#panier ul').insertBefore(article, this.articlesNodeList[index]);
@@ -314,7 +319,7 @@ export default class Course{
 	pushPreview(item, animate){
 		if(item && item.id && item.titre && item.color){
 			this.insertPreview(0, item, animate)
-			this.items.previews.unshift({id: item.id, titre: item.titre, color: item.color});
+			this.items.previews.unshift({id: item.id, titre: item.titre, color: item.color, message: item.message});
 		} else console.log("Preview requirements not fullfilled", item);
 	}
 	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
@@ -328,7 +333,8 @@ export default class Course{
 				id: item.id,
 				titre: item.titre,
 				couleur: item.color,
-				animation: animation
+				animation: animation,
+				message: item.message
 			});
 		
 			if(index) document.querySelector('#liste ul').insertBefore(preview, this.previewsNodeList[index]);

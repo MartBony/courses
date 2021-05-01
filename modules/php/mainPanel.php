@@ -3,6 +3,10 @@
 		<header class="phones">
 			<h1 class="noselect">Panier</h1>
 		</header>
+		<card-total>
+			<h2>🛒 Votre avancement : <strong>0%</strong></h2>
+			<div></div>
+		</card-total>
 		<ul></ul>
 		<article class="options">
 			<h4>4€ HT</h4>

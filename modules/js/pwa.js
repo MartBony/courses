@@ -4,7 +4,7 @@ let deferredPrompt,
 	newWorker;
 
 // Install app
-window.addEventListener('beforeinstallprompt', (e) => {
+/* window.addEventListener('beforeinstallprompt', (e) => {
 	e.preventDefault();
 	deferredPrompt = e;
 	if(window.innerWidth < 900){
@@ -22,7 +22,7 @@ document.querySelector('.install button').addEventListener('click', e => {
 			console.log('User dismissed the install prompt');
 		}
 	})
-});
+}); */
 
 let refreshing;
 navigator.serviceWorker.addEventListener('controllerchange', function () {

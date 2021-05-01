@@ -4,7 +4,8 @@ ease =  "cubic-bezier(0.8 , 0 , 0.2 , 1)";
 class Animations {
 	static ease = {
 		out: "cubic-bezier(0.7 , 0 , 1 , 0.5)",
-		move: "cubic-bezier(0.8 , 0 , 0.2 , 1)"
+		move: "cubic-bezier(0.8 , 0 , 0.2 , 1)",
+		in: "cubic-bezier(0.1 , 0.9 , 0.2 , 1)"
 	}
 
 	static animateScaleIn(node){

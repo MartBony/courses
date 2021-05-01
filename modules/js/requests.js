@@ -12,9 +12,10 @@ class Pull{
 				return res.payload;
 			} else if (res.status == "offline") {
 				UI.msgIsOffline();
-				return true;
+				throw "offline";
 			} else {
-				UI.erreur(err.payload ? err.payload.message : null);
+				console.log("here",res.payload ? res.payload.message : null);
+				UI.erreur(res.payload ? res.payload.message : null);
 				throw res;
 			}
 		});
@@ -31,9 +32,9 @@ class Pull{
 				return res.payload;
 			} else if (res.status == "offline") {
 				UI.msgIsOffline();
-				return true;
+				throw "offline";
 			} else {
-				UI.erreur(err.payload ? err.payload.message : null);
+				UI.erreur(res.payload ? res.payload.message : null);
 				throw res;
 			}
 		});
@@ -49,22 +50,25 @@ class Pull{
 				return res.payload;
 			} else if (res.status == "offline") {
 				UI.msgIsOffline();
-				return true;
+				throw "offline";
 			} else{
-				UI.erreur(err.payload ? err.payload.message : null);
+				UI.erreur(res.payload ? res.payload.message : null);
 				throw res;
 			}
 		});
 	}
-	static invitations(app){
+	static invitations(){
 		fetcher({
 			method: 'POST',
 			url: 'serveur/invites.php',
 			body: { pull: true }
 		}).then(res => {
-			if(res.status == 200) app.updateInvites(res.payload)
+			if(res.status == 200) document.querySelector("app-window").updateInvites(res.payload)
+			else if(res.status == "offline"){
+				document.querySelector("#invitations div").innerHTML = "Le réseau est inssufisant, réessayez";
+			}
 			else if(res.payload){
-				UI.erreur(res.payload.message)
+				document.querySelector("#invitations div").innerHTML = res.payload.message;
 			} else UI.erreur()
 		});
 	}

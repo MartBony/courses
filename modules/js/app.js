@@ -8,29 +8,33 @@ import Generate from './generate.js';
 import Groupe from './groupe.js';
 import Structure from './structure.js';
 
-class App{
+class AppWindow extends HTMLElement{
 	buttonsState;
-	constructor(userId, offline){
+	offline = true;
+	queue = new QueueHandler();
+	user;
+	groupe;
+	chartContent;
+	course;
+	pullState;
+
+	constructor(){
+		super();
+	}
+	refresh(){
+		this.queue.enqueue(() => this.pull("refresh"));
+	}
+	initiateApp(userId, offline){
 
 		UI.openPanel('panier');
 		UI.initChart(this);
 		document.getElementById('preload').classList.add('close');
-		
-		// LocalStorage.setItem('userConnectionData', user);
-		this.offline = true;
-		this.queue = new QueueHandler();
+
 		this.buttons = "hide";
-		this.user;
-		this.groupe;
-		this.chartContent;
-		this.course;
 		this.user = new Structure(userId);
-		this.pullState;
-		this.pending; // Avoid collisions
-		this.swipeBinaryState = 0;
 		this.setParameters();
 		this.queue.enqueue(() => this.pull("open"));
-		
+
 	}
 	setParameters(){
 		let toChange = document.querySelectorAll('.prixFlex, .setPrixFlex, .article h3, .preview h3, #calcul p');
@@ -75,7 +79,6 @@ class App{
 
 
 		// Load from network
-		Pull.invitations(this);
 	
 		let pull = Pull.structure(this)
 		.then(data => {
@@ -301,19 +304,17 @@ class App{
 				document.querySelector('#modernBuyer #newPrice').value = "";
 				document.querySelector('#modernBuyer #quantP').value = "1";
 				
-				// Delete old preview
-				UI.closeModernForms();
+				// Delete old preview				
+				UI.acc(this);
 				
 				this.course.deletePreview(idPreview);
 				UI.removeItem(item.id);
-
 
 
 				// Add new article
 				setTimeout(() => {
 
 					UI.openPanel("panier");
-					UI.acc(this);
 					setTimeout(() => {
 						this.course.pushArticle(this, {
 							id: -res.reqId,
@@ -446,15 +447,18 @@ class App{
 		}
 	}
 	updateApp(data, save){
-		if(!this.user || !jsonEqual(this.user, data)){
-			this.user = new Structure(data.id);
+		if(data && data.id){
+			if(!this.user || !jsonEqual(this.user, data)){
+				this.user = new Structure(data.id);
+			}
+
+		
+			document.querySelector('#compte em').innerHTML = data.nom;
+			this.user.update(data);
+			this.user.updateGroupes(data.groupes, save);
+		} else {
+			throw "Nous n'arrivons pas à vous identifier. Veuillez recharger la page et réessayer.";
 		}
-
-	
-		document.querySelector('#compte em').innerHTML = data.nom;
-		this.user.update(data);
-		this.user.updateGroupes(data.groupes, save);
-
 	}
 	updateGroupe(groupe, save){
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
@@ -544,8 +548,8 @@ class App{
 		});
 	}
 	updateInvites(data){
-		$('#invitations div').html('');
-		if(data.groupes.length != 0){
+		document.querySelector('#invitations div').innerHTML = "";
+		if(data && data.groupes && data.groupes.length != 0){
 			data.groupes.forEach(el => {
 				let button = document.createElement('button'),
 					span = document.createElement('span'),
@@ -567,9 +571,11 @@ class App{
 				deny.addEventListener('click', () => {
 					this.rejectInvite(el.id);
 				});
-				$('#invitations div').append(button);
+				document.querySelector('#invitations div').append(button);
 			});
-		} else $('#invitations div').html('Rien pour l\'instant')
+		} else {
+			document.querySelector('#invitations div').innerHTML = "Rien pour l'instant";
+		}
 	}
 	acceptInvite(id){
 		
@@ -689,15 +695,16 @@ class App{
 
 		document.getElementById('totalDep').innerHTML = total.toFixed(2) + this.params.currency;
 		document.getElementById('totalTaxDep').innerHTML = totalTax.toFixed(2) + this.params.currency;
-		if(this.course.maxPrice < totalTax){
+		/* if(this.course.maxPrice < totalTax){
 			//document.getElementById('panier').style.setProperty('--color-theme', 'linear-gradient(-45deg, #CA5010, #E81123)');
 		}
 		else{
 			document.getElementById('panier').style.setProperty('--color-theme', '');
-		}
+		} */
 
+		document.querySelector("card-total").setValue(total/this.course.maxPrice);
 		this.course.totalCost = total;
 	}
 }
 
-export default App;
+export default AppWindow;

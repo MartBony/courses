@@ -1,0 +1,5 @@
+<IfModule mod_headers.c>
+	Header set Cache-Control "no-store"
+	Header set Pragma "no-cache"
+	Header set Expires 0
+</IfModule>

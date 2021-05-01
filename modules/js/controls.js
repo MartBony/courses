@@ -1,14 +1,16 @@
 import Pull from './requests.js';
 import UI from './UI.js';
+import Animations from './animations.js';
 import { LocalStorage, IndexedDbStorage } from './storage.js';
 import Generate from './generate.js';
 import { fetcher } from './tools.js';
 
 
-export default function initEvents(app){
+export default function initEvents(){
 
-	const refresh = (callback, idGroupe, idCourse) => {
-		callback = callback || function(){};
+	const app = document.querySelector("app-window"),
+		refresh = (callback, idGroupe, idCourse) => {
+			callback = callback || function(){};
 			if(!app.pending){
 				app.pull("refresh", idGroupe, idCourse).then(callback);
 			} else {
@@ -69,6 +71,7 @@ export default function initEvents(app){
 			}
 		},
 		activate = () => {
+			
 			if ('serviceWorker' in navigator && 'SyncManager' in window) {
 				IndexedDbStorage.put("requests", {
 					type: "activate",
@@ -85,29 +88,27 @@ export default function initEvents(app){
 					} else throw "Pas de course"	
 				})
 				.then(() => {
-					const activationPanels = Array.from(document.getElementsByClassName('promptActivation'));
-
+					
 					app.course.started = true;
-
 					setTimeout(() => {
 						UI.openPanel("panier");
 					},200);
 
-					setTimeout(() => {
-						app.buttons = "show";
-						activationPanels.forEach(node => {
-							node.style.transition = 'all 200ms ease-out 200ms';
-							node.style.opacity = '0';
-							node.style.transform = 'scale(0.98)';
-						});
-						
-						setTimeout(() => {
-							activationPanels.forEach(node => {
-								node.style.display = 'none';
-							});
-						}, 400);	
-					}, 400);
+					app.buttons = "show";
+				
+					Animations.createAnimation(document.querySelector('.promptActivation'), [
+						{ opacity: '1', transform: 'scale(1)'},
+						{ opacity: '0', transform: 'scale(0.98)'}
+					], {
+						duration: 200,
+						fill: 'forwards',
+						easing: 'ease-out'
+					}).then((el) => {
+						el.style.display = 'none';
+						app.course.cardTotal.style.display = "block";
 
+					});
+				
 				})
 				.catch(err => {
 					console.log(err);
@@ -137,27 +138,22 @@ export default function initEvents(app){
 				.then(() => {
 					document.querySelector('loader').classList.remove('opened');
 
-					const activationPanels = Array.from(document.getElementsByClassName('promptActivation'));
 					
-
 					setTimeout(() => {
 						UI.openPanel("panier");
 					},200);
 
-					setTimeout(() => {
-						app.buttons = "show";
-						activationPanels.forEach(node => {
-							node.style.transition = 'all 200ms ease-out 200ms';
-							node.style.opacity = '0';
-							node.style.transform = 'scale(0.98)';
-						});
-						
-						setTimeout(() => {
-							activationPanels.forEach(node => {
-								node.style.display = 'none';
-							});
-						}, 400);	
-					}, 400);
+					Animations.createAnimation(document.querySelector('.promptActivation'), [
+						{ opacity: '1', transform: 'scale(1)'},
+						{ opacity: '0', transform: 'scale(0.98)'}
+					], {
+						duration: 200,
+						fill: 'forwards',
+						easing: 'ease-out'
+					}).then((el) => {
+						el.style.display = 'none';
+						app.course.cardTotal.style.display = "block";
+					});
 
 				}).catch(res => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
@@ -514,6 +510,10 @@ export default function initEvents(app){
 			const res = event.data;
 			const payload = res.payload;
 			switch(res.type){
+				case "CacheRefreshed":
+					if(payload.type == "SUCCESS") UI.message(payload.message);
+					else UI.erreur(payload.message);
+					break;
 				case "DISCONNECT":
 					if("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations()
 						.then(registrations => Promise.all(registrations.map(reg => reg.unregister())))
@@ -591,6 +591,14 @@ export default function initEvents(app){
 		if(e.target.classList.contains('ms-Icon--Back')){
 			UI.closeMenus();
 		}
+		else if (e.target.id == "refreshCache"){
+			if("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+				navigator.serviceWorker.controller.postMessage({
+					action: 'RefreshCache',
+				});
+				// window.location = "/courses/"; Location changes on message from the SW
+			}
+		}
 		if(e.target.classList.contains('groupe')
 			|| e.target.parentNode.classList.contains('groupe')
 			|| e.target.parentNode.parentNode.classList.contains('groupe')) { // when clicked on a button
@@ -629,9 +637,9 @@ export default function initEvents(app){
 					LocalStorage.clear();
 					IndexedDbStorage.closeIDB()
 				
-						if("serviceWorker" in navigator) {
+						if("serviceWorker" in navigator && navigator.serviceWorker.controller) {
 							navigator.serviceWorker.controller.postMessage({
-								type: 'DELETEDB',
+								action: 'DELETEDB',
 							});
 							// window.location = "/courses/"; Location changes on message from the SW
 						}
@@ -703,10 +711,12 @@ export default function initEvents(app){
 				|| e.target.classList.contains('preview')){
 
 				const element = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
-				UI.hideOptions();
-				if(!app.course.old) UI.showOptions(app, element)
 				
-			} else if (e.target.parentNode.classList.contains('options')){
+				if(!app.course.old){
+					document.querySelector("item-options").open(element.content);
+				}
+				
+			}/*  else if (e.target.parentNode.classList.contains('options')){
 				if(e.target.classList.contains('ms-Icon--Cancel')){
 					UI.hideOptions();
 				} else if(e.target.classList.contains('ms-Icon--Pinned')) {
@@ -730,7 +740,7 @@ export default function initEvents(app){
 						UI.openModernForm("buy", {app: app, id: key});
 					}
 				} 
-			}
+			} */
 		});
 	});
 

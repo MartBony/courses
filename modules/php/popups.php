@@ -8,7 +8,27 @@
 	<p></p>
 	<div></div>
 </div>
-<section class="install">
+<item-options>
+	<article>
+		<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
+		<h2>Aucun article sélectionné</h2>
+		<i id="colorEtiquette"></i>
+		<h3 id="articlePrix"><span>0€</span> (<span>0€</span> HT)</h3>
+		<p>Attendez que votre article soit synchronisé avec le serveur pour lui assigner un message.</p>
+		<form id="item-message">
+			<textarea placeholder="Pas de notes" name="message" rows="3" maxlength="130"></textarea>
+			<div id="msg-action">
+				<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
+				<button><i class="ms-Icon ms-Icon--Save" aria-hidden="true"></i></button>
+			</div>
+		</form>
+		<ul>
+			<li><i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i></li>
+			<li><i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i></li>
+		</ul>
+	</article>
+</item-options>
+<!-- <section class="install">
 	<i class="ms-Icon ms-Icon--Cancel" aria-hidden="true"></i>
 	<div class="logo">
 		<img src="images/logos/logo_bg.png">
@@ -17,7 +37,7 @@
 		<img src="images/logos/logo_tp.png">
 	</div>
 	<button>Télécharger l'application</button>
-</section>
+</section> -->
 <section class="loader">
 	<div class="logo">
 		<img src="images/logos/logo_bg.png">

@@ -79,17 +79,32 @@ self.importScripts("./scripts/sw/syncCourses.js");
 self.addEventListener("message", event => {
 	// console.log("Service Worker recieved a message", event);
 	if(event.data){
-		if (event.data.type === "DELETEDB"){
-			event.waitUntil((async () => {
-				IndexedDbStorage.closeIDB()
-				.then(() => IndexedDbStorage.deleteDb())
-				.then(() => postMessageToCLients("DISCONNECT"))
-				.catch(err => console.error(err));
-			})());
-		}
-
-		else if (event.data.action === 'skipWaiting') {
-			self.skipWaiting();
+		switch(event.data.action){
+			case "DELETEDB":
+				event.waitUntil((async () => {
+					IndexedDbStorage.closeIDB()
+					.then(() => IndexedDbStorage.deleteDb())
+					.then(() => postMessageToCLients("DISCONNECT"))
+					.catch(err => console.error(err));
+				})());
+				break;
+			case "RefreshCache":
+				event.waitUntil(
+					caches.delete(staticCacheName)
+					.then(() => caches.open(staticCacheName))
+					.then(cache => cache.addAll(assets))
+					.then(() => {
+						postMessageToCLients("CacheRefreshed", {type: "SUCCESS", message: "Le cache de l'application a été actualisé avec succès."});
+					})
+					.catch(err => {
+						postMessageToCLients("CacheRefreshed", {type: "ERROR", message: "Un problème est survenu."});
+						console.error(err);
+					})
+				);
+				break;
+			case 'skipWaiting':
+				self.skipWaiting();
+				break;
 		}
 	}
 });

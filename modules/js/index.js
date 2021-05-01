@@ -1,9 +1,9 @@
-import App from './app.js';
+import AppWindow from './app.js';
 import Pull from './requests.js';
 import UI from './UI.js';
 import { installSW } from './pwa.js';
 import initEvents from './controls.js';
-import { IndexedDbStorage, LocalStorage } from './storage.js';
+import { LocalStorage } from './storage.js';
 import { fetcher } from './tools.js';
 
 let app;
@@ -80,7 +80,8 @@ async function cssReady(){
 
 function startApp(user, offline = false){
 	if(!app){
-		app = new App(user, offline);
+		customElements.define("app-window", AppWindow);
+		app = document.querySelector("app-window").initiateApp(user, offline);
 		initEvents(app);
 	}
 }

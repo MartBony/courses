@@ -38,6 +38,31 @@ function pushCousesIndependent($user, PDO $bdd){
 		}
 
 		return true;
+	} else if (isset($_POST['submitMessage'])) {
+		if(!isset($_POST['message']) || !isset($_POST['idItem'])){
+			echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'La requête est incomplête, actualisez et réessayez.')));
+			return true;
+		}
+		$message = htmlspecialchars($_POST['message']);
+		$idItem = (int) $_POST['idItem'];
+		
+		$reqItemsValidity = $bdd->prepare('SELECT a.id as id
+			FROM `articles` as a
+			INNER JOIN `courses` as c
+				ON a.course = c.id
+			INNER JOIN `gulinks` as lks
+				ON c.groupe = lks.groupeId
+			WHERE lks.userId = ? AND a.id = ?');
+		$reqItemsValidity->execute(array($user['id'], $idItem));
+		if($reqItemsValidity->rowCount() == 1){
+			$idItem = $reqItemsValidity->fetch();
+			$reqSetMessage = $bdd->prepare('UPDATE `articles` SET `message` = ? WHERE `id` = ?');
+			$reqSetMessage->execute(array($message, $idItem['id']));
+			echo json_encode(array('status' => 200, 'payload' => array('message' => $message)));
+		} else {
+			echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'L\'article que vous essayez de modifier n\'est plus disponible sur le serveur, rechargez la page et réessayez.')));
+		}
+		return true;
 	} else {
 
 		return checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){

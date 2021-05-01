@@ -13,7 +13,7 @@ login($bdd, function($user) use($bdd){
 		$previews = array();
 		
 		$reqItems = $bdd->prepare('
-			SELECT a.id, a.titre, a.prix, a.course, a.preview, u.hueColor
+			SELECT a.id, a.titre, a.prix, a.course, a.preview, a.message, u.hueColor
 			FROM `articles` a 
 			INNER JOIN `users` u
 			ON a.idAuteur = u.id
@@ -27,14 +27,16 @@ login($bdd, function($user) use($bdd){
 				array_push($previews, array(
 					'id' => $article['id'],
 					'color' => $article['hueColor'],
-					'titre' => $article['titre']
+					'titre' => $article['titre'],
+					'message' => $article['message']
 				));
 			} else {
 				array_push($articles, array(
 					'id' => $article['id'],
 					'prix' => $article['prix'],
 					'color' => $article['hueColor'],
-					'titre' => $article['titre']
+					'titre' => $article['titre'],
+					'message' => $article['message']
 				));
 			}
 		}

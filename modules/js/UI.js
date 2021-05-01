@@ -1,5 +1,188 @@
 import Touch from "./touch.js";
+import { fetcher } from "./tools.js";
 import Animations from "./animations.js";
+import Pull from './requests.js';
+
+class CardTotal extends HTMLElement {
+	constructor(){
+		super();
+	}
+	setValue(avancement){
+		this.children[0].children[0].innerHTML = `${parseInt(avancement*100)}%`;
+		avancement = Math.min(avancement, 1);
+		this.style.setProperty("--prc", `${parseInt(avancement*100)}%`);
+		if(avancement>0.9){
+			this.classList.add("alert");
+		} else this.classList.remove("alert");
+	}
+}
+
+class ItemOptions extends HTMLElement{
+	item;
+	opened = false;
+	msgButtonsState = ["", ""];
+	constructor(){
+		super();
+		this.generateEventListeners();
+	}
+	open(item){
+		// Animate panel
+		if(!this.opened){
+			this.classList.add("opened");
+			Animations.createAnimation(this.children[0], [
+				{
+					transform: "translateY(300px)",
+					opacity: 0
+				},{
+					transform: "translateY(0)",
+					opacity: 1
+				}
+			], {
+				duration: 300,
+				fill: 'forwards',
+				easing: Animations.ease.in
+			})
+		}
+
+		// Update content
+		const titreEl = this.querySelector('h2'),
+		prixEl = this.querySelector('h3'),
+		buttons = this.querySelectorAll("ul li");
+
+		titreEl.innerHTML = `${item.titre}</div></div>`;
+		this.style.setProperty("--color-item", item.couleur);
+		if(item.type == 'article'){
+			const spansPrice = Array.from(prixEl.querySelectorAll('span'));
+			prixEl.style.display = "";
+			spansPrice.forEach(span => span.innerHTML = item.prix);
+			buttons[1].style.display = "none";
+		} else {
+			prixEl.style.display = "none";
+			buttons[1].style.display = "";
+		}
+
+		if(item.id < 0){
+			this.querySelector("p").style.display = "block";
+			this.querySelector("form").style.display = "none";
+		} else {
+			this.querySelector("p").style.display = "";
+			this.querySelector("form").style.display = "";
+		}
+
+		if(item.message){
+			this.setMessageButtons(0, "block");
+		}
+
+		document.body.style.overflow = "hidden";
+
+		this.querySelector("textarea").value = item.message || null;
+
+		this.item = item;
+		this.opened = true;
+	}
+	close(){
+		Animations.createAnimation(this.children[0], [
+			{
+				transform: "translateY(0)",
+				opacity: 1
+			},{
+				transform: "translateY(300px)",
+				opacity: 0
+			}
+		], {
+			duration: 80,
+			fill: 'forwards',
+			easing: Animations.ease.out
+		}).then(() => {
+			this.classList.remove("opened");
+		})
+
+		this.setMessageButtons(0,"").setMessageButtons(1,"");
+		document.body.style.overflow = "";
+		
+		this.item = null;
+		this.opened = false;
+	}
+	generateEventListeners(){
+		this.addEventListener('click', event => {
+			if(event.target.classList.contains("ms-Icon--Cancel") || event.target == this) this.close();
+			else if(event.target.tagName == "I" && event.target.parentElement.parentElement.tagName == "UL"){
+				if(event.target.classList.contains('ms-Icon--Delete')){
+					if(this.item.type == 'article'){
+						document.querySelector("app-window").deleteArticle(this.item.id);
+					} else document.querySelector("app-window").deletePreview(this.item.id);
+					this.close();
+				} else {
+					if(this.item.type == 'preview') UI.openModernForm("buy", {item: this.item});
+				}
+			} else if (event.target.tagName == "I" && event.target.parentElement.id == "msg-action"){
+				this.querySelector("textarea").value = "";
+				this.setMessageButtons(0, "");
+				if(!this.item.message){
+					this.setMessageButtons(1, "block");
+				} else {
+					this.setMessageButtons(1, "");
+				}
+			}
+		});
+
+		this.querySelector("textarea").addEventListener("keyup", event => {
+			
+			if(event.target.value == ""){
+				this.setMessageButtons(0, "");
+			} else {
+				this.setMessageButtons(0, "block");
+			}
+			
+			if(this.item.message == event.target.value){
+				this.setMessageButtons(1, "");
+			} else {
+				this.setMessageButtons(1, "block");
+			}
+		});
+
+		this.addEventListener("submit", async event => {
+			event.preventDefault();
+			const form = event.target;
+			try{
+				let res = await fetcher({
+					url: "serveur/push.php",
+					method: "POST",
+					body: { submitMessage: true, message: form.message.value, idItem: this.item.id }
+				});
+
+				if(res.status == 200){
+					this.setMessageButtons(1, "");
+					this.item.message = res.payload.message;
+					form.message.value = res.payload.message;
+					document.querySelector("app-window").refresh();
+					if(res.payload.message == "") this.setMessageButtons(0, "");
+					else this.setMessageButtons(0, "block");
+		
+				} else if(res.status == "offline") UI.offlineMsg();
+				else if(res.payload) UI.erreur(res.payload.message);
+				else throw res;
+			} catch(err) {
+				console.error(err);
+				UI.erreur();
+			}
+		
+		});
+	}
+	setMessageButtons(buttonIndex, value){
+		const messageButtons = this.querySelector("#msg-action").children;
+		messageButtons[buttonIndex].style.display = value;
+		this.msgButtonsState[buttonIndex] = value;
+		if(this.msgButtonsState.every(state => !state)){
+			this.querySelector("#msg-action").style.display = "";
+		} else this.querySelector("#msg-action").style.display = "flex"
+		return this;
+	}
+}
+
+customElements.define('item-options', ItemOptions);
+
+customElements.define('card-total', CardTotal);
 
 export default class UI {
 	static message(titre, texte, buttons, timer = 7000){
@@ -87,6 +270,7 @@ export default class UI {
 		document.getElementById('menus').classList.remove('calcul', 'params');
 		document.getElementById('menus').classList.add('opened', type);
 		if(type == 'calcul' && data && app) UI.openChart(app, data);
+		if(type == 'params') Pull.invitations()
 	}
 	static closeMenus(){
 		document.getElementById('menus').className = "";
@@ -144,7 +328,7 @@ export default class UI {
 		UI.closeForms();
 		UI.closeMenus();
 		UI.closePrice();
-		UI.hideOptions();
+		document.querySelector("item-options").close();
 	}
 	static showInstall(delay){
 		setTimeout(function(){
@@ -191,19 +375,15 @@ export default class UI {
 
 				break;
 			case "buy":
-				if(data && data.app && data.id){
-					const item = data.app.course.items.previews.filter(item => item.id == data.id)[0];
+				if(data && data.item){
+					const item = data.item;
 
-					if(item){
+					document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
+					document.getElementById('modernBuyer').setAttribute("key", item.id);
 
-						document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
-						document.getElementById('modernBuyer').setAttribute("key", item.id);
+					document.getElementById("modernForms").classList.add("opened", "buyForm");
+					setTimeout(() => document.querySelector(`#modernBuyer input`).focus(), 300);
 
-						document.getElementById("modernForms").classList.add("opened", "buyForm");
-						setTimeout(() => document.querySelector(`#modernBuyer input`).focus(), 300)
-
-
-					} else UI.erreur("Un problème est survenu, réessayez")
 				}
 				break;
 			case "groupe":
@@ -259,10 +439,14 @@ export default class UI {
 		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
 	static removeItem(index){
-		const el = document.querySelector(`li[idItem="${index}"]`),
-		anim = Animations.removeItem(el).then(() => {
-			setTimeout(() => el.remove(), 100);
-		});
+		return new Promise((resolve, reject) => {
+			const el = document.querySelector(`li[idItem="${index}"]`);
+			Animations.removeItem(el).then(() => {
+				setTimeout(() => el.remove(), 100);
+				resolve();
+			});
+
+		})
 	}
 	static removeArticle(course, itemIndex, rank = 0){
 		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
