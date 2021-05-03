@@ -103,6 +103,7 @@ item-options.opened{
 	opacity: 1;
 	transition: opacity 200ms ease;
 }
+
 item-options article{
 	background: white;
 	position: absolute;
@@ -118,8 +119,7 @@ item-options article > i{
 	top: 0;
 	left: 0;
 	font-size: 2rem;
-	padding: 10px;
-	padding-top: 15px;
+	padding: 15px;
 }
 
 item-options h2{
@@ -137,10 +137,10 @@ item-options i#colorEtiquette{
 	position: absolute;
 	left: auto;
 	right: 0;
-	width: 20px;
-	height: 20px;
+	width: 2rem;
+	height: 2rem;
 	padding: 0;
-	margin: 20px;
+	margin: 15px;
 	border-radius: 10px;
 	background-color: hsl(var(--color-item), var(--previewS), var(--previewL));
 }
@@ -307,7 +307,12 @@ item-options ul i.ms-Icon--Delete{
 	border-radius: 5px;
 	padding: 30px 10px;
 	text-align: center;
-	white-space: break-spaces;
+}
+
+@supports (white-space: break-spaces){
+	.promptActivation, .promptEmpty{
+		white-space: break-spaces;
+	}
 }
 
 .promptEmpty{
@@ -350,7 +355,7 @@ item-options ul i.ms-Icon--Delete{
 #modal{
 	visibility: collapse;
 	display: flex;
-	z-index: 6;
+	z-index: 7;
 	align-items: center;
 	justify-content: center;
 	position: fixed;
@@ -385,9 +390,9 @@ item-options ul i.ms-Icon--Delete{
 	box-sizing: border-box;
 	transition: all 200ms var(--ease-sortir);
 
-	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-select: none;
+	user-select: none;
 }
 
 #modal.leaveGroupe #leaveGroupe{
@@ -606,7 +611,29 @@ button.greyish{
 	color: #444;
 }
 
+@media screen and (min-width: 500px){
+	item-options article{
+		width: 400px;
+		left: calc(50% - 200px);
+		bottom: 20px;
+		border-radius: 10px;
+	}
+}
+
 @media screen and (min-width: 900px){
+	item-options{
+		--pos-left: calc(50vw - 200px);
+		--pos-bottom: 20px;
+	}
+
+	item-options article{
+		width: 400px;
+		top: auto;
+		left: min(var(--pos-left), calc(100% - 400px));
+		bottom: min(var(--pos-bottom), calc(100% - 300px));
+		border-radius: 10px;
+	}
+
 	.notification{
 		left: calc(50% - 300px);
 		right: auto;
@@ -622,8 +649,8 @@ button.greyish{
 
 	.notification{
 		background: rgba(255, 255, 255, 0.93);
-		backdrop-filter: blur(20px);
 		-webkit-backdrop-filter: blur(20px);
+		backdrop-filter: blur(20px);
 	}
 
 }

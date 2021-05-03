@@ -7,36 +7,36 @@
 	"theme_color" : "#022d6f",
 	"orientation" : "any",
 	"icons" : [{
-		"src": "images/logos/android/androidicon512.png",
-		"type" : "image/png",
-		"sizes": "512x512"
-	},
-	{
-		"src": "images/logos/android/androidicon192.png",
-		"type" : "image/png",
-		"sizes": "192x192"
-	},
-	{
-		"src": "images/logos/android/androidicon144.png",
-		"type" : "image/png",
-		"sizes": "144x144"
-	},
-	{
-		"src": "images/logos/android/androidicon96.png",
-		"type" : "image/png",
-		"sizes": "96x96"
-	},
-	{
-		"src": "images/logos/android/androidicon72.png",
-		"type" : "image/png",
-		"sizes": "72x72"
-	},
-	{
-		"src": "images/logos/maskable_icon.png",
-		"sizes": "512x512",
-		"type": "image/png",
-		"purpose": "any maskable"
-	  }],
+			"src": "images/logos/android/androidicon512.png",
+			"type" : "image/png",
+			"sizes": "512x512"
+		},
+		{
+			"src": "images/logos/android/androidicon192.png",
+			"type" : "image/png",
+			"sizes": "192x192"
+		},
+		{
+			"src": "images/logos/android/androidicon144.png",
+			"type" : "image/png",
+			"sizes": "144x144"
+		},
+		{
+			"src": "images/logos/android/androidicon96.png",
+			"type" : "image/png",
+			"sizes": "96x96"
+		},
+		{
+			"src": "images/logos/android/androidicon72.png",
+			"type" : "image/png",
+			"sizes": "72x72"
+		},
+		{
+			"src": "images/logos/maskable_icon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+	}],
 	"dir" : "ltr",
 	"lang" : "French",
 	"scope" : "/",

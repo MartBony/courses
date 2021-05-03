@@ -2,6 +2,8 @@ import Generate from './generate.js';
 import { IndexedDbStorage, LocalStorage } from './storage.js';
 import Animations from "./animations.js";
 
+const app = document.querySelector("app-window");
+
 class CourseItem extends HTMLLIElement{
 	itemContent = {
 		type: 'article',
@@ -91,7 +93,7 @@ export default class Course{
 		Array.from(document.querySelectorAll('.main ul'))
 		.forEach(container => Array.from(container.childNodes).forEach(itemNode => itemNode.remove()));
 	}
-	updateSelf(app, data){
+	updateSelf(data){
 		
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
@@ -103,7 +105,7 @@ export default class Course{
 
 		this.old = data.id != app.groupe.courses[0].id;
 
-		$('#maxprice').html(this.maxPrice + app.params.currency);
+		document.querySelector('#maxprice').innerHTML = this.maxPrice + app.params.currency;
 	
 		// this.updateItems(app, data.items.articles, data.items.previews, save)
 

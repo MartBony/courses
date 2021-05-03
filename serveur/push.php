@@ -67,19 +67,27 @@ function pushCousesIndependent($user, PDO $bdd){
 
 		return checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
 	
-			if(isset($_POST['submitCourse']) && isset($_POST['titre']) && isset($_POST['maxPrice']) && isset($_POST['taxes'])) {
+			if(isset($_POST['submitCourse'])) {
+				if(!isset($_POST['titre']) || !isset($_POST['maxPrice']) || !isset($_POST['taxes'])){
+					echo json_encode(array("status" => 400, "payload" => array('type' => 'ERROR', 'message' => 'La requête n\'est pas valide.')));
+					return true;
+				}
+				
 				$titre = htmlspecialchars($_POST['titre']);
 				$maxPrice = (float) $_POST['maxPrice'];
 				$taxes = ((float) $_POST['taxes'])/100;
+
+				if(strlen($titre) > 80){
+					echo json_encode(array("status" => 400, "payload" => array('type' => 'ERROR', 'message' => 'Titre trop long.')));
+					return true;
+				}
 		
-				$insert = $bdd->prepare(
-					'INSERT INTO `courses`
+				$insert = $bdd->prepare('INSERT INTO `courses`
 					(`nom`, `maxPrice`, `total`, `dateStart`, `groupe`, `taxes`)
-					VALUES (?,?,0,0,?,?)'
-				);
+					VALUES (?,?,0,0,?,?)');
 				$insert->execute(array($titre, $maxPrice, $groupe['id'], $taxes));
 
-				$reqInserted =  $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC LIMIT 1');
+				$reqInserted = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY id DESC LIMIT 0,1');
 				$reqInserted->execute(array($groupe['id']));
 				if($reqInserted->rowCount() == 1){
 					$inserted = $reqInserted->fetch();
@@ -95,8 +103,9 @@ function pushCousesIndependent($user, PDO $bdd){
 						)
 					));
 				} else {
-					echo json_encode(array("status" => "Failed Retrieving"));
+					echo json_encode(array("status" => 500, "payload" => array("type" => "ERROR", "message" => "Erreur interne au serveur. La requête à été anullée.")));
 				}
+		
 
 				return true;
 		

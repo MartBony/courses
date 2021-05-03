@@ -81,7 +81,8 @@ async function cssReady(){
 function startApp(user, offline = false){
 	if(!app){
 		customElements.define("app-window", AppWindow);
-		app = document.querySelector("app-window").initiateApp(user, offline);
+		app = document.querySelector("app-window");
+		app.initiate(user, offline);
 		initEvents(app);
 	}
 }

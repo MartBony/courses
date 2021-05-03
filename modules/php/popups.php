@@ -19,7 +19,7 @@
 			<textarea placeholder="Pas de notes" name="message" rows="3" maxlength="130"></textarea>
 			<div id="msg-action">
 				<i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i>
-				<button><i class="ms-Icon ms-Icon--Save" aria-hidden="true"></i></button>
+				<button aria-label="Sauvegarder"><i class="ms-Icon ms-Icon--Save" aria-hidden="true"></i></button>
 			</div>
 		</form>
 		<ul>
@@ -40,10 +40,10 @@
 </section> -->
 <section class="loader">
 	<div class="logo">
-		<img src="images/logos/logo_bg.png">
-		<img src="images/logos/logo_bt.png">
-		<img src="images/logos/logo_md.png">
-		<img src="images/logos/logo_tp.png">
+		<img alt="Une partie du logo de l'application." src="images/logos/logo_bg.png">
+		<img alt="Une partie du logo de l'application." src="images/logos/logo_bt.png">
+		<img alt="Une partie du logo de l'application." src="images/logos/logo_md.png">
+		<img alt="Une partie du logo de l'application." src="images/logos/logo_tp.png">
 	</div>
 	<h1>En cours</h1>
 </section>

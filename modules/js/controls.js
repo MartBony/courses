@@ -713,7 +713,8 @@ export default function initEvents(){
 				const element = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				
 				if(!app.course.old){
-					document.querySelector("item-options").open(element.content);
+					console.log(e);
+					document.querySelector("item-options").open(element.content,{x: e.clientX, y: e.clientY});
 				}
 				
 			}/*  else if (e.target.parentNode.classList.contains('options')){
@@ -816,24 +817,24 @@ export default function initEvents(){
 	});
 
 	document.getElementById('modernForms').addEventListener('submit', e => {
-		switch(e.target.parentNode.id){
+		switch(e.target.parentNode.parentNode.id){
 			case "modernArticleAdder": 
-				if(e.target.tagName == "FORM") addArticle(e)
+				addArticle(e)
 				break;
 			case "modernPreviewAdder": 
-				if(e.target.tagName == "FORM") addPreview(e)
+				addPreview(e)
 				break;
 			case "modernCourseAdder": 
-				if(e.target.tagName == "FORM") addCourse(e)
+				addCourse(e)
 				break;
 			case "modernBuyer": 
-				if(e.target.tagName == "FORM") buyForm(e)
+				buyForm(e)
 				break;
 			case "modernGroupeAdder": 
-				if(e.target.tagName == "FORM") addGroupe(e)
+				addGroupe(e)
 				break;
 			case "modernInviteur": 
-				if(e.target.tagName == "FORM") submitInvitation(e)
+				submitInvitation(e)
 				break;
 		}
 	});
@@ -901,13 +902,7 @@ export default function initEvents(){
 
 	// Others
 
-	document.getElementById('refresh').onclick = e => {
-		refreshAsync();
-	};
-
-	$('.install i').click(function(){
-		UI.hideInstall();
-	});
+	document.getElementById('refresh').onclick = refreshAsync;
 
 /* 	window.addEventListener("offline", event => {
 		UI.message(

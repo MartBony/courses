@@ -24,7 +24,7 @@ class AppWindow extends HTMLElement{
 	refresh(){
 		this.queue.enqueue(() => this.pull("refresh"));
 	}
-	initiateApp(userId, offline){
+	initiate(userId, offline){
 
 		UI.openPanel('panier');
 		UI.initChart(this);
@@ -475,6 +475,11 @@ class AppWindow extends HTMLElement{
 				this.groupe = new Groupe();
 
 			}
+			if(this.groupe.id != groupe.id){
+				document.querySelector("card-total").style.display = "";
+				this.course = new Course();
+			}
+
 			this.groupe.update(groupe);
 			this.groupe.updateCourses(this, groupe.coursesList, save);
 
@@ -499,7 +504,7 @@ class AppWindow extends HTMLElement{
 				UI.closeModal();
 
 				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
-				this.course.updateSelf(this, data);
+				this.course.updateSelf(data);
 				Array.from(document.querySelectorAll('.promptActivation, .promptEmpty')).forEach(node => node.remove());
 
 				this.groupe.coursesNodeList.forEach(node => {

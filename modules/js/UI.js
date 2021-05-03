@@ -2,12 +2,14 @@ import Touch from "./touch.js";
 import { fetcher } from "./tools.js";
 import Animations from "./animations.js";
 import Pull from './requests.js';
+import { IndexedDbStorage } from './storage.js';
 
 class CardTotal extends HTMLElement {
 	constructor(){
 		super();
 	}
 	setValue(avancement){
+		this.style.display = "block";
 		this.children[0].children[0].innerHTML = `${parseInt(avancement*100)}%`;
 		avancement = Math.min(avancement, 1);
 		this.style.setProperty("--prc", `${parseInt(avancement*100)}%`);
@@ -25,16 +27,16 @@ class ItemOptions extends HTMLElement{
 		super();
 		this.generateEventListeners();
 	}
-	open(item){
+	open(item, position){
 		// Animate panel
 		if(!this.opened){
 			this.classList.add("opened");
 			Animations.createAnimation(this.children[0], [
 				{
-					transform: "translateY(300px)",
+					transform: window.innerWidth < 900 ? "translateY(300px)" : "scale(0.6)",
 					opacity: 0
 				},{
-					transform: "translateY(0)",
+					transform: "translateY(0) scale(1)",
 					opacity: 1
 				}
 			], {
@@ -42,6 +44,12 @@ class ItemOptions extends HTMLElement{
 				fill: 'forwards',
 				easing: Animations.ease.in
 			})
+		}
+
+		if(position.x && position.y){
+			console.log(position);
+			this.style.setProperty("--pos-bottom", `max(0px, calc(100vh - ${position.y + 100}px))`);
+			this.style.setProperty("--pos-left", `${Math.max(position.x - 200, 0)}px`);
 		}
 
 		// Update content
@@ -81,12 +89,18 @@ class ItemOptions extends HTMLElement{
 		this.opened = true;
 	}
 	close(){
+
+		document.body.style.overflow = "";
+		
+		this.item = null;
+		this.opened = false;
+
 		Animations.createAnimation(this.children[0], [
 			{
-				transform: "translateY(0)",
+				transform: "translateY(0) scale(1)",
 				opacity: 1
 			},{
-				transform: "translateY(300px)",
+				transform: window.innerWidth < 900 ? "translateY(300px)" : "scale(0.6)",
 				opacity: 0
 			}
 		], {
@@ -95,13 +109,11 @@ class ItemOptions extends HTMLElement{
 			easing: Animations.ease.out
 		}).then(() => {
 			this.classList.remove("opened");
-		})
+			this.style.setProperty("--pos-bottom", "");
+			this.style.setProperty("--pos-left", "");
+			this.setMessageButtons(0,"").setMessageButtons(1,"");
+		});
 
-		this.setMessageButtons(0,"").setMessageButtons(1,"");
-		document.body.style.overflow = "";
-		
-		this.item = null;
-		this.opened = false;
 	}
 	generateEventListeners(){
 		this.addEventListener('click', event => {
@@ -118,7 +130,7 @@ class ItemOptions extends HTMLElement{
 			} else if (event.target.tagName == "I" && event.target.parentElement.id == "msg-action"){
 				this.querySelector("textarea").value = "";
 				this.setMessageButtons(0, "");
-				if(!this.item.message){
+				if(this.item.message){
 					this.setMessageButtons(1, "block");
 				} else {
 					this.setMessageButtons(1, "");
@@ -155,7 +167,8 @@ class ItemOptions extends HTMLElement{
 					this.setMessageButtons(1, "");
 					this.item.message = res.payload.message;
 					form.message.value = res.payload.message;
-					document.querySelector("app-window").refresh();
+					// document.querySelector("app-window").refresh();
+					IndexedDbStorage.put("items", this.item);
 					if(res.payload.message == "") this.setMessageButtons(0, "");
 					else this.setMessageButtons(0, "block");
 		

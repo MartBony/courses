@@ -32,7 +32,6 @@
 	box-shadow: 0px 5px 10px -5px rgba(0,0,0,0.4);
 	box-sizing: border-box;
 
-	touch-action: none;
 	visibility: hidden;
 
 	opacity: 0;
@@ -50,8 +49,6 @@
 
 /* Menubar */
 #menubar{
-	-webkit-backdrop-filter: blur(10px);
-	backdrop-filter: blur(10px);
 	background: var(--color-theme);
 	color: var(--color-text-menu);
 	border: white solid 2px;
@@ -279,4 +276,13 @@
 		grid-template-columns: repeat(2, 1fr);
 	}
 	
+}
+
+@supports (backdrop-filter: blur(20px)){
+	
+	#menubar{
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+	}
+
 }

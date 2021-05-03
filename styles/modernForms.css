@@ -6,7 +6,6 @@
 	right: 0px;
 	bottom: 0px;
 	background: rgba(0,0,0,0);
-	backdrop-filter: blur(0px);
 	visibility: hidden;
 	overflow: hidden;
 	transition: background 10ms linear, backdrop-filter 0 linear;
@@ -27,129 +26,181 @@
 }
 
 #modernForms .formContainer{
+	--rad: 10px;
+
 	position: absolute;
 	top: 0px;
 	left: 0px;
 	right: 0px;
-	height: 100%;
-	max-height: 600px;
+	bottom: 0;
+	padding-bottom: 40%;
 	overflow: auto;
 	z-index: 2;
 	transform-origin: 50% 50%;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 }
 
+.formContainer article{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	margin: 0;
+	width: 90%;
+	max-width: 300px;
+	overflow: hidden;
+	
+	background: rgba(250, 248, 245, 0.95);
+	border-radius: var(--rad);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+
+	box-sizing: border-box;
+}
+
+
+
 #modernForms #modernArticleAdder{
-	--rad: 10px;
+	visibility: collapse;
+}
+
+#modernForms #modernArticleAdder article{
 	opacity: 0;
 	transform: translate(70px, 100px) scale(0.7);
-	visibility: collapse;
 }
 
 #modernForms.articleForm #modernArticleAdder{
-	transition: opacity 300ms ease;
 	visibility: visible;
-	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
-	opacity: 1;
 }
 
-#modernForms #modernCourseAdder{
-	--rad: 10px;
+#modernForms.articleForm #modernArticleAdder article{
+	opacity: 1;
+	transform: translate(0, 0) scale(1);
+	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
+}
+
+
+#modernForms #modernPreviewAdder{
+	visibility: collapse;
+}
+
+#modernForms #modernPreviewAdder article{
 	opacity: 0;
 	transform: translate(70px, 100px) scale(0.7);
+}
+
+#modernForms.previewForm #modernPreviewAdder{
+	visibility: visible;
+}
+
+#modernForms.previewForm #modernPreviewAdder article{
+	transform: translate(0, 0) scale(1);
+	opacity: 1;
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
+}
+
+
+#modernForms #modernCourseAdder{
 	visibility: collapse;
+}
+
+#modernForms #modernCourseAdder article{
+	opacity: 0;
+	transform: translate(70px, 100px) scale(0.7);
 }
 
 #modernForms.courseForm #modernCourseAdder{
 	visibility: visible;
-	transform: translate(0, 0) scale(1);
-	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
-	opacity: 1;
 }
 
+#modernForms.courseForm #modernCourseAdder article{
+	opacity: 1;
+	transform: translate(0, 0) scale(1);
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
+}
+
+
+
 #modernForms #modernGroupeAdder{
-	--rad: 10px;
+	visibility: collapse;
+}
+
+#modernForms #modernGroupeAdder article{
 	opacity: 0;
 	transform: scale(0.7);
-	visibility: collapse;
 }
 
 #modernForms.groupeForm #modernGroupeAdder{
 	visibility: visible;
+}
+
+#modernForms.groupeForm #modernGroupeAdder article{
+	opacity: 1;
 	transform: scale(1);
-	transition: opacity 300ms ease, transform 300ms var(--ease-enter);
-	opacity: 1;
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
 }
 
-#modernForms #modernPreviewAdder{
-	--rad: 10px;
-	opacity: 0;
-	transform: translate(70px, 100px) scale(0.7);
-	visibility: collapse;
-}
 
-#modernForms.previewForm #modernPreviewAdder{
-	transition: opacity 300ms ease;
-	visibility: visible;
-	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
-	opacity: 1;
-}
 
 #modernForms #modernBuyer{
-	--rad: 10px;
+	visibility: collapse;
+}
+
+#modernForms #modernBuyer article{
 	opacity: 0;
 	transform: translate(0, 0) scale(0.7);
-	visibility: collapse;
 }
 
 #modernForms.buyForm #modernBuyer{
-	transition: opacity 300ms ease;
 	visibility: visible;
-	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
-	opacity: 1;
 }
 
+#modernForms #modernBuyer article{
+	opacity: 1;
+	transform: translate(0, 0) scale(1);
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
+}
+
+
 #modernForms #modernInviteur{
-	--rad: 10px;
-	opacity: 0;
-	transform: translate(0, 0) scale(0.7);
 	visibility: collapse;
 }
 
+#modernForms #modernInviteur article{
+	opacity: 0;
+	transform: translate(0, 0) scale(0.7);
+}
+
 #modernForms.inviteForm #modernInviteur{
-	transition: opacity 300ms ease;
 	visibility: visible;
-	transform: translate(0, 0) scale(1);
-	transition: transform 300ms var(--ease-enter);
+}
+
+#modernForms.inviteForm #modernInviteur article{
 	opacity: 1;
+	transform: translate(0, 0) scale(1);
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
 }
 
 
 
 
 .modernFormTitle{
-	position: relative;
 	--pad: 10px;
-	width: 90%;
-	max-width: 300px;
+
+	width: 100%;
 	background: var(--color-theme);
 	color: var(--color-text-menu);
 	padding: var(--pad);
 	margin: 0;
 	text-align: center;
 	font-size: 2rem;
-	border-radius: var(--rad) var(--rad) 0 0;
-	z-index: 2;
-	user-select: none;
+
 	-ms-user-select: none;
 	-webkit-user-select: none;
 	-moz-user-select: none;
+	user-select: none;
 
 	box-sizing: border-box;
 }
@@ -166,16 +217,16 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	
+	width: 100%;
 	margin: 0;
-	width: 90%;
-	max-width: 300px;
 	height: auto;
+
 	padding: 20px;
 	padding-bottom: 40px;
 	padding-top: 10px;
-	background: rgba(250, 248, 245, 0.95);
-	border-radius: 0 0 var(--rad) var(--rad);
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+	background: rgba(0,0,0,0);
+
 	box-sizing: border-box;
 }
 
@@ -238,33 +289,37 @@
 
 
 @media screen and (min-width: 900px){
-	#modernForms #modernArticleAdder{
+	#modernForms #modernArticleAdder article{
 		transform: translate(0, 0) scale(0.7);
 	}
 
-	#modernForms #modernPreviewAdder{
+	#modernForms #modernPreviewAdder article{
 		transform: translate(0, 0) scale(0.7);
 	}
 
-	#modernForms #modernCourseAdder{
+	#modernForms #modernCourseAdder article{
 		transform: translate(0, 0) scale(0.7);
 	}
-	
-		
 
 	#modernForms .formContainer{
-		transform-origin: 50% 50%;
+		padding-bottom: 10%;
 	}
+	
 }
 
 @supports (backdrop-filter: blur(20px)){
+	#modernForms{
+		-webkit-backdrop-filter: blur(0px);
+		backdrop-filter: blur(0px);
+	}
 
 	#modernForms.opened{
 		background: rgba(0,0,0,0.2);
+		-webkit-backdrop-filter: blur(20px);
 		backdrop-filter: blur(20px);
 	}
 
-	#modernForms form{
+	#modernForms article{
 		background: rgba(250, 248, 245, 0.88);
 	}
 

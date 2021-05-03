@@ -1,6 +1,6 @@
 <div id="buttons">
-	<button class="adder" id="addPrev"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
-	<button class="adder" id="addArt"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
+	<button class="adder" id="addPrev" aria-label="Nouvel article"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
+	<button class="adder" id="addArt" aria-label="Nouvel article"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
 	<button id="addCourse">
 		<i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i>
 		Nouvelle Course
