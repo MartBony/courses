@@ -11,7 +11,6 @@ const assets = [
 	// CSS
 	"./styles/parametres.css",
 	"./styles/popups.css",
-	"./styles/forms.css",
 	"./styles/modernForms.css",
 	"./styles/style.css",
 	"./styles/menus.css",
