@@ -32,12 +32,9 @@ document.querySelector('form.signup').onsubmit = e => {
 			nom: form.nom.value 
 		}
 	}).then(res => {
-		if (res.status == 200){
-			if(res.payload){
-				UI.message(res.payload.message);
-			} else {
-				alert("Vous êtes inscrits avec succès, nous vous demandons de confirmez votre adresse email avec le message que nous vous avons envoyé.");
-			}
+		if (res.status == 200 && res.payload){
+		UI.message(res.payload.message);
+
 		} else {
 			UI.erreur(res.payload.message);
 		}
@@ -58,7 +55,7 @@ document.querySelector('form.login').onsubmit = e => {
 		if(res && res.status == 200) {
 			LocalStorage.setItem('userId', res.payload.userId);
 			return cssReady().then(() => startApp(res.payload.userId));
-		} else UI.erreur(res.payload ? res.payload.title : null);
+		} else UI.erreur(res.payload ? res.payload.message : null);
 	});
 }
 

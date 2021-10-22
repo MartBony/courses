@@ -1,4 +1,4 @@
-const version = 'v1.25';
+const version = 'v1.27';
 const staticCacheName = 'static-cache-courses-'+ version;
 const offlinePage = "./offline.html";
 const assets = [
@@ -9,15 +9,16 @@ const assets = [
 	"./manifest.webmanifest",
 	'./sw.js',
 	// CSS
-	"./styles/parametres.css",
+	"./styles/preload.css",
+	/* "./styles/parametres.css",
 	"./styles/popups.css",
 	"./styles/modernForms.css",
 	"./styles/style.css",
 	"./styles/menus.css",
 	"./styles/switches.css",
-	"./styles/preload.css",
 	"./styles/auth.css",
-	"./styles/mainPanel.css",
+	"./styles/mainPanel.css", */
+	"./styles/production.css",
 	// MODULES
 	"./modules/js/app.js",
 	"./modules/js/controls.js",

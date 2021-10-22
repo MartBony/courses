@@ -25,7 +25,13 @@
 			"src": "images/logos/logo72.png",
 			"type" : "image/png",
 			"sizes": "72x72"
-		}],
+		},
+		{
+			"src": "images/logos/maskable_icon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+	}],
 	"dir" : "ltr",
 	"lang" : "French",
 	"scope" : "/courses/",

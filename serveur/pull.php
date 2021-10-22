@@ -21,6 +21,8 @@ login($bdd, function($user) use($bdd){
 		');
 		$reqItems->execute(array($course['id']));
 
+		$total = 0;
+
 		while($article = $reqItems->fetch()){
 			if($article['preview'] == 1){
 				
@@ -38,6 +40,7 @@ login($bdd, function($user) use($bdd){
 					'titre' => $article['titre'],
 					'message' => $article['message']
 				));
+				$total += (float) $article['prix'];
 			}
 		}
 		
@@ -47,7 +50,7 @@ login($bdd, function($user) use($bdd){
 				'id' => (int) $course['id'],
 				'nom' => $course['nom'],
 				'maxPrice' => (float) $course['maxPrice'],
-				'total' => (float) $course['total'],
+				'total' => $total,
 				'dateStart' => (int) $course['dateStart'],
 				'groupe' => (int) $course['groupe'],
 				'taxes' => (float) $course['taxes'],

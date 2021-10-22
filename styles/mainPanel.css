@@ -125,7 +125,7 @@ card-total strong{
 }
 
 
-#mainPanel ul{
+#panier ul, #liste ul{
 	padding: 0;
 	width: 100%;
 	margin: 10px 0 0 0;
@@ -281,7 +281,60 @@ section#calcul
 	box-sizing: border-box;
 }
 
-#calcul h2
+#calcul article{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin: 10px 0;
+}
+
+#calcul ul{
+	width: 100%;
+	padding: 10px;
+	box-shadow: 0 5px 10px -5px rgb(0, 0, 0, 7%);
+	border-radius: 4px;
+	background: rgb(242 242 245);
+	margin: 0;
+	margin-top: 10px;
+	list-style-type: none;
+	box-sizing: border-box;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+#calcul ul:nth-child(2){
+	flex-direction: row;
+}
+
+#calcul li{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex: 1;
+	width: 100%;
+
+	font-size: 1.8rem;
+	font-weight: 700;
+}
+
+#calcul li div{
+	background: var(--color-theme-complement);
+	padding: 10px;
+	margin: 5px;
+	border-radius: 2px;
+
+	color: white;
+}
+
+#calcul ul:nth-child(2) li{
+	width: auto;
+	flex-direction: column;
+}
+	
+
+/* #calcul h2
 {
 	width: auto;
 	position: relative;
@@ -312,7 +365,7 @@ section#calcul
 	margin-left: 10px;
 	margin-bottom: 10px;
 	color: var(--colorTextLight);
-}
+} */
 
 #calcul canvas{
 	margin-top: 20px;
@@ -320,8 +373,153 @@ section#calcul
 }
 
 /* Menu */
-#menu article
+#menu article{
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-bottom: 20px;
+}
+
+article#optsButtons{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	padding: 10px 10px;
+	margin: 10px 0;
+	max-width: 400px;
+	width: 100%;
+	font-size: 1.7rem;
+	box-sizing: border-box;
+}
+
+#optsButtons > button{
+	font-size: inherit;
+	background: var(--color-theme-secondary);
+	padding: 10px;
+	color: white;
+	border-radius: 4px;
+	box-shadow: 0px 2px 5px rgba(0,0,0,0.35);
+}
+
+#optsButtons i{
+	vertical-align: -2px;
+}
+
+#menu h2{
+	position: relative;
+	width: 100%;
+	text-align: center;
+	margin: 10px 0;
+	font-size: 2rem;
+}
+
+#groupesContainer > div{
+	width: 100%;
+	padding: 15px;
+	white-space: nowrap;
+	overflow-x: auto;
+	box-sizing: border-box;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+}
+
+#groupesContainer button{
+
+	color: white;
+	font-size: 1.3rem;
+	border: none;
+	outline: none;
+	vertical-align: middle;
+
+	box-sizing: border-box;
+}
+
+#groupesContainer > button{
+	margin: 20px 10px;
+	padding: 10px 15px;
+
+	background: var(--color-theme-complement);
+	border-radius: 2px;
+	align-self: flex-end;
+}
+
+button.groupe
 {
+	position: relative;
+	display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+	width: 200px;
+	margin: 0 5px;
+	padding: 10px 15px 3.3rem 15px;
+
+	scroll-snap-align: center;
+	scroll-margin: 0 10px;
+	transform: scale(0.99);
+	background: #f7f0e6;
+	box-shadow: 0px 0.5px 0 1px rgba(0,0,0,0.06);
+	border-radius: 2px;
+	transition: transform 100ms var(--ease-enter);
+}
+
+button.groupe.opened
+{
+	transform: scale(1) translateY(-2px);
+	box-shadow: 0px 5px 5px -1px rgba(0,0,0,0.06);
+	background: var(--color-theme-complement);
+}
+
+.groupe h4{
+	color: black;
+	text-transform: capitalize;
+	margin: 5px;
+	text-align: left;
+	font-size: 1.5rem;
+}
+
+.groupe ul{
+	margin: 5px;
+	padding: 0;
+	text-align: left;
+	font-size: 1.3rem;
+	grid-gap: 0;
+}
+
+.groupe li{
+	color: black;
+	list-style-type: none;
+}
+
+.groupe i{
+	color: black;
+	position: absolute;
+	display: none;
+	padding: 0.5rem;
+	right: 5%;
+	bottom: 0;
+	font-size: 2.2rem;
+	align-self: center;
+	justify-self: flex-end;
+}
+
+.groupe i.ms-Icon--AddFriend
+{
+	right: auto;
+	left: 5%;
+}
+
+.groupe.opened li, .groupe.opened h4{
+	color: #ffffffe0;
+}
+
+.groupe.opened i{
+	color: #ffffffe0;
+	display: block;
+}
+
+
+#coursesContainer div{
 	width: 100%;
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -329,12 +527,6 @@ section#calcul
 	grid-gap: 5px;
 	padding: 5px;
 	box-sizing: border-box;
-}
-
-#menu h2{
-	position: relative;
-	margin: 10px 20px;
-	font-size: 2rem;
 }
 
 #menu .course

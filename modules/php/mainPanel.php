@@ -1,6 +1,6 @@
 <section id="mainPanel">
 	<section id="panier" class="main">
-		<header class="phones">
+		<header>
 			<h1 class="noselect">Panier</h1>
 		</header>
 		<card-total>
@@ -16,7 +16,7 @@
 		</article>
 	</section>
 	<section id="liste" class="main">
-		<header class="phones">
+		<header>
 			<h1 class="noselect">Liste</h1>
 		</header>
 		<button id="recycle">Reprendre la liste</button>
@@ -28,11 +28,23 @@
 		</article>
 	</section>
 	<section id="calcul">
-		<header class="phones">
+		<header>
 			<h1 class="noselect">Calculer</h1>
 		</header>
 		<article>
-			<h3 class="maxim">Limite envisagée :</h3>
+			<ul>
+				<li><div><span id="average">0</span><span class="currency">€</span></div> Prix moyen d'un article  (TTC)</li>
+				<li><div id="nbrarticles">0</div> Nombre d'articles dans le panier</li>
+			</ul>
+			<ul>
+				<li>Total (TTC) <div><span id="total">0</span><span class="currency">€</span></div></li>
+				<li>Objectif <div><span id="objectif">0</span><span class="currency">€</span></div></li>			
+			</ul>
+			<ul>
+				<li><div><span id="averagecourses">0</span><span class="currency">€</span></div> Coût moyen d'une course sur les derniers mois</li>
+				<li><div id="endmonth">0 Jours</div> Restant ce mois-ci</li>
+			</ul>
+			<!-- <h3 class="maxim">Limite envisagée :</h3>
 			<p id="maxprice"></p>
 			<div class="flex">
 				<div class="card">
@@ -47,7 +59,7 @@
 					<h3>Fin du mois dans</h3>
 					<p id="endmonth"></p>
 				</div>
-			</div>
+			</div> -->
 		</article>
 		<!-- <h3>Dépenses du dernier mois:</h3>
 		<p id="moiDep"></p>
@@ -58,11 +70,21 @@
 		<canvas id="depensesChart" width="400" height="400"></canvas>
 	</section>
 	<section id="menu">
-		<header class="phones">
+		<header>
 			<h1 class="noselect">Menu</h1>
-			<i class="ms-Icon ms-Icon--Settings" aria-hidden="true"></i>
 		</header>
-		<h2>Historique</h2>
-		<article></article>
+		<article id="optsButtons">
+			<button id="paramsOpener"><i class="ms-Icon ms-Icon--Settings" aria-hidden="true"></i> Paramètres</button>
+			<button id="compteOpener"><i class="ms-Icon ms-Icon--Contact" aria-hidden="true"></i> Compte</button>
+		</article>
+		<article id="groupesContainer">
+			<h2>Mes groupes</h2>
+			<div></div>
+			<button><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i> Nouveau groupe</button>
+		</article>
+		<article id="coursesContainer">
+			<h2>Mes courses</h2>
+			<div></div>
+		</article>
 	</section>
 </section>

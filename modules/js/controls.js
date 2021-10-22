@@ -419,9 +419,8 @@ export default function initEvents(){
 					document.querySelector('.loader').classList.remove('opened');
 					if(res.status == 200){
 						form.titre.value = "";
-						LocalStorage.clear();
 						UI.closeModernForms();
-						refreshAsync();
+						refreshAsync(res.payload ? res.payload.id: null);
 					} else if(res.payload) {
 						UI.erreur(res.payload.message);
 					}  else throw "La réponse du serveur n'est pas correcte. Redemmarez l'application et réessayez.";
@@ -599,61 +598,8 @@ export default function initEvents(){
 				// window.location = "/courses/"; Location changes on message from the SW
 			}
 		}
-		if(e.target.classList.contains('groupe')
-			|| e.target.parentNode.classList.contains('groupe')
-			|| e.target.parentNode.parentNode.classList.contains('groupe')) { // when clicked on a button
-			let btGroupe;
-			switch(true){
-				case e.target.classList.contains('groupe'):
-				btGroupe = e.target;
-				break;
-				case e.target.parentNode.classList.contains('groupe'):
-				btGroupe = e.target.parentNode;
-				break;
-				case e.target.parentNode.parentNode.classList.contains('groupe'):
-				btGroupe = e.target.parentNode.parentNode;
-				break;
-			}
-			
-			if(e.target.classList.contains('ms-Icon--Leave')) {
-				UI.modal('leaveGroupe', btGroupe.innerHTML);
-				return null;
-			}
-			else if(e.target.classList.contains('ms-Icon--AddFriend')) {
-				UI.openModernForm("inviter");
-				return null;
-			}
-
-			app.queue.enqueue(() => app.pull("open", btGroupe.getAttribute("idGroupe")));
-		}
-		else if(e.target.id == "deconnect") {
-
-			fetcher({
-				method: 'POST',
-				url: 'serveur/auth.php',
-				data: { deconnect: true }
-			}).then(data => {
-				if(data.status == 200){
-					LocalStorage.clear();
-					IndexedDbStorage.closeIDB()
-				
-						if("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-							navigator.serviceWorker.controller.postMessage({
-								action: 'DELETEDB',
-							});
-							// window.location = "/courses/"; Location changes on message from the SW
-						}
-			
-				} else throw "Offline"
-			})
-			.catch(err => {
-				console.log(err);
-				if(err == "Offline") UI.offlineMsg(app)
-			});
-			
-		} else if (e.target.id == "supprCompte") UI.modal(app, 'deleteAll')
+		else if (e.target.id == "supprCompte") UI.modal(app, 'deleteAll')
 		else if (e.target.id == 'generateId') app.generateInviteKey()
-		else if (e.target.id == 'newgroupe') UI.openModernForm('groupe')
 		else if (e.target.parentNode.id == "invitations"){
 			if(e.target.tagName == "BUTTON") Pull.invitations(app)
 		}
@@ -670,6 +616,37 @@ export default function initEvents(){
 		} /* else if (e.target.id === 'theme') {
 			UI.toggleTheme();
 		} */
+	});
+
+	// Compte
+	document.getElementById('compteContainer').addEventListener('click', event => {
+		if(event.target.classList.contains('ms-Icon--Back')) UI.closeMenus()
+		else if(event.target.id == "logout") {
+
+			fetcher({
+				method: 'POST',
+				url: 'serveur/auth.php',
+				data: { deconnect: true }
+			}).then(res => {
+				if(res.status == 200){
+					LocalStorage.clear();
+					IndexedDbStorage.closeIDB()
+				
+						if("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+							navigator.serviceWorker.controller.postMessage({
+								action: 'DELETEDB',
+							});
+							// window.location = "/courses/"; Location changes on message from the SW
+						}
+			
+				} else if(res.status == "offline") UI.offlineMsg(app)
+				else UI.erreur(res.payload ? res.payload.message : null);
+			})
+			.catch(err => {
+				console.warn(err);
+			});
+			
+		}
 	});
 
 
@@ -713,11 +690,11 @@ export default function initEvents(){
 				const element = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				
 				if(!app.course.old){
-					console.log(e);
 					document.querySelector("item-options").open(element.content,{x: e.clientX, y: e.clientY});
 				}
 				
-			}/*  else if (e.target.parentNode.classList.contains('options')){
+			}
+			/*  else if (e.target.parentNode.classList.contains('options')){
 				if(e.target.classList.contains('ms-Icon--Cancel')){
 					UI.hideOptions();
 				} else if(e.target.classList.contains('ms-Icon--Pinned')) {
@@ -749,7 +726,8 @@ export default function initEvents(){
 	// MenuPanel
 
 	document.getElementById('menu').addEventListener('click', event => {
-		if(event.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
+		if(event.target.id == "paramsOpener" || event.target.parentNode.id == "paramsOpener") UI.openMenus('params')
+		else if(event.target.id == "compteOpener") UI.openMenus('compte')
 		else if(event.target.classList.contains('course')) {
 			const id = event.target.getAttribute("dbIndex");
 			if(id){
@@ -759,6 +737,36 @@ export default function initEvents(){
 		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
 			const id = event.target.parentNode.getAttribute("dbIndex");
 			if(id) UI.modal('deleteCourse', id);
+		}
+		
+		else if (event.target.tagName == 'BUTTON' && event.target.parentNode.id == "groupesContainer") UI.openModernForm('groupe')
+		
+		else if(event.target.classList.contains('groupe')
+			|| event.target.parentNode.classList.contains('groupe')
+			|| event.target.parentNode.parentNode.classList.contains('groupe')) { // when clicked on a button
+			let btGroupe;
+			switch(true){
+				case event.target.classList.contains('groupe'):
+				btGroupe = event.target;
+				break;
+				case event.target.parentNode.classList.contains('groupe'):
+				btGroupe = event.target.parentNode;
+				break;
+				case event.target.parentNode.parentNode.classList.contains('groupe'):
+				btGroupe = event.target.parentNode.parentNode;
+				break;
+			}
+			
+			if(event.target.classList.contains('ms-Icon--Leave')) {
+				UI.modal('leaveGroupe', btGroupe.innerHTML);
+				return null;
+			}
+			else if(event.target.classList.contains('ms-Icon--AddFriend')) {
+				UI.openModernForm("inviter", btGroupe.children[0].innerHTML);
+				return null;
+			}
+
+			app.queue.enqueue(() => app.pull("open", btGroupe.getAttribute("idGroupe")));
 		}
 	});
 
@@ -788,12 +796,8 @@ export default function initEvents(){
 
 	Array.from(document.getElementsByTagName('header')).forEach(el => {
 		el.addEventListener('click', e => {
-			/* if(el.classList.contains('phones')){
-				if(e.target.tagName == "I") UI.openMenus('mainMenu')
-			} else */ if(el.classList.contains('tablet')) {
-				if(e.target.classList.contains('ms-Icon--GlobalNavButton')) UI.openMenus('mainMenu')
-				else if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
-				else if(e.target.classList.contains('ms-Icon--Calculator')) UI.openMenus('calcul', app)
+			if(el.classList.contains('tablet')) {
+				if(e.target.classList.contains('ms-Icon--Settings')) UI.openMenus('params')
 				else if(e.target.classList.contains('ms-Icon--BarChartVertical')){
 					let calcul = document.querySelector('#calcul');
 					if(calcul.classList.contains('opened')) calcul.classList.remove('opened')
@@ -839,36 +843,6 @@ export default function initEvents(){
 		}
 	});
 
-/* 	document.getElementById('forms').addEventListener('click', e => {
-		if (e.target.tagName == "I" && e.target.classList.contains("ms-Icon--Back")){
-			if(e.target.parentNode.id == "prices") UI.closePrice()
-			else UI.closeForms()
-		} else if (e.target.id == "forms") UI.closeForms()
-	});
-
-	document.getElementById('forms').addEventListener('submit', e => {
-		switch(e.target.parentNode.id){
-			case "addArticle": 
-				if(e.target.tagName == "FORM") addArticle(e)
-				break;
-			case "addPreview" :
-				if(e.target.tagName == "FORM") addPreview(e)
-				break;
-			case "prices" :
-				if(e.target.tagName == "FORM") buyForm(e)
-				break;
-			case "addCourse" :
-				if(e.target.tagName == "FORM") addCourse(e)
-				break;
-			case "addGroupe" :
-				if(e.target.tagName == "FORM") addGroupe(e)
-				break;
-			case "invitation" :
-				if(e.target.tagName == "FORM") invitation(e)
-				break;
-		}
-	}); */
-
 	let inputsForms = new Array(
 		Array.from(document.querySelectorAll('#addArticle input')),
 		Array.from(document.querySelectorAll('#addCourse input')),
@@ -902,29 +876,6 @@ export default function initEvents(){
 
 	// Others
 
-	document.getElementById('refresh').onclick = refreshAsync;
-
-/* 	window.addEventListener("offline", event => {
-		UI.message(
-			"Vous êtes hors ligne", 
-			"Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement",
-			null, 3000)
-	});
-
-	window.addEventListener("online", event => {
-		UI.message(
-			"Vous êtes de nouveau en ligne", 
-			"Nous synchronisons vos données",
-			null, 2000)
-	}); */
-
-
-
-
-	// Context Events
-	/* document.addEventListener("visibilitychange", ()=>{
-		if (document.visibilityState == "visible") noLoaderRefresh()
-	}); */
-	//window.addEventListener('online', () => noLoaderRefresh());
+	document.getElementById('refresh').onclick = () => refreshAsync();
 
 }

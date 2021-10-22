@@ -51,8 +51,8 @@ export default class Structure { // Structure means the the User
 		if(this.filterGroupe(groupe)){
 			const groupeNode = Generate.groupe(groupe.id, groupe.nom, groupe.membres);
 			
-			if(index) document.getElementById('groupes').insertBefore(groupeNode, this.groupesNodeList[index]);
-			else document.getElementById('groupes').prepend(groupeNode);
+			if(index) document.querySelector('#groupesContainer div').insertBefore(groupeNode, this.groupesNodeList[index]);
+			else document.querySelector('#groupesContainer div').prepend(groupeNode);
 		}
 	}
 	filterGroupe(groupe){ // Verifies is a groupe

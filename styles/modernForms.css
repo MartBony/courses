@@ -157,7 +157,7 @@
 	visibility: visible;
 }
 
-#modernForms #modernBuyer article{
+#modernForms.buyForm #modernBuyer article{
 	opacity: 1;
 	transform: translate(0, 0) scale(1);
 	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
@@ -241,7 +241,8 @@
 #modernForms label
 {
 	font-size: 1.6rem;
-	margin-left: 10px;
+	padding: 0 10px;
+	width: 100%;
 	box-sizing: border-box;
 }
 
@@ -303,6 +304,13 @@
 
 	#modernForms .formContainer{
 		padding-bottom: 10%;
+	}
+	
+}
+
+@media screen and (max-height: 500px){
+	#modernForms .formContainer{
+		padding-bottom: 0;
 	}
 	
 }

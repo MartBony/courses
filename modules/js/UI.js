@@ -47,7 +47,6 @@ class ItemOptions extends HTMLElement{
 		}
 
 		if(position.x && position.y){
-			console.log(position);
 			this.style.setProperty("--pos-bottom", `max(0px, calc(100vh - ${position.y + 100}px))`);
 			this.style.setProperty("--pos-left", `${Math.max(position.x - 200, 0)}px`);
 		}
@@ -224,6 +223,9 @@ export default class UI {
 			});
 		}
 	}
+	static closeMessage(){
+		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
+	}
 	static erreur(titre = "Un problème est survenu.", texte, buttons){
 		document.querySelector('#erreur').classList.add('opened');
 
@@ -251,6 +253,10 @@ export default class UI {
 	static msgIsOffline(){
 		UI.message("Vous êtes hors ligne", "Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement", null, 3000);
 	}
+	static offlineMsg(app, msg){
+		msg = msg || "Cette requête n'a pas pu aboutir, connectez-vous et réessayez.";
+		UI.erreur("Le réseau est indisponible.", msg);
+	}
 	static requireAuth(){
 		UI.erreur("Vous n'êtes pas connectés", "Clickez ici pour se connecter", [
 			{
@@ -262,15 +268,6 @@ export default class UI {
 			}
 		]);
 	}
-	static closeForms(){
-		document.querySelector('#forms').className = "";
-		Array.from(document.querySelectorAll('#forms div, #forms input, #forms label, #forms i, #forms ul')).forEach(el => {
-			el.classList.remove('opened');
-		});
-	}
-	static closeMessage(){
-		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
-	}
 	static openPanel(type, app = null){
 		document.getElementById('depensesChart').style.opacity = "0";
 		document.getElementById('mainPanel').className = type;
@@ -279,15 +276,14 @@ export default class UI {
 		if((type == 'calcul' || type == "menu") && app) UI.openChart(app);
 	}
 	static openMenus(type, data = null, app = null){
-		Array.from(document.querySelectorAll('#backTouchSurf, #btTouchSurf')).forEach(el => el.style.classList.add("hide"));
-		document.getElementById('menus').classList.remove('calcul', 'params');
-		document.getElementById('menus').classList.add('opened', type);
-		if(type == 'calcul' && data && app) UI.openChart(app, data);
+		document.getElementById('menus').className = `opened ${type}`;
 		if(type == 'params') Pull.invitations()
+		setTimeout(() => {document.body.style.overflowY = "hidden"}, 500);
 	}
 	static closeMenus(){
 		document.getElementById('menus').className = "";
 		document.getElementById('depensesChart').style.opacity = "0";
+		setTimeout(() => {document.body.style.overflowY = ""}, 500);
 	}
 	static initChart(app){
 		const ctx = document.getElementById('depensesChart').getContext('2d');
@@ -315,6 +311,7 @@ export default class UI {
 		});
 	}
 	static openChart(app){
+		// Update chart
 		const graph = app.groupe.graphData;
 		document.getElementById('depensesChart').style.opacity = "1";
 		const labels = Array(graph.length).fill("");
@@ -322,6 +319,9 @@ export default class UI {
 		app.chart.data.labels = labels;
 		app.chart.data.datasets.forEach(dataset => dataset.data = graph);
 		app.chart.update();
+
+		// Update Calculs
+		document.getElementById("averagecourses").innerHTML = app.groupe.averageCoursesCost;
 	}
 	static modal(action, data){
 		document.querySelector('#modal').classList.add('opened', action || '');
@@ -332,35 +332,10 @@ export default class UI {
 	static closeModal(){
 		document.querySelector('#modal').className = '';
 	}
-	static offlineMsg(app, msg){
-		msg = msg || "Cette requête n'a pas pu aboutir, connectez-vous et réessayez.";
-		UI.erreur("Le réseau est indisponible.", msg);
-	}
 	static acc(app){
 		UI.closeModernForms();
-		UI.closeForms();
 		UI.closeMenus();
-		UI.closePrice();
 		document.querySelector("item-options").close();
-	}
-	static showInstall(delay){
-		setTimeout(function(){
-			$('.install').css({'display':'flex'});
-			setTimeout(function(){
-				$('.install').addClass('opened');
-				$('.install img').each(function(i){
-					setTimeout(function(){
-						$('.install img').eq(i).addClass('opened');
-					}, i*50);
-				});
-			}, 10);
-		}, delay);
-	}
-	static hideInstall(){
-		$('.install img, .install').removeClass('opened');
-		setTimeout(function(){
-			$('.install').css({'display':'none'});
-		}, 200);
 	}
 	static openModernForm(type = "article", data){
 		let button;
@@ -386,6 +361,7 @@ export default class UI {
 				document.getElementById("modernForms").classList.add("opened", "courseForm");
 				document.querySelector(`#modernCourseAdder input`).focus();
 
+
 				break;
 			case "buy":
 				if(data && data.item){
@@ -405,6 +381,7 @@ export default class UI {
 
 				break;
 			case "inviter":
+				document.querySelector("#modernInviteur h2").innerHTML = data;
 				document.getElementById("modernForms").classList.add("opened", "inviteForm");
 				setTimeout(() => document.querySelector(`#modernInviteur input`).focus(), 300);
 		}
@@ -419,37 +396,6 @@ export default class UI {
 		document.body.classList.remove("formed");
 		document.querySelector('#modernForms').className = "";
 		Array.from(document.querySelectorAll(".adder, #addCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
-	}
-	static closePrice(){
-		UI.closeForms();
-	}
-	static openMenu(){
-		//$('.menu').css({'display':'block'});
-		setTimeout(function(){
-			$('.menu').addClass('opened');
-		},10);
-	}
-	static openParams(){
-		//$('#params').css({'display':'block'});
-		setTimeout(function(){
-			$('#params').addClass('opened');
-		},10);
-	}
-	static openAddGroup(){
-		document.getElementById("forms").classList.add('opened','groupe');
-
-		$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').each(function(i){	
-			setTimeout(function(){
-				$('#addGroupe div, #addGroupe input, #addGroupe label, #addGroupe i').eq(i).addClass('opened');
-			},20*i+250);
-		});
-		setTimeout(function(){
-			$('#addGroupe input').eq(0).focus();
-		},200);
-	}
-	static closeAddGroup(){
-		$('#addGroupe').css({'display':'', 'opacity':'', 'transform':''});
-		$('#addGroupe label, #addGroupe input').removeClass('opened');
 	}
 	static removeItem(index){
 		return new Promise((resolve, reject) => {

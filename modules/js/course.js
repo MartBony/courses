@@ -5,6 +5,7 @@ import Animations from "./animations.js";
 const app = document.querySelector("app-window");
 
 class CourseItem extends HTMLLIElement{
+	totalCost = 0;
 	itemContent = {
 		type: 'article',
 		id: null,
@@ -40,6 +41,9 @@ class CourseItem extends HTMLLIElement{
 
 		this.content = this.itemContent;
 		
+	}
+	async saveToIDB(){
+		return await IndexedDbStorage.put("courses", this.itemContent);
 	}
 	get content(){
 		return this.itemContent;
@@ -98,19 +102,21 @@ export default class Course{
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
 		this.maxPrice = Number(data.maxPrice);
-		app.total = Number(data.total);
+		app.course.total = Number(data.total);
 		this.dateStart = data.dateStart;
 		this.groupe = Number(data.groupe);
 		this.taxes = Number(data.taxes) || 0;
 
 		this.old = data.id != app.groupe.courses[0].id;
 
-		document.querySelector('#maxprice').innerHTML = this.maxPrice + app.params.currency;
+		document.getElementById('objectif').innerHTML = this.maxPrice;
 	
 		// this.updateItems(app, data.items.articles, data.items.previews, save)
 
 		this.started = data.dateStart != 0;
 		this.cardTotal.style.display = this.started ? "block" : "none";
+
+		this.updateCalculs();
 
 	}
 	/* updateItems(app, articles, previews, save = false){
@@ -276,23 +282,11 @@ export default class Course{
 
 
 	}
-	export(){
-		return {
-			'id': this.id,
-			'nom': this.nom,
-			'maxPrice': this.maxPrice,
-			'total': this.totalCost,
-			'dateStart': this.dateStart,
-			'groupe': this.groupe,
-			'taxes': this.taxes,
-			'items': this.items
-		};
-	}
 	pushArticle(app, item, animate){ // Appens an article in the logic
 		if(item && item.id && item.titre && item.color && item.prix){
 			this.insertArticle(app, 0, item, animate)
 			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix, message: item.message});
-			app.total += item.prix;
+			app.course.total += item.prix;
 		} else console.log("Article requirements not fullfilled", item);
 	}
 	insertArticle(app, index, item, animate = true){ // Inserts an article in the UI
@@ -314,7 +308,9 @@ export default class Course{
 			if(index) document.querySelector('#panier ul').insertBefore(article, this.articlesNodeList[index]);
 			else document.querySelector('#panier ul').prepend(article);
 			
-			setTimeout(() => article.classList.remove(animation) , 300);
+			this.updateCalculs();
+
+			// setTimeout(() => article.classList.remove(animation) , 300);
 
 		} else console.log("Article requirements not fullfilled", item);
 	}
@@ -346,9 +342,14 @@ export default class Course{
 
 		} else console.log("Preview requirements not fullfilled", item);
 	}
+	updateCalculs(){
+		document.getElementById("nbrarticles").innerHTML = this.articlesNodeList.length;
+		document.getElementById("average").innerHTML = (app.course.total / this.articlesNodeList.length | 0).toFixed(2);
+	}
 	deleteArticle(app, item){
+		this.updateCalculs();
 		this.items.articles = this.items.articles.filter(el => el.id != item.id);
-		app.total -= item.prix;
+		app.course.total -= item.prix;
 	}
 	deletePreview(id){
 		this.items.previews = this.items.previews.filter(el => el.id != id);
@@ -380,5 +381,19 @@ export default class Course{
 	}
 	get previewsNodeList(){
 		return Array.from(document.getElementsByClassName("preview"));
+	}
+	get total(){
+		return this.totalCost;
+	}
+	set total(val){
+		val = Number(val);
+		let total = Number(val.toFixed(2)),
+			totalTax = Number((total*(1+this.taxes)).toFixed(2)),
+			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.dateStart/(60*60*24*30));
+
+		document.getElementById("total").innerHTML = total;
+
+		document.querySelector("card-total").setValue(total/this.maxPrice);
+		this.totalCost = total;
 	}
 }

@@ -91,6 +91,30 @@ function pushCousesIndependent($user, PDO $bdd){
 				$reqInserted->execute(array($groupe['id']));
 				if($reqInserted->rowCount() == 1){
 					$inserted = $reqInserted->fetch();
+
+
+					if($user["premium"] == 0){
+						// DELETE VERY OLD COURSES
+						$timeLimit = time() - 60*60*24*30*7;
+						$reqVeryOldCourses = $bdd->prepare('SELECT `id` FROM `courses`
+							WHERE groupe = :idGroupe AND dateStart < :timelim ORDER BY id DESC');
+						$reqVeryOldCourses->execute(array(
+							"idGroupe" => $groupe['id'],
+							"timelim" => $timeLimit
+						));
+						$counter = -1;
+						while($delCrs = $reqVeryOldCourses->fetch()){
+							$counter++;
+							if($counter < 2){ // Pass first three entries, may be working one
+								continue;
+							}
+							$deleteItems = $bdd->prepare('DELETE FROM `articles` WHERE `course` = ?');
+							$deleteItems->execute(array($delCrs['id']));
+							$deleteCourse = $bdd->prepare('DELETE FROM `courses` WHERE id = ?');
+							$deleteCourse->execute(array($delCrs['id']));
+						}
+					}
+
 					echo json_encode(array(
 						"status" => 200,
 						"payload" => array(

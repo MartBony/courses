@@ -19,7 +19,10 @@ export default class Groupe{
 		// UI
 		Array.from(document.querySelectorAll('.groupe')).forEach(node => {
 			node.classList.remove("opened");
-			if(node.getAttribute('idGroupe') == groupe.id) node.classList.add('opened')
+			if(node.getAttribute('idGroupe') == groupe.id) {
+				node.classList.add('opened');
+				setTimeout(() => {node.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})}, 200);
+			}
 		});
 	}
 	updateCourses(app, courses, save = false){
@@ -100,8 +103,8 @@ export default class Groupe{
 		if(this.filterCourse(course)){
 			const courseNode = Generate.course(course.id, course.nom);
 			
-			if(index) document.querySelector('#menu article').insertBefore(courseNode, this.coursesNodeList[index]);
-			else document.querySelector('#menu article').prepend(courseNode);
+			if(index) document.querySelector('#coursesContainer div').insertBefore(courseNode, this.coursesNodeList[index]);
+			else document.querySelector('#coursesContainer div').prepend(courseNode);
 
 		}
 	}
@@ -131,5 +134,18 @@ export default class Groupe{
 			// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
 		})
 		return result.map(valeur => parseFloat(valeur.toFixed(2)));
+	}
+	get averageCoursesCost(){
+		const monthStamp = 60*60*24*30,
+		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
+		var sum = 0, len = 0;
+		this.courses.forEach((course) => {
+			if(course.dateStart > timeMarker-(monthStamp*(6))) {
+				sum += course.total;
+				len++;
+			}
+			// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
+		});
+		return len ? (sum / len).toFixed(1) : 0;
 	}
 }

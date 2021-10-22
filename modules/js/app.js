@@ -87,6 +87,8 @@ class AppWindow extends HTMLElement{
 
 			this.updateApp(data, true);
 			idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
+			
+			
 			return Pull.groupe(this, idGroupe);
 		})
 		.then(data => {
@@ -207,11 +209,10 @@ class AppWindow extends HTMLElement{
 					$('.loader').removeClass('opened');
 					let displayedIndex = this.course.items.articles.indexOf(item);
 
-					this.total -= data.prix;
+					this.course.total -= data.prix;
 					UI.removeArticle(this.course, item.id, displayedIndex);
 
 					this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
-					IndexedDbStorage.put("courses", this.course.export());
 
 				}).catch(res => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
@@ -272,7 +273,6 @@ class AppWindow extends HTMLElement{
 					UI.removePreview(this.course, item.id, displayedIndex);
 
 					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
-					IndexedDbStorage.put("courses", this.course.export());
 				}).catch(err => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.requireAuth();
@@ -464,11 +464,6 @@ class AppWindow extends HTMLElement{
 		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
 			if(!this.groupe || !jsonEqual(this.groupe.membres, groupe.membres)){
 
-				if(save) IndexedDbStorage.put("groupes", {
-					id: groupe.id,
-					membres: groupe.membres,
-					nom: groupe.nom
-				})
 				if(this.groupe && groupe.id != this.groupe.id) LocalStorage.setItem('usedCourse', null)
 				
 				// UPD CourseList
@@ -502,8 +497,8 @@ class AppWindow extends HTMLElement{
 
 				// app.course = new Course();
 				UI.closeModal();
-
-				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes != 0 ? (data.taxes*100).toFixed(1) : 0;
+				
+				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes ? (data.taxes*100).toFixed(1) : 0;
 				this.course.updateSelf(data);
 				Array.from(document.querySelectorAll('.promptActivation, .promptEmpty')).forEach(node => node.remove());
 
@@ -689,27 +684,7 @@ class AppWindow extends HTMLElement{
 			}
 		} 
 	}
-	get total(){
-		return this.course.totalCost;
-	}
-	set total(val){
-		val = Number(val);
-		let total = Number(val.toFixed(2)),
-			totalTax = Number((total*(1+this.course.taxes)).toFixed(2)),
-			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.course.dateStart/(60*60*24*30));
 
-		document.getElementById('totalDep').innerHTML = total.toFixed(2) + this.params.currency;
-		document.getElementById('totalTaxDep').innerHTML = totalTax.toFixed(2) + this.params.currency;
-		/* if(this.course.maxPrice < totalTax){
-			//document.getElementById('panier').style.setProperty('--color-theme', 'linear-gradient(-45deg, #CA5010, #E81123)');
-		}
-		else{
-			document.getElementById('panier').style.setProperty('--color-theme', '');
-		} */
-
-		document.querySelector("card-total").setValue(total/this.course.maxPrice);
-		this.course.totalCost = total;
-	}
 }
 
 export default AppWindow;

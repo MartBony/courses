@@ -85,12 +85,12 @@ class Offline{
 				throw err;
 			}
 			else if(!["HaltItems", "HaltItemsFetch", "HaltCourses", "HaltCoursesFetch", "HaltGroupe", "HaltGroupesFetch", "HaltStructure"].includes(err.message)){
-				console.error(err);
+				console.warn(err);
 				if(err.payload){
 					if(err.type == "ERROR") UI.erreur(err.payload.message);
 				} else UI.erreur("Problème de cache local", "Nous n'avons pas pu acceder au stockage local du téléphone, certaines fonctionnalités hors ligne peuvent être affectées")
-			}// else console.log(err);
-			console.log(err);
+			} else console.log(err);
+
 		});
 	}
 	/* static async updateRequests(app){
