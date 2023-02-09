@@ -27,10 +27,10 @@ class AppWindow extends HTMLElement{
 	initiate(userId, offline){
 
 		UI.openPanel('panier');
-		UI.initChart(this);
+		UI.initChart();
 		document.getElementById('preload').classList.add('close');
 
-		this.buttons = "hide";
+		this.setButtons("hide");
 		this.user = new Structure(userId);
 		this.setParameters();
 		this.queue.enqueue(() => this.pull("open"));
@@ -47,18 +47,6 @@ class AppWindow extends HTMLElement{
 			this.params.currency = "$";
 			document.querySelector("#currency").checked = true;
 		}
-
-
-		/* document.querySelector("#prices ul").innerHTML = "";
-		this.liPrices.forEach(item => {
-			let li = document.createElement("li");
-			li.innerHTML = item+this.params.currency;
-			document.querySelector("#prices ul").appendChild(li);
-		});
-		var numLi = $('#prices ul').children().length; // Série des prix
-		$('#prices li').each(i => {
-			$('#prices li').eq(i).css({'filter':'grayscale('+ (i+1)/numLi*50 +'%)'});
-		}); */
 
 		toChange.forEach(item => item.innerHTML = item.innerHTML.replace(/[\$€]/g, this.params.currency));
 	}
@@ -85,24 +73,22 @@ class AppWindow extends HTMLElement{
 			this.pullState.structure = true;
 			console.log('Network structure fetched:', data);
 
-			this.updateApp(data, true);
+			this.updateApp(data, true); // Throws if no groupes
+
+
 			idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
-			
-			
+		
 			return Pull.groupe(this, idGroupe);
 		})
 		.then(data => {
-			console.log(data);
 		
 			// Update Group
 			this.pullState.groupe = true;
 			console.log('Network groupe fetched:', data);
-			return this.updateGroupe(data, true);
-	
-		})
-		.then(() => {
-			idCourse = idCourse || LocalStorage.getItem('usedCourse') || this.groupe.courses[0].id;
-			// if(!idCourse) idCourse = this.groupe.coursesList.length != 0 ? this.groupe.coursesList[0].id : null;
+			
+			this.updateGroupe(data, true); // Throws if no lists inside
+
+			idCourse = idCourse || LocalStorage.getItem('currentListeId') || data.defaultId;
 			return Pull.course(idCourse);
 		})
 		.then(data => {
@@ -112,7 +98,7 @@ class AppWindow extends HTMLElement{
 			return Offline.filterPendingRequests(this, networkItems);
 		})
 		.then(items => {
-			this.course.updateItemsModern(this, items.articles, items.previews, true)
+			this.course.updateItemsModern(this, items.articles, items.previews, {save: true, forceUpdate: true})
 		})
 		.catch(err => {
 			console.log(err.payload ? err.payload : err);
@@ -153,7 +139,7 @@ class AppWindow extends HTMLElement{
 			document.querySelector('.loader').classList.remove('opened');
 			if(res.status == 200){
 
-				LocalStorage.removeItem("usedCourse");
+				LocalStorage.removeItem("currentListeId");
 				this.groupe.removeCourse(res.payload.id);
 
 				IndexedDbStorage.delete("courses", res.payload.id)
@@ -163,7 +149,7 @@ class AppWindow extends HTMLElement{
 			else throw res
 
 		}).catch(err => {
-			if (err == "Offline") UI.offlineMsg(this, err);
+			if (err == "Offline") UI.offlineMsg(err);
 			else if(err == 404) UI.erreur("La course demandée est introuvable", "Rechargez la page et réessayez");
 			else UI.erreur("Il y a eu un problème", "Rechargez la page et réessayez")
 		});
@@ -175,21 +161,19 @@ class AppWindow extends HTMLElement{
 			.then(() => {
 				let rank = this.course.items.articles.indexOf(item);
 
-				UI.removeArticle(this.course, item.id, rank);
-				this.course.deleteArticle(this, {id: index, prix: item.prix});
+				this.course.deleteArticle({id: index, prix: item.prix}, item.id, rank);
 
 			});
 		} else {
 
-			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+			/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 				IndexedDbStorage.put("requests", {
 					type: "delArticle",
 					data: { id: index, prix: item.prix, groupe: this.groupe.id }
 				}).then(() => {
 					let rank = this.course.items.articles.indexOf(item);
 
-					UI.removeArticle(this.course, item.id, rank);
-					this.course.deleteArticle(this, {id: index, prix: item.prix});
+					this.course.deleteArticle({id: index, prix: item.prix}, item.id, rank);
 
 					return navigator.serviceWorker.ready;
 				})
@@ -198,32 +182,33 @@ class AppWindow extends HTMLElement{
 					console.log(err);
 					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
 				});
-			} else {
+			} else { */
 
-				$('.loader').addClass('opened');
+				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
-					data: { deleteArticle: 'true', id: index, groupe: this.groupe.id}
+					url: "serveur/pushAnywhere.php",
+					data: {
+						action: "deleteArticle", 
+						id: index
+					}
 				}).then(data => {
-					$('.loader').removeClass('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					let displayedIndex = this.course.items.articles.indexOf(item);
 
-					this.course.total -= data.prix;
-					UI.removeArticle(this.course, item.id, displayedIndex);
+					this.course.deleteArticle({id: index, prix: item.prix}, item.id, displayedIndex);
 
-					this.course.items.articles = this.course.items.articles.filter(el => el.id != index);
 
 				}).catch(res => {
 					if (res.responseJSON && res.responseJSON.notAuthed){
 						UI.requireAuth();
 					} else {
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(this, res);
+						document.querySelector('.loader').classList.remove('opened');
+						UI.offlineMsg(res);
 					}
 				});
 
-			}
+			/* } */
 		}
 		
 	}
@@ -234,13 +219,12 @@ class AppWindow extends HTMLElement{
 			.then(() => {
 				let rank = this.course.items.previews.indexOf(item);
 
-				UI.removePreview(this.course, item.id, rank);
-				this.course.deletePreview(index);
+				this.course.deletePreview(index, rank);
 
 			});
 		} else {
 
-			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+			/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 				
 				IndexedDbStorage.put("requests", {
 					type: "delPreview",
@@ -248,8 +232,7 @@ class AppWindow extends HTMLElement{
 				}).then(() => {
 					let rank = this.course.items.previews.indexOf(item);
 
-					UI.removePreview(this.course, item.id, rank);
-					this.course.deletePreview(index);
+					this.course.deletePreview(index, rank);
 
 					return navigator.serviceWorker.ready;
 				})
@@ -258,34 +241,33 @@ class AppWindow extends HTMLElement{
 					console.log(err);
 					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
 				});
-			} else {
+			} else { */
 
-				$('.loader').addClass('opened');
+				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
-					data: { deletePreview: 'true', id: index, groupe: this.groupe.id}
+					url: "serveur/pushAnywhere.php",
+					data: { action: "deletePreview", id: index}
 				}).then(data => {
-					$('.loader').removeClass('opened');
+					document.querySelector('.loader').classList.remove('opened');
 					let displayedIndex = this.course.items.previews.indexOf(item);
 
-					$('.article, .preview').removeClass('ready');
-					UI.removePreview(this.course, item.id, displayedIndex);
+					this.course.deletePreview(index, displayedIndex);
 
 					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
 				}).catch(err => {
-					if (res.responseJSON && res.responseJSON.notAuthed){
+					if (err.responseJSON && err.responseJSON.notAuthed){
 						UI.requireAuth();
 					} else {
-						$('.loader').removeClass('opened');
-						UI.offlineMsg(this, res);
+						document.querySelector('.loader').classList.remove('opened');
+						UI.offlineMsg(err);
 					}
 				});
 				
-			}
+			/* } */
 		}
 	}
-	buy(idPreview, prix){
+	/* buy(idPreview, prix){
 		const item = this.course.items.previews.filter(item => item.id == idPreview)[0],
 		handleBuy = (res) => {
 			return new Promise((resolve, reject) => {
@@ -293,22 +275,14 @@ class AppWindow extends HTMLElement{
 				const displayedIndex = this.course.items.previews.indexOf(item);
 				let timer = 600;
 				window.scrollTo({ top: 0, behavior: 'smooth' });
-
-	
-		
-				if (!this.course.started) {
-					document.querySelector('.activate').click();
-					timer = 1000;
-				}
 				
 				document.querySelector('#modernBuyer #newPrice').value = "";
 				document.querySelector('#modernBuyer #quantP').value = "1";
 				
 				// Delete old preview				
-				UI.acc(this);
+				UI.acc();
 				
 				this.course.deletePreview(idPreview);
-				UI.removeItem(item.id);
 
 
 				// Add new article
@@ -316,10 +290,10 @@ class AppWindow extends HTMLElement{
 
 					UI.openPanel("panier");
 					setTimeout(() => {
-						this.course.pushArticle(this, {
+						this.course.pushArticle({
 							id: -res.reqId,
 							titre: res.data.titre,
-							color: this.user.color,
+							color: res.color,
 							prix: res.data.prix
 						});
 						resolve();
@@ -333,7 +307,7 @@ class AppWindow extends HTMLElement{
 
 		if(idPreview < 0){
 			
-			return Promise.all([
+			/* return Promise.all([
 				IndexedDbStorage.delete("requests", -item.id), 
 				IndexedDbStorage.put("requests", {
 					type: "article",
@@ -354,7 +328,7 @@ class AppWindow extends HTMLElement{
 
 		} else {
 
-			if ('serviceWorker' in navigator && 'SyncManager' in window) {
+			/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 
 				return IndexedDbStorage.put("requests", {
 					type: "buy",
@@ -379,73 +353,33 @@ class AppWindow extends HTMLElement{
 				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
+					url: "serveur/pushAnywhere.php",
 					data: {
-						buyPreview: true,
-						id: item.id,
-						prix: prix,
-						groupe: this.groupe.id
+						action: "buyItem",
+						itemId: item.id,
+						prix: prix
 					}
 				}).then(res => {
-					$('.loader').removeClass('opened');
+					document.querySelector(".loader").classList.remove("opened");
 					
-					const displayedIndex = app.course.items.previews.indexOf(item),
-					item = res.payload;
-					let timer = 600;
-					window.scrollTo({ top: 0, behavior: 'smooth' });
-	
-		
-			
-					if (!app.course.started) {
-						document.getElementsByName('activate')[0].click();
-						timer = 1000;
-					}
-					
-					document.querySelector('#modernBuyer #newPrice').value = "";
-					document.querySelector('#modernBuyer #quantP').value = "1";
-					
-					// Delete old preview
-					UI.closeModernForms();
-					
-					app.course.deletePreview(idPreview);
-					UI.removeItem(item.id);
-	
-	
-	
-					// Add new article
-					setTimeout(() => {
-	
-						UI.openPanel("panier");
-						UI.acc(app);
-						setTimeout(() => {
-							app.course.pushArticle(this, {
-								id: item.id,
-								titre: item.titre,
-								color: item.color,
-								prix: item.prix
-							});
-						}, 100);
-						setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
-	
-					}, timer);
+					handleBuy(res);
 
-					IndexedDbStorage.put("items", {...item, type: "article"});
 				})
 				.catch(err => {
-					$('.loader').removeClass('opened');
+					document.querySelector(".loader").classList.remove("opened");
 					if (err.responseJSON && res.responseJSON.notAuthed){
 						UI.requireAuth();
 					} else if(err.status == 400 && err.responseJSON && err.responseJSON.indexOf("Negative value") > -1){
 						UI.erreur("Le prix doit être positif")
 					}
 					else {
-						UI.offlineMsg(this, err);
+						UI.offlineMsg(err);
 					}
 				});
-			}
+			/* } 
 
 		}
-	}
+	} */
 	updateApp(data, save){
 		if(data && data.id){
 			if(!this.user || !jsonEqual(this.user, data)){
@@ -454,45 +388,54 @@ class AppWindow extends HTMLElement{
 
 		
 			document.querySelector('#compte em').innerHTML = data.nom;
-			this.user.update(data);
-			this.user.updateGroupes(data.groupes, save);
+			this.user.update(data, save);
+
+			if(this.user.groupes.length == 0){
+				UI.modal('noGroupe');
+				throw {action : "noPrompt", msg:"Le compte n'est rattaché à aucun groupe"};
+			}
 		} else {
-			throw "Nous n'arrivons pas à vous identifier. Veuillez recharger la page et réessayer.";
+			throw("Nous n'arrivons pas à vous identifier. Veuillez recharger la page et réessayer.");
 		}
 	}
 	updateGroupe(groupe, save){
-		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom){
+		if(groupe && groupe.coursesList && groupe.id && groupe.membres && groupe.nom && groupe.defaultId){
+
 			if(!this.groupe || !jsonEqual(this.groupe.membres, groupe.membres)){
 
-				if(this.groupe && groupe.id != this.groupe.id) LocalStorage.setItem('usedCourse', null)
+				if(this.groupe && groupe.id != this.groupe.id) LocalStorage.setItem('currentListeId', null)
 				
 				// UPD CourseList
 				this.groupe = new Groupe();
 
 			}
 			if(this.groupe.id != groupe.id){
-				document.querySelector("card-total").style.display = "";
 				this.course = new Course();
 			}
 
-			this.groupe.update(groupe);
-			this.groupe.updateCourses(this, groupe.coursesList, save);
+			let preselect = -1;
+			if(this.course && this.course.id){
+				preselect = this.course.id;
+			}
 
-			if(groupe.coursesList.length == 0){
+			this.groupe.update(groupe, save);
+			this.groupe.updateCourses(groupe.coursesList, save, preselect);
+
+			if(groupe.defaultId == -1){
+				document.querySelector("state-card").state = 3;
 				throw {payload: {type: "MSG", message: "Le groupe ne possède pas de courses."}};
 			}
 
+			document.querySelector("state-card").state = 0;
+
 		} else {
-			UI.offlineMsg(this, "Contenu de groupe incomplet", "Le groupe demandé est indisponible pour l'instant");
+			UI.offlineMsg("Contenu de groupe incomplet", "Le groupe demandé est indisponible pour l'instant");
 			throw {payload: new Error("Contenu de groupe incomplet")};
 		}
 	}
-	updateCourse(data, save){
+	updateCourse(data){
 		if(data && data.id && data.nom && data.items){
-			//if(!jsonEqual(this.course.export(), data)){
 				if(!this.course) this.course = new Course();
-
-				document.getElementById('recycle').classList.remove('opened');
 				
 
 				// app.course = new Course();
@@ -500,36 +443,26 @@ class AppWindow extends HTMLElement{
 				
 				document.querySelector('#modernCourseAdder form').taxes.value = data.taxes ? (data.taxes*100).toFixed(1) : 0;
 				this.course.updateSelf(data);
-				Array.from(document.querySelectorAll('.promptActivation, .promptEmpty')).forEach(node => node.remove());
 
-				this.groupe.coursesNodeList.forEach(node => {
+
+				Array.from(document.getElementsByClassName('course')).forEach(node => {
 					if (node.getAttribute('dbindex') == data.id) node.classList.add('opened')
 					else node.classList.remove('opened')
 				});
 
-				if (this.course.old) {
-					if(data.items.previews.length){
-						document.getElementById('recycle').classList.add('opened');
-					}
-					LocalStorage.setItem('usedCourse', data.id);
-					this.buttons = "hide";
+				// Gerer l'ui en fonction de l'état de la liste (active ou passée)
+				if (data.isold) {
+					LocalStorage.removeItem('currentListeId');
+					this.setButtons("hide");
 				} else{
-					LocalStorage.removeItem('usedCourse');
-					this.buttons = "show";
-
-					if (data.dateStart == 0) {
-						document.querySelector('#panier ul').prepend(Generate.activate());
-
-						this.buttons = "listmode";
-					}
+					LocalStorage.setItem('currentListeId', data.id);
+					this.setButtons("show");
 				}
-				
-			//}
 
 			
 			return data.items;
 
-		} else UI.offlineMsg(this, "Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
+		} else UI.offlineMsg("Targeted course content lacks/incomplete", "La course demandée est indisponible pour l'instant")
 	
 		return data.items || { articles: new Array(), previews: new Array() };
 	}
@@ -543,7 +476,7 @@ class AppWindow extends HTMLElement{
 		.then(res => {
 			document.querySelector('.loader').classList.remove('opened');
 			if(res.status == "Offline") UI.offlineMsg()
-			LocalStorage.removeItem("usedCourse");
+			LocalStorage.removeItem("currentListeId");
 			this.queue.enqueue(() => this.pull("open"));
 		});
 	}
@@ -651,17 +584,11 @@ class AppWindow extends HTMLElement{
 			} else UI.erreur()
 		});
 	}
-	applyTaxes(prix){
-		return (Number(prix)*(1+this.course.taxes)).toFixed(2);
-	}
 	parseUnit(prix){
 		return prix + this.params.currency
 	}
-	get buttons(){
-		return this.buttonsState;
-	}
-	set buttons(type){
-		if(this.buttons != type){
+	setButtons(type){
+		if(this.buttonsState != type){
 			switch(type){
 				case "hide":
 					Array.from(document.getElementsByClassName("adder")).forEach(el => {
@@ -675,12 +602,6 @@ class AppWindow extends HTMLElement{
 					});
 					this.buttonsState = "show";
 					break;
-				case "listmode": // When course not activated
-					Array.from(document.getElementsByClassName("adder")).forEach(el => {
-						el.classList.remove("hide");
-					});
-					document.getElementById("addArt").classList.add("hide");
-					this.buttonsState = "listmode";
 			}
 		} 
 	}

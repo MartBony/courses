@@ -15,11 +15,13 @@ export default class Structure { // Structure means the the User
 		this.mail = data.mail;
 		this.nom = data.nom;
 		this.color = data.color;
-		if(save) IndexedDbStorage.put("structures", { nom: data.nom, id: data.id, color: data.color })
+
+		this.updateGroupes(data.groupes);
+		
+		if(save) IndexedDbStorage.put("structures", { nom: data.nom, id: data.id, color: data.color, groupes : data.groupes.map(grp => grp.id) })
 	}
-	updateGroupes(groupes, save){
+	updateGroupes(groupes){
 		UI.closeModal();
-		if(!groupes.length) UI.modal('noGroupe')
 
 		groupes.forEach((groupe, index) => {
 			const groupeNode = document.querySelector(`.groupe[idGroupe="${groupe.id}"]`),
@@ -38,14 +40,10 @@ export default class Structure { // Structure means the the User
 
 		this.groupes = groupes;
 
-
-		if(save){
-			IndexedDbStorage.filterCursorwise("groupes", null, null, groupe => {
-				return !(groupe.user == this.id && this.groupeIndexOf(groupe) == -1);
-			});
-			
-			groupes.forEach(groupe => IndexedDbStorage.put("groupes", {...groupe, user: this.id}));
-		}
+		// Enlever les groupes absents en ligne du stockage local
+		IndexedDbStorage.filterCursorwise("groupes", null, null, groupe => {
+			return !(groupe.user == this.id && this.groupeIndexOf(groupe) == -1);
+		});
 	}
 	insertGroupe(index, groupe){
 		if(this.filterGroupe(groupe)){

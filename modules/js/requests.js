@@ -2,6 +2,12 @@ import UI from './UI.js';
 import { fetcher } from './tools.js';
 
 class Pull{
+	static domaines(){
+		return fetcher({
+			method: 'POST',
+			url: 'serveur/structure.php'
+		});
+	}
 	static structure(app){
 		return fetcher({
 			method: 'POST',

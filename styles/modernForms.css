@@ -33,11 +33,14 @@
 	left: 0px;
 	right: 0px;
 	bottom: 0;
-	padding-bottom: 40%;
 	overflow: auto;
 	z-index: 2;
 	transform-origin: 50% 50%;
+}
+
+.formsPanel{
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 }
@@ -48,7 +51,7 @@
 	align-items: center;
 	justify-content: center;
 
-	margin: 0;
+	margin: 20px;
 	width: 90%;
 	max-width: 300px;
 	overflow: hidden;
@@ -120,6 +123,28 @@
 	transform: translate(0, 0) scale(1);
 	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
 }
+
+
+
+#modernForms #courseEditor{
+	visibility: collapse;
+}
+
+#modernForms #courseEditor article{
+	opacity: 0;
+	transform: translate(70px, 100px) scale(0.7);
+}
+
+#modernForms.courseEditForm #courseEditor{
+	visibility: visible;
+}
+
+#modernForms.courseEditForm #courseEditor article{
+	opacity: 1;
+	transform: translate(0, 0) scale(1);
+	transition: opacity 150ms ease, transform 150ms var(--ease-enter);
+}
+
 
 
 
@@ -210,7 +235,29 @@
 	left: 0;
 	top: 0;
 	padding: var(--pad);
-	font-size: 2.7rem;
+	font-size: 2.2rem;
+}
+
+#modernForms button{
+	--margin: 5px;
+	padding: 10px;
+	font-size: 2rem;
+	background-color: var(--color-theme);
+	color: var(--color-text-menu);
+	font-weight: 600;
+	width: calc(100% - 2*var(--margin));
+	margin-top: var(--margin);
+	border-radius: 6px;
+}
+
+#modernForms button:hover{
+	transform: scale(.98);
+}
+
+#modernForms p{
+	font-size: 1.5rem;
+	margin: 10px;
+	text-align: center;
 }
 
 #modernForms form{
@@ -259,7 +306,7 @@
 
 #modernForms input:focus{
 	transform: scale(1);
-}	
+}
 
 .prixFlex{
 	display: flex;

@@ -14,40 +14,41 @@ class Offline{
 			if(!data) throw new Error("No Structure Data");
 			if(!app.pullState.structure){ // If data hasn't been loaded via the network
 				structure = data;
-				console.log('Fetching groupes');
-				return IndexedDbStorage.getCursorwise("groupes", "user", data.id, "prev");
+
+				// structure.groupes est une liste d'ids, on cherche les informations des groupes
+				return Promise.all(structure.groupes.map(grpid => IndexedDbStorage.get("groupes", parseInt(grpid))));
 			} else throw new Error('HaltGroupesFetch');
 		})
 		.then(groupes => {
 			groupes = groupes.sort((i1,i2) => i1.id - i2.id);
 			if(!app.pullState.structure){
-				structure.groupes = groupes || {};
+				structure.groupes = groupes;
+				app.updateApp(structure);
 
 				console.log('Local structure fetched:', structure);
 				app.pullState.structure = "idb";
-				app.updateApp(structure);
-				idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || structure.groupes[0].id;
-				return IndexedDbStorage.get("groupes", parseInt(idGroupe));
+
+				idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || groupes[0].id;
+				return groupes.filter(grp => grp.id == idGroupe)[0];
+
 				
 			} else throw new Error('HaltStructure');
 		})
 		.then(res => {
-			if(!res) throw new Error("No Groupe Data");
 			if(!app.pullState.groupe){
-				groupe = res;
-				console.log('Fetching courses');
 				return IndexedDbStorage.getCursorwise("courses", "groupe", res.id, "prev");
 			} else throw new Error('HaltCoursesFetch');
 		})
-		.then(courses => {
-			courses = courses.sort((i1,i2) => i2.id - i1.id);
+		.then(arrayCourses => {
+			arrayCourses = arrayCourses.sort((i1,i2) => i2.id - i1.id);
+			const courses = new Array(arrayCourses.filter(crs => !crs.isold), arrayCourses.filter(crs => crs.isold));
 			if(!app.pullState.groupe){
 				groupe.coursesList = courses || {};
 			
 				console.log('Local groupe fetched:', groupe);
 				app.pullState.groupe = "idb";
 				app.updateGroupe(groupe);
-				idCourse = idCourse || LocalStorage.getItem('usedCourse') || Math.max(...app.groupe.courses.map(course => course.id));
+				idCourse = idCourse || LocalStorage.getItem('currentListeId') || groupe.defaultId;
 				// if(!idCourse) idCourse = app.groupe.coursesList.length != 0 ? app.groupe.coursesList[0].id : null;
 				return IndexedDbStorage.get("courses", parseInt(idCourse));
 		
@@ -57,7 +58,6 @@ class Offline{
 			if(!res) throw new Error("No Course Data");
 			if(!app.pullState.course && res && res.id){
 				course = res;
-				console.log('Fetching articles');
 				return IndexedDbStorage.getCursorwise("items", "course", res.id, "prev");
 			} else throw new Error('HaltItemsFetch');
 		})
@@ -73,23 +73,25 @@ class Offline{
 				else items = {articles: [], previews: []}
 				console.log('Local course fetched:', course);
 				app.pullState.course = "idb";
-				const cacheItems = app.updateCourse(course, true);
+				const cacheItems = app.updateCourse(course);
 				return Offline.filterPendingRequests(app, cacheItems);
 			} else throw new Error('HaltItems');
 		})
 		.then(items => {
-			app.course.updateItemsModern(app, items.articles, items.previews, false)
+			app.course.updateItemsModern(app, items.articles, items.previews, {save: false});
 		})
 		.catch(err => {
-			if(["No Structure Data", "No Groupe Data", "No Course Data"].includes(err.message)){
-				throw err;
+			if(err.action != "noPrompt"){
+				if(["No Structure Data", "No Course Data"].includes(err.message)){
+					throw err;
+				}
+				else if(!["HaltItems", "HaltItemsFetch", "HaltCourses", "HaltCoursesFetch", "HaltGroupe", "HaltGroupesFetch", "HaltStructure"].includes(err.message)){
+					console.warn(err);
+					if(err.payload){
+						if(err.type == "ERROR") UI.erreur(err.payload.message);
+					} else UI.erreur("Problème de cache local", "Nous n'avons pas pu acceder au stockage local du téléphone, certaines fonctionnalités hors ligne peuvent être affectées")
+				} else console.log(err);
 			}
-			else if(!["HaltItems", "HaltItemsFetch", "HaltCourses", "HaltCoursesFetch", "HaltGroupe", "HaltGroupesFetch", "HaltStructure"].includes(err.message)){
-				console.warn(err);
-				if(err.payload){
-					if(err.type == "ERROR") UI.erreur(err.payload.message);
-				} else UI.erreur("Problème de cache local", "Nous n'avons pas pu acceder au stockage local du téléphone, certaines fonctionnalités hors ligne peuvent être affectées")
-			} else console.log(err);
 
 		});
 	}

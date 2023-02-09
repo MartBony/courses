@@ -103,13 +103,26 @@ input#iColor{
 @media screen and (min-width: 800px){
 	#authContainer{
 		padding: 5%;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
 		flex-direction: row;
 		justify-content: center;
 	}
 
 	#authContainer form{
 		border-radius: 10px;
-		width: auto;
+		width: 100%;
+		max-width: 500px;
+	}
+
+	#authContainer form.login{
+		justify-self: flex-end;
+	}
+
+	#authContainer img{
+		position: absolute;
+		top: 0;
+		left: calc(50% - 36px);
 	}
 
 }

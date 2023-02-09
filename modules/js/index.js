@@ -76,6 +76,7 @@ async function cssReady(){
 }
 
 function startApp(user, offline = false){
+	document.getElementById('authContainer').classList.remove('opened');
 	if(!app){
 		customElements.define("app-window", AppWindow);
 		app = document.querySelector("app-window");
@@ -97,7 +98,7 @@ async function directAuthenticaction(){
 		await cssReady()
 		return startApp(userId);
 	} catch(err) {
-		console.error(err);
+		console.log(err);
 		if(err.action && err.action == "authenticate") document.getElementById('authContainer').classList.add('opened');
 		else window.location = "/courses/offline.html";
 	}

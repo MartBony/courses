@@ -22,6 +22,15 @@
 				<button aria-label="Sauvegarder"><i class="ms-Icon ms-Icon--Save" aria-hidden="true"></i></button>
 			</div>
 		</form>
+		<div id="item-type">
+			Type
+			<select>
+				<option>Quelconque</option>
+				<option>Alimentaire</option>
+				<option>Ménager</option>
+				<option>Divertissement</option>
+			</select>
+		</div>
 		<ul>
 			<li><i class="ms-Icon ms-Icon--Delete" aria-hidden="true"></i></li>
 			<li><i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i></li>
@@ -62,6 +71,7 @@
 		<p>Les différents participants à un groupe peuvent collaborer sur leurs courses</p>
 		<footer>
 			<button class="lienParams">Aller aux paramètres</button>
+			<button class="lienCreateCroupe">Creer un groupe de listes</button>
 		</footer>
 	</article>
 	<article id="deleteCourse">

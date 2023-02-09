@@ -147,7 +147,7 @@ self.addEventListener('activate', evt => {
 // Fetch Event
 self.addEventListener('fetch', evt => {
 
-	if(evt.request.url.includes('/serveur')){
+	/* (TODO : decomment for release) if(evt.request.url.includes('/serveur')){
 		evt.respondWith(coursesServerResponse(evt));
 	} else {
 		evt.respondWith(
@@ -159,6 +159,6 @@ self.addEventListener('fetch', evt => {
 				}
 			})
 		);
-	}
+	} */
 
 });

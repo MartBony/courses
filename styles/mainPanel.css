@@ -83,7 +83,7 @@
 	}
 }
 
-card-total {
+state-card {
 	--prc: 100%;
 	--bar-color: #36a70d;
 	width: 100%;
@@ -92,24 +92,32 @@ card-total {
 	background: rgb(242 242 245);
 	box-shadow: 0 5px 10px -5px rgb(0,0,0,0.07);
 	border-radius: 5px;
-	display: flex;
-	flex-direction: column;
 	box-sizing: border-box;
-	display: none;
 }
 
-card-total.alert{
+state-card span{
+	display: flex;
+	flex-direction: column;
+}
+
+state-card.alert{
 	--bar-color: red;
 }
 
-card-total h2{
-	font-weight: 500;
+state-card h2{
+	font-weight: 600;
 	font-size: 2rem;
 	padding: 0;
 	margin: 0;
 }
 
-card-total div{
+state-card p{
+	font-size: 1.4rem;
+	padding: 0;
+	margin: 0;
+}
+
+state-card div{
 	margin-top: 5px;
 	width: 100%;
 	height: 5px;
@@ -120,7 +128,7 @@ card-total div{
 	transition: background-position 900ms var(--ease), background-image 900ms var(--ease);
 }
 
-card-total strong{
+state-card strong{
 	font-weight: 700;
 }
 
@@ -411,7 +419,11 @@ article#optsButtons{
 	width: 100%;
 	text-align: center;
 	margin: 10px 0;
-	font-size: 2rem;
+	font-size: 2.5rem;
+}
+
+#menu h3{
+	font-size: 1.8rem;
 }
 
 #groupesContainer > div{
@@ -430,7 +442,7 @@ article#optsButtons{
 	font-size: 1.3rem;
 	border: none;
 	outline: none;
-	vertical-align: middle;
+	vertical-align: top;
 
 	box-sizing: border-box;
 }
@@ -519,14 +531,29 @@ button.groupe.opened
 }
 
 
-#coursesContainer div{
+#coursesContainer > div{
 	width: 100%;
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 50px;
 	grid-gap: 5px;
 	padding: 5px;
 	box-sizing: border-box;
+}
+
+#coursesContainer span{
+	width: 100%;
+	background-color: var(--color-theme-complement);
+	color: var(--color-text-menu);
+	border-radius: 5px;
+}
+
+#coursesContainer h5{
+	font-size: 2rem;
+	margin: 10px 0 5px 20px;
+}
+
+#coursesContainer p{
+	margin: 0 0 10px 30px;
 }
 
 #menu .course
@@ -557,14 +584,27 @@ button.groupe.opened
 {
 	grid-column: 1/3;
 	box-shadow: 0px 2px 3px -1px rgba(0,0,0,0.2);
+	padding-right: 9rem;
+}
+
+.course div{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 0;
+	margin: 0;
+
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-end;
 }
 
 
 .course i{
-	position: absolute;
-	right: 0;
-	top: 0;
-	padding: 15px;
+	padding: 1.25rem;
 	font-size: 2rem;
 	display: none;
 }

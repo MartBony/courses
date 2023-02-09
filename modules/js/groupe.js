@@ -3,20 +3,28 @@ import { IndexedDbStorage, LocalStorage } from './storage.js';
 import UI from './UI.js';
 
 export default class Groupe{
+	id;
+	nom;
+	membres;
+	courses;
+	allLists;
+	defaultListId = -1;
 	constructor(){
-		this.id;
-		this.nom;
-		this.membres;
-		this.courses = new Array();
+		this.courses = {
+			"active": new Array(),
+			"old": new Array()
+		};
+		this.allLists = new Array();
 	}
-	update(groupe){
+	update(groupe, save){
 		this.id = parseInt(groupe.id);
 		this.nom = groupe.nom;
 		this.membres = groupe.membres;
+		this.defaultListId = groupe.defaultId;
 
 		LocalStorage.setItem('usedGroupe', this.id);
 
-		// UI
+		// groupes UI
 		Array.from(document.querySelectorAll('.groupe')).forEach(node => {
 			node.classList.remove("opened");
 			if(node.getAttribute('idGroupe') == groupe.id) {
@@ -24,100 +32,88 @@ export default class Groupe{
 				setTimeout(() => {node.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})}, 200);
 			}
 		});
-	}
-	updateCourses(app, courses, save = false){
-		courses.forEach((course, index) => {
-			const courseNode = document.querySelector(`.course[dbIndex="${course.id}"]`),
-				courseNodeIndex = this.courseIndexOf(course);
 
-			if(courseNodeIndex > -1){
-				if(courseNodeIndex != index) courseNode.parentNode.insertBefore(courseNode, courseNode.parentNode.childNodes[index])
-			} else {
-				if(courseNode) courseNode.remove();
-				this.insertCourse(index, course);
-			}
-		});
-
-		this.coursesNodeList.slice(courses.length).forEach(courseNode => {
-			courseNode.remove();
-		});
-
-		this.courses = courses;
-
-
-		if(save){
-			IndexedDbStorage.filterCursorwise("courses", null, null, (course) => {
-				if(course.groupe == this.id){
-					if(this.courseIndexOf(course) == -1) return false
-				}
-				return true;
-			});
-
-			
-			courses.forEach(course => {
-				if(course.id >= 0) IndexedDbStorage.put("courses", {...course, groupe: this.id})
-			});
-		}
-
-
-		// UI
-		Array.from(document.getElementsByClassName('noCourse')).forEach(node => node.remove());
-		UI.closeModal();
-
+		// Afficher le nombre de jours restant dans le mois
 		const monthStamp = 60*60*24*30,
 		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
 		dayLeft = Math.round((timeMarker-(Date.now()/1000))/(60*60*24));
 
 		document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
-		Array.from(document.querySelectorAll(".promptActivation, .promptEmpty")).forEach(el => el.remove());
-		if(!courses.length) {
-			// Array.from(document.querySelectorAll('#menu .course')).forEach(node => node.remove());
-			Array.from(document.querySelectorAll('.main ul')).forEach(node => node.prepend(Generate.noCourse()));
-			app.buttons = "hide";
 
-			// this.usedGroupe = groupe;
-			return false;
+		if(save) IndexedDbStorage.put("groupes", {...groupe});
+
+	}
+	updateCourses(courses, save = false, preselect = -1){
+
+		/* Afficher des banderoles si le contenu est vide */
+		const banners = Array.from(document.querySelectorAll("#coursesContainer > span")),
+			containers = Array.from(document.querySelectorAll('#coursesContainer > div')),
+			allLists = new Array();
+			banners.forEach(node => node.style.display = "block");
+
+
+		
+		courses.forEach((array, iter) => {
+			banners[iter].style.display = array.length ? "none" : "block";
+		});
+
+		// CoursesList UI
+		containers.forEach((container) => {
+			Array.from(container.childNodes).forEach(node => node.remove());
+		});
+
+		courses.forEach((array, type) => {
+			array.forEach(liste => {
+				const listeNode = Generate.course(liste.id, liste.nom);
+				if(liste.id == preselect){
+					listeNode.classList.add("opened");
+				}
+				containers[type].appendChild(listeNode);
+
+				if(save) allLists.push(liste);
+			});
+		});
+
+		this.courses = courses;
+
+		if(save){
+			IndexedDbStorage.filterCursorwise("courses", null, null, (listIter) => listIter.groupe != this.groupe);
+
+			allLists.forEach(liste => {
+				if(liste.id >= 0) IndexedDbStorage.put("courses", {...liste, groupe: this.id})
+			});
 		}
+		
 
 	}
 	filterCourse(course){
-		if(course.id && course.maxPrice && course.nom) return true
+		if(course.id && course.maxPrice && course.nom && course.isold) return true
 		else console.log("Course requirements not fullfilled", course);
 		return false
 	}
-	pushCourse(course){
-		if(this.filterCourse(course)){
-			this.insertCourse(0, course)
-			this.courses.unshift({
-				groupe: this.id,
-				dateStart: course.dateStart || 0,
-				id: course.id,
-				maxPrice: course.maxPrice,
-				nom: course.nom,
-				taxes: course.taxes,
-				total: course.total || 0
-			});
-		}
-	}
-	insertCourse(index, course){
-		if(this.filterCourse(course)){
-			const courseNode = Generate.course(course.id, course.nom);
-			
-			if(index) document.querySelector('#coursesContainer div').insertBefore(courseNode, this.coursesNodeList[index]);
-			else document.querySelector('#coursesContainer div').prepend(courseNode);
+	editCourse(data){ // REDO
+		// Update data of lists array
+		this.courses.filter(course => course.id != data.id);
+		this.courses.push(data)
 
+		// Update UI in lists menu
+		const courseUi = Array.from(document.querySelectorAll("#coursesContainer button")).filter(uiItem => uiItem.getAttribute("dbindex") == data.id)[0];
+		if(courseUi){
+			courseUi.firstChild.textContent = data.nom;
 		}
 	}
 	removeCourse(id){
 		this.courses = this.courses.filter(course => course.id != id);
 		document.querySelector(`.course[dbIndex="${id}"]`).remove();
 	}
-	courseIndexOf(course){
-		return this.coursesNodeList
-			.findIndex((courseNode, index) => parseInt(courseNode.getAttribute("dbIndex")) == course.id );
+	courseIndexOf(course, container){
+		return this.coursesNodeList[type].findIndex((courseNode) => parseInt(courseNode.getAttribute("dbIndex")) == course.id);
 	}
 	get coursesNodeList(){
-		return Array.from(document.getElementsByClassName("course"));
+		return [
+			Array.from(document.getElementById('runninglists').getElementsByClassName("course")),
+			Array.from(document.getElementById('oldlists').getElementsByClassName("course"))
+		];
 	}
 	get graphData(){
 		// Update Chart
@@ -129,7 +125,7 @@ export default class Groupe{
 		this.courses.forEach((course) => {
 			if(course.date) console.error("Inproper course", course);
 			for (let i = 0; i < result.length; i++) {
-				if(course.dateStart > timeMarker-(monthStamp*(i+1)) && course.dateStart < timeMarker-(monthStamp*i))  result[result.length-i-1] += parseFloat(course.total)
+				if(course.dateCreation > timeMarker-(monthStamp*(i+1)) && course.dateCreation < timeMarker-(monthStamp*i))  result[result.length-i-1] += parseFloat(course.total)
 			}
 			// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
 		})
@@ -140,7 +136,7 @@ export default class Groupe{
 		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
 		var sum = 0, len = 0;
 		this.courses.forEach((course) => {
-			if(course.dateStart > timeMarker-(monthStamp*(6))) {
+			if(course.dateCreation > timeMarker-(monthStamp*(6))) {
 				sum += course.total;
 				len++;
 			}

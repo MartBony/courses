@@ -1,6 +1,7 @@
 import Generate from './generate.js';
 import { IndexedDbStorage, LocalStorage } from './storage.js';
 import Animations from "./animations.js";
+import { $_GET } from './tools.js';
 
 const app = document.querySelector("app-window");
 
@@ -11,13 +12,15 @@ class CourseItem extends HTMLLIElement{
 		id: null,
 		titre: "",
 		prix: 0,
+		prixSTR: "",
 		couleur: "",
+		id_domaine: 0,
 		animation: null
 	};
 	constructor(content){
 		super();
-		const { type = this.itemContent.type, id, titre, prix, couleur, animation, message } = content;
-		this.itemContent = { type, id, titre, prix, couleur, animation, message };
+		const { type = this.itemContent.type, id, titre, prix, hue, animation, message, id_domaine } = content;
+		this.itemContent = { type, id, titre, prix, hue, animation, message, id_domaine };
 	}
 	connectedCallback(){
 		Array.from(this.children).forEach(child => child.remove());
@@ -42,8 +45,10 @@ class CourseItem extends HTMLLIElement{
 		this.content = this.itemContent;
 		
 	}
-	async saveToIDB(){
-		return await IndexedDbStorage.put("courses", this.itemContent);
+	save(id_course){
+		if(id_course => 0){
+			IndexedDbStorage.put("items", {...this.content, course: id_course});
+		}
 	}
 	get content(){
 		return this.itemContent;
@@ -53,23 +58,29 @@ class CourseItem extends HTMLLIElement{
 			const { 
 				id = this.itemContent.id, 
 				titre = this.itemContent.titre, 
-				prix = this.itemContent.prix, 
-				couleur = this.itemContent.couleur, 
+				prix = this.itemContent.prix,
+				id_domaine = this.itemContent.id_domaine,
+				hue = this.itemContent.hue, 
 				animation = null,
-				message = null
+				message = this.itemContent.message, 
 			} = item;
-
+			let prixSTR = this.itemContent.prixSTR;
 			if(id){
 				if(id < 0) this.classList.add('sync');
 				else this.classList.remove('sync')
 				this.setAttribute("idItem", id);
 			}
 			if(titre) this.firstChild.firstChild.innerHTML = titre;
-			if(prix && this.firstChild.children.length) this.firstChild.lastChild.innerHTML = prix;
-			if(couleur) this.style.background = `hsl(${couleur}, var(--previewS), var(--previewL))`;
+			if(prix && this.firstChild.children.length){
+				const app = document.querySelector("app-window");
+				prixSTR = app.parseUnit(app.course.applyTaxes(prix));
+				this.firstChild.lastChild.innerHTML = prixSTR;
+			}
+			if(hue) this.style.background = `hsl(${hue}, var(--previewS), var(--previewL))`;
+			else this.style.background = "hsl(10, var(--previewS), var(--previewL))";
 			if(animation) Animations[animation](this)
 
-			this.itemContent = { type: this.itemContent.type, id, titre, prix, couleur, message };
+			this.itemContent = { type: this.itemContent.type, id, titre, prix, prixSTR, hue, message, id_domaine };
 		}
 	}
 }
@@ -77,23 +88,20 @@ class CourseItem extends HTMLLIElement{
 customElements.define('course-item', CourseItem, { extends: 'li' });
 
 export default class Course{
+	id;
+	nom;
+	maxPrice;
+	totalCost;
+	dateCreation;
+	groupe;
+	taxes = 0;
+	isold;
+	items = {
+		articles: new Array,
+		previews: new Array
+	};
+	
 	constructor(){
-		this.id;
-		this.nom;
-		this.maxPrice;
-		this.totalCost;
-		this.dateStart;
-		this.groupe;
-		this.taxes = 0;
-		this.items = {
-			articles: new Array,
-			previews: new Array
-		};
-		this.cardTotal = document.querySelector("card-total");
-
-		this.started;
-		this.old;
-
 		Array.from(document.querySelectorAll('.main ul'))
 		.forEach(container => Array.from(container.childNodes).forEach(itemNode => itemNode.remove()));
 	}
@@ -102,120 +110,23 @@ export default class Course{
 		this.id = parseInt(data.id);
 		this.nom = data.nom;
 		this.maxPrice = Number(data.maxPrice);
-		app.course.total = Number(data.total);
-		this.dateStart = data.dateStart;
+		this.total = Number(data.total);
+		this.dateCreation = new Date(data.dateCreation*1000);
 		this.groupe = Number(data.groupe);
 		this.taxes = Number(data.taxes) || 0;
-
-		this.old = data.id != app.groupe.courses[0].id;
+		this.isold = data.isold;
 
 		document.getElementById('objectif').innerHTML = this.maxPrice;
-	
-		// this.updateItems(app, data.items.articles, data.items.previews, save)
 
-		this.started = data.dateStart != 0;
-		this.cardTotal.style.display = this.started ? "block" : "none";
+		document.querySelector("state-card").state = this.isold+1;
 
 		this.updateCalculs();
 
+		this.updateEditForm();
+
 	}
-	/* updateItems(app, articles, previews, save = false){
-		let attribute = this.old ? "disabled" : "",
-			pendings = {
-				put: new Array(),
-				delete: new Array()
-			};
-
-		let iter = 0;
-		while(iter < articles.length){
-			let article = articles[iter];
-			if (this.items.articles[iter]) { // Si un article de même rand existe déja
-				if (article.id != this.items.articles[iter].id){ // Si les articles sont différents
-					if(articles.filter(el => el.id == this.items.articles[iter].id).length > 0){ // Si l'article séléctionné existe plus loin
-						
-						this.items.articles.splice(iter, 0, article);
-						document.querySelector('#panier ul').insertBefore(
-							Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute),
-							document.querySelectorAll('#panier ul .article')[iter]
-						);
-						pendings.put.push({...article, type: "article", course: this.id });
-
-						iter++;
-					} else { // Supprimer l'article séléctionné
-
-						pendings.delete.push(this.items.articles[iter].id);
-						this.items.articles.splice(iter, 1);
-						document.querySelectorAll('#panier ul .article')[iter].remove();
-
-					}
-				} else iter++
-			} else { // Ajouter l'article en fin de tableau
-
-				this.items.articles.splice(iter, 0, article);
-				document.querySelector('#panier ul').append(Generate.article(app, article.id, article.titre, article.color, article.prix, 'animateSlideTop', attribute));
-				pendings.put.push({...article, type: "article", course: this.id})
-
-				iter++;
-
-			}
-
-		}
-		Array.from(document.querySelectorAll('#panier ul .article')).slice(articles.length).forEach(item => item.remove()); // delete the articles left
-		this.items.articles.slice(articles.length).forEach(item => pendings.delete(item.id));
-		this.items.articles = this.items.articles.slice(0, articles.length);
-		
-
-
-
-		iter = 0;
-		while(iter < previews.length){
-			let preview = previews[iter];
-			if (this.items.previews[iter]) {
-				if (preview.id != this.items.previews[iter].id){
-					if(previews.filter(el => el.id == this.items.previews[iter].id).length > 0){
-
-						this.items.previews.splice(iter, 0, preview);
-						document.querySelector('#liste ul').insertBefore(
-							Generate.preview(preview.id, preview.titre, preview.color, 'animateSlideTop', attribute),
-							document.querySelectorAll('#liste ul .preview')[iter]
-						);
-						pendings.put.push({...preview, type: "preview", course: this.id});
-						iter++;
-						
-					} else {
-
-						pendings.delete.push(this.items.previews[iter].id);
-						this.items.previews.splice(iter, 1);
-						document.querySelectorAll('#liste ul .preview')[iter].remove();
-
-					}
-				} else iter++
-			} else {
-
-				this.items.previews.splice(iter, 0, preview);
-				document.querySelector('#liste ul').append(Generate.preview(preview.id, preview.titre, preview.color, 'animateSlideTop', attribute));
-				pendings.put.push({...preview, type: "preview", course: this.id});
-				iter++;
-
-			}
-
-		}
-
-		this.items.previews.slice(previews.length).forEach(item => pendings.delete(item.id));
-		Array.from(document.querySelectorAll('#liste ul .preview')).slice(previews.length).forEach(item => item.remove());
-		this.items.previews = this.items.previews.slice(0, previews.length);
-
-
-		if(save){
-			pendings.put.forEach(item => IndexedDbStorage.put("items", item));
-			pendings.delete.forEach(id => IndexedDbStorage.delete("items", id));
-		}
-
-		setTimeout(function(){
-			$('.article, .preview').removeClass('animateSlideTop');
-		},600);
-	} */
-	updateItemsModern(app, articles, previews, save = false){
+	updateItemsModern(app, articles, previews, options = {save: false, forceUpdate: false}){
+		// Force update 
 
 		// Articles
 		articles.forEach((article, index) => {
@@ -224,9 +135,10 @@ export default class Course{
 
 			if(articleNodeIndex > -1){
 				if(articleNodeIndex != index) articleNode.parentNode.insertBefore(articleNode, articleNode.parentNode.childNodes[index])
+				if(options.forceUpdate) articleNode.content = article;
 			} else {
 				if(articleNode) articleNode.remove();
-				this.insertArticle(app, index, article, false);
+				this.insertArticle(index, article, false);
 			}
 		});
 
@@ -243,6 +155,7 @@ export default class Course{
 
 			if(previewNodeIndex > -1){
 				if(previewNodeIndex != index) previewNode.parentNode.insertBefore(previewNode, previewNode.parentNode.childNodes[index])
+				if(options.forceUpdate) previewNode.content = preview;
 			} else {
 				if(previewNode) previewNode.remove();
 				this.insertPreview(index, preview, false);
@@ -255,7 +168,7 @@ export default class Course{
 
 		this.items.previews = previews;
 
-		if(save){
+		if(options.save){
 			IndexedDbStorage.filterCursorwise("items", "id", null, (item) => {
 				switch(item.type){
 					case "article":
@@ -282,15 +195,16 @@ export default class Course{
 
 
 	}
-	pushArticle(app, item, animate){ // Appens an article in the logic
+	pushArticle(item, animate){ // Appens an article in the logic
 		if(item && item.id && item.titre && item.color && item.prix){
-			this.insertArticle(app, 0, item, animate)
+			this.insertArticle(0, item, animate)
 			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix, message: item.message});
-			app.course.total += item.prix;
+			this.total += item.prix;
 		} else console.log("Article requirements not fullfilled", item);
 	}
-	insertArticle(app, index, item, animate = true){ // Inserts an article in the UI
-		if(item && item.id && item.titre && item.color && item.prix){
+	insertArticle(index, item, animate = true){ // Inserts an article in the UI
+		if(item && item.id && item.titre && item.prix){
+
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
 			/* article = item.id < 0 ? 
 				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync'):
@@ -299,8 +213,8 @@ export default class Course{
 				type: 'article',
 				id: item.id,
 				titre: item.titre,
-				prix: app.parseUnit(app.applyTaxes(item.prix)),
-				couleur: item.color,
+				prix: item.prix,
+				hue: item.hue,
 				animation: animation,
 				message: item.message
 			});
@@ -321,7 +235,8 @@ export default class Course{
 		} else console.log("Preview requirements not fullfilled", item);
 	}
 	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
-		if(item && item.id && item.titre && item.color){
+		if(item && item.id && item.titre){
+			
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
 			/* preview = item.id < 0 ? 
 				Generate.preview(item.id, item.titre, item.color, animation, 'sync') :
@@ -330,7 +245,7 @@ export default class Course{
 				type: 'preview',
 				id: item.id,
 				titre: item.titre,
-				couleur: item.color,
+				hue: item.hue,
 				animation: animation,
 				message: item.message
 			});
@@ -344,15 +259,94 @@ export default class Course{
 	}
 	updateCalculs(){
 		document.getElementById("nbrarticles").innerHTML = this.articlesNodeList.length;
-		document.getElementById("average").innerHTML = (app.course.total / this.articlesNodeList.length | 0).toFixed(2);
+		document.getElementById("average").innerHTML = (this.total / this.articlesNodeList.length | 0).toFixed(2);
 	}
-	deleteArticle(app, item){
+	updateEditForm(){
+		const form = document.querySelector("#courseEditor form");
+		
+		form.titre.value = this.nom;
+		form.prixMax.value = this.maxPrice;
+		form.date.value = this.dateCreation.toISOString().substring(0,10);
+		form.taxes.value = this.taxes;
+	}
+	deleteArticle(item, itemIndex, rank = 0){
 		this.updateCalculs();
 		this.items.articles = this.items.articles.filter(el => el.id != item.id);
-		app.course.total -= item.prix;
+		this.total -= item.prix;
+
+		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
+		positions = this.articlesNodeList.map(el => [el, el.getBoundingClientRect()]),
+		anim = Animations.removeItem(selectedElement).then(() => {
+			selectedElement.remove();
+			positions.forEach((elData, index) => {
+				const el = elData[0],
+				oldPos = elData[1],
+				newPos = el.getBoundingClientRect();
+
+				Animations.createAnimation(el, [
+					{
+						width: `${oldPos.width}px`,
+						height: `${oldPos.height}px`,
+						transform: `translate(${-(newPos.left - oldPos.left)}px, ${-(newPos.top - oldPos.top)}px)`
+					},
+					{
+						width: `${newPos.width}px`,
+						height: `${newPos.height}px`,
+						transform: `translate(0,0)`
+					}
+				], {
+					duration: 200 + (index-rank)*20,
+					fill: 'forwards',
+					easing: Animations.ease.move
+				}).then(el => {
+					el.style.width = "";
+					el.style.height = "";
+					el.style.transform = "";
+				});
+			});
+		});
 	}
-	deletePreview(id){
-		this.items.previews = this.items.previews.filter(el => el.id != id);
+	deletePreview(index, rank = 0, lightAnimations = false){
+		return new Promise((resolve, reject) => {
+			const selectedElement = document.querySelector(`li[idItem="${index}"]`);
+			if(!lightAnimations){
+				var positions = app.course.previewsNodeList.map(el => [el, el.getBoundingClientRect()]);
+			}
+			this.items.previews = this.items.previews.filter(el => el.id != index);
+			Animations.removeItem(selectedElement).then(() => {
+				selectedElement.remove();
+				if(!lightAnimations){
+					positions.forEach((elData, index) => {
+						const el = elData[0],
+						oldPos = elData[1],
+						newPos = el.getBoundingClientRect();
+		
+						Animations.createAnimation(el, [
+							{
+								width: `${oldPos.width}px`,
+								height: `${oldPos.height}px`,
+								transform: `translate(${-(newPos.left - oldPos.left)}px, ${-(newPos.top - oldPos.top)}px)`
+							},
+							{
+								width: `${newPos.width}px`,
+								height: `${newPos.height}px`,
+								transform: `translate(0,0)`
+							}
+						], {
+							duration: 200 + (index-rank)*20,
+							fill: 'forwards',
+							easing: Animations.ease.move
+						}).then(el => {
+							el.style.width = "";
+							el.style.height = "";
+							el.style.transform = "";
+							resolve();
+						});
+					});
+				} else resolve();
+			});
+
+		})
 	}
 	articleIndexOf(article){
 		return this.articlesNodeList.findIndex((articleNode, index) => {
@@ -376,6 +370,9 @@ export default class Course{
 			return false;
 		});
 	}
+	applyTaxes(prix){
+		return (Number(prix)*(1+this.taxes)).toFixed(2);
+	}
 	get articlesNodeList(){
 		return Array.from(document.getElementsByClassName("article"));
 	}
@@ -388,12 +385,12 @@ export default class Course{
 	set total(val){
 		val = Number(val);
 		let total = Number(val.toFixed(2)),
-			totalTax = Number((total*(1+this.taxes)).toFixed(2)),
-			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.dateStart/(60*60*24*30));
+			totalTax = this.applyTaxes(total),
+			index = Math.floor(Date.now()/(60*60*24*30*1000)) - Math.floor(this.dateCreation/(60*60*24*30));
 
-		document.getElementById("total").innerHTML = total;
+		document.getElementById("total").innerHTML = totalTax;
 
-		document.querySelector("card-total").setValue(total/this.maxPrice);
+		document.querySelector("state-card").setValue(totalTax/this.maxPrice);
 		this.totalCost = total;
 	}
 }

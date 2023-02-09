@@ -3,8 +3,56 @@ require_once('../dbConnect.php');
 require_once('checkers/login.php');
 require_once('checkers/getLatestCourse.php');
 require_once('checkers/checkGroupe.php');
+require_once('checkers/checkCourse.php');
 
 header('Content-type: application/json');
+
+function editCourse($user, $bdd){
+	if(isset($_POST['editCourse']) && $_POST['editCourse'] && isset($_POST['idCourse'])){
+		checkCourse($bdd, $user, $_POST['idCourse'], function($course) use ($bdd,$user){
+
+			if(isset($_POST['titre']) && isset($_POST['maxPrice']) && isset($_POST['taxes']) && isset($_POST['date'])){
+
+				$titre = htmlspecialchars($_POST['titre']);
+				$budget = (float) $_POST['maxPrice'];
+				$taxes = ((float) $_POST['taxes'])/100;
+				$date = (int) $_POST['date'];
+
+				if(strlen($titre) > 80){
+					echo json_encode(array("status" => 400, "payload" => array('type' => 'ERROR', 'message' => 'Titre trop long.')));
+				} else {
+					$modifyReq = $bdd->prepare('UPDATE `courses` SET `nom` = :nom, `maxPrice` = :maxPrice, `dateCreation` = :dateCreation, `taxes` = :taxes WHERE `id` = :id');
+					$modifyReq->execute(array(
+						"nom" => $titre,
+						"maxPrice" => $budget,
+						"dateCreation" => $date,
+						"taxes" => $taxes,
+						"id" => $course['id']
+					));
+					
+
+					echo json_encode(array(
+						"status" => 200,
+						"payload" => array(
+							"id" =>(int) $course['id'],
+							"dateCreation" => $date,
+							"maxPrice" => $budget,
+							"nom" => $titre,
+							"taxes" => $taxes,
+							"total" => $course["total"]
+						)
+					));
+				}
+				
+			} else {
+				echo json_encode(array("status" => 400, "payload" => array('type' => 'ERROR', 'message' => 'Informations incomplètes')));
+			}
+		});
+		return true;
+	} else {
+		return False;
+	}
+}
 
 function pushCousesIndependent($user, PDO $bdd){
 	if(isset($_POST['newGroupe']) && isset($_POST['titre'])) { // REWRITE
@@ -63,6 +111,31 @@ function pushCousesIndependent($user, PDO $bdd){
 			echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'L\'article que vous essayez de modifier n\'est plus disponible sur le serveur, rechargez la page et réessayez.')));
 		}
 		return true;
+	} else if (isset($_POST["action"]) && $_POST["action"] == "setItemType") {
+		if(isset($_POST["itemId"]) && isset($_POST["type"])){
+			$type = (int) $_POST["type"];
+			$itemId = (int) $_POST["itemId"];
+
+			$reqItemsValidity = $bdd->prepare('SELECT a.id as id, d.id id_domaine, d.couleur hue_domaine, c.id id_course
+				FROM `articles` as a
+				INNER JOIN `courses` as c
+					ON a.course = c.id
+				INNER JOIN `gulinks` as lks
+					ON c.groupe = lks.groupeId
+				INNER JOIN `domaines` d
+					ON d.id = ?
+				WHERE lks.userId = ? AND a.id = ?');
+			$reqItemsValidity->execute(array($type, $user['id'], $itemId));
+			if($reqItemsValidity->rowCount() == 1){
+				$data = $reqItemsValidity->fetch();
+				$reqSetMessage = $bdd->prepare('UPDATE `articles` SET `domaine` = ? WHERE `id` = ?');
+				$reqSetMessage->execute(array($type, $data['id']));
+				echo json_encode(array('status' => 200, 'payload' => array('id' => $data["id_domaine"], 'hue' => $data["hue_domaine"], 'id_course' => (int) $data["id_course"])));
+			} else {
+				echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'La requête à échouée')));
+			}
+		}
+		return true;
 	} else {
 
 		return checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
@@ -83,9 +156,9 @@ function pushCousesIndependent($user, PDO $bdd){
 				}
 		
 				$insert = $bdd->prepare('INSERT INTO `courses`
-					(`nom`, `maxPrice`, `total`, `dateStart`, `groupe`, `taxes`)
-					VALUES (?,?,0,0,?,?)');
-				$insert->execute(array($titre, $maxPrice, $groupe['id'], $taxes));
+					(`nom`, `maxPrice`, `total`, `dateCreation`, `groupe`, `taxes`)
+					VALUES (?,?,0,?,?,?)');
+				$insert->execute(array($titre, $maxPrice, time(), $groupe['id'], $taxes));
 
 				$reqInserted = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY id DESC LIMIT 0,1');
 				$reqInserted->execute(array($groupe['id']));
@@ -97,7 +170,7 @@ function pushCousesIndependent($user, PDO $bdd){
 						// DELETE VERY OLD COURSES
 						$timeLimit = time() - 60*60*24*30*7;
 						$reqVeryOldCourses = $bdd->prepare('SELECT `id` FROM `courses`
-							WHERE groupe = :idGroupe AND dateStart < :timelim ORDER BY id DESC');
+							WHERE groupe = :idGroupe AND dateCreation < :timelim ORDER BY id DESC');
 						$reqVeryOldCourses->execute(array(
 							"idGroupe" => $groupe['id'],
 							"timelim" => $timeLimit
@@ -120,7 +193,7 @@ function pushCousesIndependent($user, PDO $bdd){
 						"payload" => array(
 							"id" => $inserted['id'],
 							"groupe" => $groupe['id'],
-							"dateStart" => $inserted['dateStart'],
+							"dateCreation" => $inserted['dateCreation'],
 							"maxPrice" => $inserted['maxPrice'],
 							"nom" => $inserted['nom'],
 							"taxes" => $inserted['taxes']
@@ -133,13 +206,13 @@ function pushCousesIndependent($user, PDO $bdd){
 
 				return true;
 		
-			} else if(isset($_POST['leaveGroup'])) {
-				$reqNbrMembres = $bdd->prepare('SELECT COUNT(*) as nbrMembres FROM `gulinks` WHERE `groupeId` = ?');
-				$reqNbrMembres->execute(array($user['id']));
-				$nbmMembres = $reqNbrMembres->fetch();
-				$nbmMembres = $nbmMembres['nbrMembres'];
+			}
+			else if(isset($_POST['leaveGroup'])) {
+				$reqNbrMembres = $bdd->prepare('SELECT * FROM `gulinks` WHERE `groupeId` = ?');
+				$reqNbrMembres->execute(array($groupe['id']));
 
-				if($nbmMembres == 1){
+
+				if($reqNbrMembres->rowCount() == 1){
 					$reqAllCourses = $bdd->prepare('SELECT id FROM courses WHERE groupe = ? ORDER BY id DESC');
 					$reqAllCourses->execute(array($groupe['id']));
 					while($resCoursesGp = $reqAllCourses->fetch()){
@@ -198,127 +271,8 @@ function pushCousesIndependent($user, PDO $bdd){
 }
 
 function push($user, $latestCourse, PDO $bdd){
-
-	if (isset($_POST['submitArticle']) && isset($_POST['titre']) && isset($_POST['prix'])) {
-		$titre = htmlspecialchars($_POST['titre']);
-		$prix = (float) $_POST['prix'];
-
-		if($prix > 0){
-			
-			$insertArt = $bdd->prepare(
-				'INSERT INTO `articles`
-				(`titre`, `prix`, `course`, `preview`, `idAuteur`)
-				VALUES (?,?,?,0,?)'
-			);
-			$insertArt->execute(array($titre, $prix, $latestCourse['id'], $user['id']));
-
-			$updCourse = $bdd->prepare('UPDATE `courses` SET `total`=? WHERE `id`=?');
-			$updCourse->execute(array($latestCourse['total'] + $prix, $latestCourse['id']));
-
-			$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
-			$reqIdInserted->execute(array($latestCourse['id']));
-			$idInserted = $reqIdInserted->fetch();
-			
-			// http_response_code(200);
-			echo json_encode([
-				'type' => 200,
-				'payload' => array(
-					'id' => $idInserted['id'],
-					'titre' => $titre,
-					'color' => $user['hueColor'],
-					'prix' => $prix,
-					'course' => $latestCourse['id']
-				)
-			]);
-		
-		} else {
-			//http_response_code(400);
-			echo(json_encode(array('type' => 201, 'error' => 'NegVal')));
-		}
-
-	}
-	elseif (isset($_POST['submitPreview']) && isset($_POST['titre'])) {
-		$titre = htmlspecialchars($_POST['titre']);
-
-		$insertArt = $bdd->prepare(
-			'INSERT INTO `articles`
-			(`titre`, `prix`, `course`, `preview`, `idAuteur`)
-			VALUES (?,0,?,1,?)'
-		);
-		$insertArt->execute(array($titre, $latestCourse['id'], $user['id']));
-
-		$reqIdInserted = $bdd->prepare('SELECT id FROM articles WHERE course = ? ORDER BY id DESC LIMIT 1');
-		$reqIdInserted->execute(array($latestCourse['id']));
-		$idInserted = $reqIdInserted->fetch();
-
-		// http_response_code(200);
-		echo json_encode([
-			'type' => 200,
-			'payload' => array(
-				'id'=> $idInserted['id'],
-				'titre'=> $titre,
-				'color' => $user['hueColor'],
-				'course' => $latestCourse['id']
-			)
-		]);
-		
-	}
-	elseif (isset($_POST['deleteArticle']) && isset($_POST['id'])) {
-
-		$reqDeleted = $bdd->prepare('SELECT `id`, `prix`, `course` FROM `articles` WHERE `id` = ?');
-		$reqDeleted->execute(array($_POST['id']));
-		
-		if($reqDeleted->rowCount() == 1){
-			$deleted = $reqDeleted->fetch();
-
-			if($deleted['course'] == $latestCourse['id']){ // Si l'id correspond à la course utilisée
-				$reqDelete = $bdd->prepare('DELETE FROM `articles` WHERE id=:index');
-				$reqDelete->bindParam(':index', $deleted['id'], PDO::PARAM_INT);
-				$reqDelete->execute();
-
-				$updCourse = $bdd->prepare('UPDATE `courses` SET `total`=? WHERE `id`=?');
-				$updCourse->execute(array($latestCourse['total'] - $deleted['prix'], $latestCourse['id']));
-
-				// http_response_code(200);
-				echo json_encode(array('type' => 200, 'prix' => $deleted['prix']));
-
-			} else {
-				// http_response_code(403);
-				echo json_encode(array('type' => 203));
-			}
-		} else {
-			// http_response_code(404);
-			echo json_encode(array('type' => 204));
-		}
-
-	}
-	elseif (isset($_POST['deletePreview']) && isset($_POST['id'])) {
-		$reqDeleted = $bdd->prepare('SELECT `id`, `course` FROM `articles` WHERE `id` = ?');
-		$reqDeleted->execute(array($_POST['id']));
-
-		if($reqDeleted->rowCount() == 1){
-			$deleted = $reqDeleted->fetch();
-
-			if($deleted && $deleted['course'] == $latestCourse['id']){ // Si l'id correspond à la course utilisée
-			
-				$reqDelete = $bdd->prepare('DELETE FROM articles WHERE id=:index');
-				$reqDelete->bindParam(':index', $_POST['id'], PDO::PARAM_INT);
-				$reqDelete->execute();
-		
-				// http_response_code(200);
-				echo json_encode(array('type' => 200));
-
-			} else {
-				// http_response_code(403);
-				echo json_encode(array('type' => 203));
-			}
-		} else {
-			// http_response_code(404);
-			echo json_encode(array('type' => 204));
-		}
-		
-	}
-	elseif(isset($_POST['buyPreview']) && isset($_POST['id']) && isset($_POST['prix'])) {
+	
+	if(isset($_POST['action']) && $_POST['action'] == "buy" && isset($_POST['id']) && isset($_POST['prix'])) {
 		$prix = (float) $_POST['prix'];
 		if($prix > 0){
 			$reqOld = $bdd->prepare('SELECT * FROM `articles` WHERE id=?');
@@ -327,7 +281,7 @@ function push($user, $latestCourse, PDO $bdd){
 			if($reqOld->rowCount() == 1){
 				$old = $reqOld->fetch();
 
-				$updTotal = (float) $latestCourse['total'] + $_POST['prix'] - $old['prix'];
+				$updTotal = (float) $latestCourse['total'] + (float) $_POST['prix'] - (float) $old['prix'];
 
 				$updCourse = $bdd->prepare('UPDATE `articles` SET `preview`=0, `prix`=? WHERE `id`=?');
 				$updCourse->execute(array($prix, $old['id']));
@@ -340,9 +294,9 @@ function push($user, $latestCourse, PDO $bdd){
 					'type' => 200,
 					'payload' => array(
 						'id' => $_POST['id'],
-						'color' => $user['hueColor'],
+						'domaine' => $old['domaine'],
 						'titre' => $old['titre'],
-						'prix' => $old['prix'],
+						'prix' => $prix,
 						'course' => $latestCourse['id']
 					)
 				));
@@ -357,28 +311,15 @@ function push($user, $latestCourse, PDO $bdd){
 		}
 	
 	}
-	elseif(isset($_POST['activate'])) {
-		$time = time();
-		$updCourse = $bdd->prepare('UPDATE `courses` SET `dateStart`=? WHERE `id`=?');
-		$updCourse->execute(array($time, $latestCourse['id']));
-
-		http_response_code(200);
-		echo json_encode(array(
-			"status" => 200,
-			"payload" => array(
-				"time" => $time,
-				"course" => (int) $latestCourse['id']
-			)
-		));
-	
-	}
 }
 
 login($bdd, function($user) use($bdd){
-	if(!pushCousesIndependent($user, $bdd)){
-		getLatestCourse($bdd, $user, function($user, $latestCourse) use ($bdd){
-			push($user, $latestCourse, $bdd);
-		});
+	if(!editCourse($user, $bdd)){
+		if(!pushCousesIndependent($user, $bdd)){
+			getLatestCourse($bdd, $user, function($user, $latestCourse) use ($bdd){
+				push($user, $latestCourse, $bdd);
+			});
+		}
 	}
 	
 });

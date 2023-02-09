@@ -3,13 +3,6 @@ const syncCourses = () => {
 		return Promise.all(requests.map(request => {
 			let itemData;
 			switch(request.type){ // Add catch statements
-				case "activate":
-					return fetcher({
-						url: "serveur/push.php",
-						method: "POST",
-						data: { activate: true, groupe: request.data.groupe }
-					})
-					.then(() => IndexedDbStorage.delete("requests", request.reqId))
 				case "preview":
 					return fetcher({
 						url: "./serveur/push.php",

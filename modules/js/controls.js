@@ -54,7 +54,7 @@ export default function initEvents(){
 		},
 		openAsync = async () => {
 			LocalStorage.removeItem("usedGroupe");
-			LocalStorage.removeItem("usedCourse");
+			LocalStorage.removeItem("currentListeId");
 			return app.queue.enqueue(() => app.pull("open"));
 		},
 		noLoaderRefresh = () => {
@@ -70,110 +70,13 @@ export default function initEvents(){
 				}, 1000);
 			}
 		},
-		activate = () => {
-			
-			if ('serviceWorker' in navigator && 'SyncManager' in window) {
-				IndexedDbStorage.put("requests", {
-					type: "activate",
-					data: { groupe: app.groupe.id }
-				})
-				.then(() => navigator.serviceWorker.ready)
-				.then(reg => reg.sync.register('syncCourses'))
-				.then(() => {
-					let latestCourse = app.groupe.courses[0];
-					app.course.started = true;
-					if(latestCourse){
-						latestCourse.dateStart = parseInt(Date.now()/1000);
-						return IndexedDbStorage.put("courses", latestCourse) 
-					} else throw "Pas de course"	
-				})
-				.then(() => {
-					
-					app.course.started = true;
-					setTimeout(() => {
-						UI.openPanel("panier");
-					},200);
-
-					app.buttons = "show";
-				
-					Animations.createAnimation(document.querySelector('.promptActivation'), [
-						{ opacity: '1', transform: 'scale(1)'},
-						{ opacity: '0', transform: 'scale(0.98)'}
-					], {
-						duration: 200,
-						fill: 'forwards',
-						easing: 'ease-out'
-					}).then((el) => {
-						el.style.display = 'none';
-						app.course.cardTotal.style.display = "block";
-
-					});
-				
-				})
-				.catch(err => {
-					console.log(err);
-					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
-				});
-				
-				
-			} else {
-				document.querySelector('loader').classList.add('opened');
-				$('.promptActivation').css({'opacity':'0.8'});
-				fetcher({
-					method: "POST",
-					url: "serveur/push.php",
-					data: { activate: true, groupe: app.groupe.id }
-				})
-				.then(res => {
-					if(res.status == 200){
-						let latestCourse = app.groupe.courses[0];
-						app.course.started = true;
-						
-						if(latestCourse){
-							latestCourse.dateStart = res.payload.time;
-							return IndexedDbStorage.put("courses", latestCourse) 
-						} else throw "Pas de course"
-					}	
-				})
-				.then(() => {
-					document.querySelector('loader').classList.remove('opened');
-
-					
-					setTimeout(() => {
-						UI.openPanel("panier");
-					},200);
-
-					Animations.createAnimation(document.querySelector('.promptActivation'), [
-						{ opacity: '1', transform: 'scale(1)'},
-						{ opacity: '0', transform: 'scale(0.98)'}
-					], {
-						duration: 200,
-						fill: 'forwards',
-						easing: 'ease-out'
-					}).then((el) => {
-						el.style.display = 'none';
-						app.course.cardTotal.style.display = "block";
-					});
-
-				}).catch(res => {
-					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else { // TODO
-						UI.erreur("Un problème sur le serveur est survenu, réessayez");
-					document.getElementsByClassName('loader')[0].classList.remove('opened');
-						$('.promptActivation').css({'opacity':'1'});
-						UI.offlineMsg(app, err);
-					}
-				});
-			}
-		},
 		addArticle = e => {
 			e.preventDefault();
 			let inputPrice = document.querySelector('#modernArticleAdder #prix'),
 				inputTitre = document.querySelector('#modernArticleAdder #titreA'),
 				inputQuantity = document.getElementById("quantA");
 			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value && inputQuantity) {
-				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 					IndexedDbStorage.put("requests", {
 						type: "article",
 						data: {
@@ -186,10 +89,10 @@ export default function initEvents(){
 					.then(res => IndexedDbStorage.get("requests", res))
 					.then(res => {
 						const data = res.data;
-						UI.acc(app);
+						UI.acc();
 
 						window.scrollTo({ top: 0, behavior: 'smooth' });
-						app.course.pushArticle(app, {
+						app.course.pushArticle({
 							id: -res.reqId,
 							titre: data.titre,
 							color: data.color,
@@ -208,25 +111,25 @@ export default function initEvents(){
 					});;
 					
 					
-				} else {
+				} else { */
 					document.getElementsByClassName('loader')[0].classList.add('opened');
 					fetcher({
 						method: "POST",
-						url: "serveur/push.php",
+						url: "serveur/pushAnywhere.php",
 						data: {
-							submitArticle: true,
+							action: "submitArticle",
 							titre: inputTitre.value,
 							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
-							groupe: app.groupe.id
+							courseId: app.course.id
 						}
 					}).then(res => {
 						const item = res.payload;
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
 					
-						UI.acc(app);
+						UI.acc();
 
 						window.scrollTo({ top: 0, behavior: 'smooth' });
-						app.course.pushArticle(app, {
+						app.course.pushArticle({
 							id: item.id,
 							titre: item.titre,
 							color: item.color,
@@ -242,7 +145,7 @@ export default function initEvents(){
 							color: item.color,
 							id: item.id,
 							prix: item.prix,
-							titre: item.titre
+							titre: item.titre,
 						})
 
 					})
@@ -253,10 +156,10 @@ export default function initEvents(){
 						} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
 							UI.erreur("Le prix doit être positif")
 						} else {
-							UI.offlineMsg(app, res);
+							UI.offlineMsg(res);
 						}
 					});
-				}
+				/*}*/
 			}
 			else{
 				alert('Prix de l\'article non conforme');
@@ -266,7 +169,7 @@ export default function initEvents(){
 			e.preventDefault();
 			let input = document.querySelector('#modernPreviewAdder #titreP');
 			if (input.value && input.value != '') {
-				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 					IndexedDbStorage.put("requests", {
 						type: "preview",
 						data: {
@@ -278,7 +181,7 @@ export default function initEvents(){
 					.then(res => IndexedDbStorage.get("requests", res))
 					.then(res => {
 						const data = res.data;
-						UI.acc(app);
+						UI.acc();
 						
 						window.scrollTo({ top: 0, behavior: 'smooth' });
 						app.course.pushPreview({
@@ -298,20 +201,20 @@ export default function initEvents(){
 					});
 					
 					
-				} else {
+				} else { */
 					document.getElementsByClassName('loader')[0].classList.add('opened');
 					fetcher({
 						method: "POST",
-						url: "serveur/push.php",
+						url: "serveur/pushAnywhere.php",
 						data: {
-							submitPreview: true,
+							action: "submitPreview",
 							titre: input.value,
-							groupe: app.groupe.id
+							courseId: app.course.id
 						}
 					}).then(res => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						const item = res.payload;
-						UI.acc(app);
+						UI.acc();
 						
 						window.scrollTo({ top: 0, behavior: 'smooth' });
 						app.course.pushPreview({
@@ -336,30 +239,91 @@ export default function initEvents(){
 							UI.requireAuth();
 						} else {
 							document.getElementsByClassName('loader')[0].classList.remove('opened');
-							UI.offlineMsg(app, err);
+							UI.offlineMsg(err);
 						}
 					});
-				}
+				/* } */
 			}
 			else
 			{
 				alert('Il faut donner un nom à l\'article 😑');
 			}
 		},
-		buyForm = e => {
+		buyPreview = e => {
 			e.preventDefault();
 			if (!isNaN(parseFloat(document.querySelector('#modernBuyer #newPrice').value)) && !isNaN(parseFloat(document.querySelector('#modernBuyer #quantP').value))) {
-				let idPreview = document.getElementById('modernBuyer').getAttribute('key'),
-					prix = document.querySelector('#modernBuyer #newPrice').value.replace(',','.') * document.getElementById('quantP').value;
+				const idPreview = parseInt(document.getElementById('modernBuyer').getAttribute('key')),
+				prix = document.querySelector('#modernBuyer #newPrice').value.replace(',','.') * document.getElementById('quantP').value,
+				item = app.course.previewsNodeList.filter(node => node.content.id == idPreview)[0];
 				document.querySelector('#quantP').value = 1;
-				app.buy(idPreview, prix);
+				
+				// todo - implement offline sync wait (wait online to sync)
+
+				document.querySelector('.loader').classList.add('opened');
+
+				fetcher({
+					method: "POST",
+					url: "serveur/pushAnywhere.php",
+					data: {
+						action: "buyItem",
+						itemId: item.content.id,
+						prix: prix
+					}
+				}).then(res => {
+					document.querySelector(".loader").classList.remove("opened");
+					document.querySelector('#modernBuyer #newPrice').value = "";
+					document.querySelector('#modernBuyer #quantP').value = "1";
+					
+					let timer = 600;
+					const articleData = res.payload;
+					console.log(articleData);
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+					
+					// Delete old preview				
+					UI.acc();
+					
+					app.course.deletePreview(idPreview);
+
+
+					// Add new article
+					setTimeout(() => {
+
+						UI.openPanel("panier");
+						setTimeout(() => {
+							app.course.pushArticle({
+								id: articleData.id,
+								titre: articleData.titre,
+								color: articleData.color,
+								prix: articleData.prix
+							});
+						}, 100);
+						setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
+
+					}, timer);
+
+					IndexedDbStorage.put("items", {...item, type: "article"});
+				})
+				.catch(err => {
+					document.querySelector(".loader").classList.remove("opened");
+					if (err.responseJSON && res.responseJSON.notAuthed){
+						UI.requireAuth();
+					} else if(err.type == 400 && err.error && err.error == "NegVal"){
+						UI.erreur("Le prix doit être positif")
+					}
+					else {
+						UI.offlineMsg(err);
+					}
+				});
+
+
 			} else alert('Il faux rentrer un prix numérique')
 		},
 		addCourse = e => {
 			e.preventDefault();
 			const form = e.target;
 			if (!isNaN(parseFloat(form.prixMax.value.replace(',','.'))) && form.titre.value) {
-				document.getElementsByClassName('loader')[0].classList.add('opened');
+				/* TODO : add loader animation */
+				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
 					url: "serveur/push.php",
@@ -376,22 +340,26 @@ export default function initEvents(){
 						const course = res.payload;
 						IndexedDbStorage.put("courses", {
 							groupe: course.groupe,
-							dateStart: course.dateStart,
+							dateCreation: course.dateCreation,
 							id: course.id,
 							maxPrice: course.maxPrice,
 							nom: course.nom,
 							taxes: course.taxes,
-							total: course.total
+							total: course.total,
 						});
-						app.groupe.pushCourse(course);
 
-						UI.acc(app);
+						const listeNode = Generate.course(liste.id, liste.nom);
+						// Inserer un nouvel element UI, dans le premier container
+						document.querySelector('#coursesContainer > div').appendChild(listeNode);
+
+						UI.acc();
 						form.titre.value = "";
 						form.prixMax.value = "";
 						form.taxes.value = "0";
 
-						LocalStorage.setItem('usedCourse', null);
-						app.queue.enqueue(() => app.pull("open", null, course.id))
+						LocalStorage.setItem('currentListeId', null);
+						app.queue.enqueue(() => app.pull("open", null, course.id));
+
 					} else throw res
 					
 				}).catch(err => {
@@ -493,10 +461,86 @@ export default function initEvents(){
 						UI.requireAuth();
 					} else {
 						alert("Le serveur a rencontré un problème");
-						UI.offlineMsg(app, err);
+						UI.offlineMsg(err);
 					}
 				});
 			} else UI.erreur("Une erreur est survenue, selectionnez ou créez un groupe dans les paramêtre pour continuer.");
+		},
+		editCourse = e => {
+			e.preventDefault();
+			const form = e.target,
+				prix = form.prixMax.value.replace(',','.'),
+				date = new Date(form.date.value);
+			if (!isNaN(parseFloat(prix)) && form.titre.value) {
+				/* TODO : add loader animation, create server-side */
+				fetcher({
+					method: "POST",
+					url: "serveur/push.php",
+					data: {
+						editCourse: true,
+						idCourse: app.course.id,
+						titre: form.titre.value,
+						maxPrice: prix,
+						taxes: form.taxes.value.replace(',','.') | "0",
+						date: parseInt(date.getTime()/1000)
+					}
+				}).then(res => {
+					document.querySelector('.loader').classList.remove('opened');
+					if(res.status == 200){
+						const course = res.payload;
+						IndexedDbStorage.put("courses", {
+							groupe: course.groupe,
+							dateCreation: course.dateCreation,
+							id: course.id,
+							maxPrice: course.maxPrice,
+							nom: course.nom,
+							taxes: course.taxes,
+							total: course.total
+						});
+
+						UI.closeModernForms();
+						app.groupe.editCourse(course);
+						app.course.updateSelf(course);
+
+
+						UI.message("C'est bon", "La liste à été modifiée avec succès")
+
+					} else throw res
+					
+				}).catch(err => {
+					console.log(err);
+					if (err.status == "Offline") UI.offlineMsg(app);
+					else UI.erreur(err.payload? err.payload.title: null)
+
+					if(err.action && err.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
+				});
+
+			} else {
+				alert('Prix de l\'article non conforme');
+			}
+		},
+		enfouir = () => {
+			document.querySelector('.loader').classList.add('opened');
+			fetcher({
+				method: "POST",
+				url: "serveur/recycle.php",
+				data: {
+					action: "enfouir",
+					idCourse: app.course.id
+				}
+			}).then(res => {
+				document.querySelector('.loader').classList.remove('opened');
+				if(res.done){
+					/* Todo : fermer le menu,  */
+					UI.message("C'est bon", "La liste à été archivée avec succès")
+					UI.closeModernForms();
+					refresh();
+				} else {
+					UI.erreur("Il y a eu une erreur", res.msg);
+				}
+			}).catch(err => {
+				console.error(err);
+			});
 		};
 
 
@@ -656,7 +700,19 @@ export default function initEvents(){
 		e.preventDefault();
 		if(e.target.classList.contains("back")) UI.closeModal()
 		else if (e.target.classList.contains("confirmLeaveGroupe")) leaveGroupe()
-		else if (e.target.classList.contains("lienParams")) UI.openMenus('params')
+		else if (e.target.classList.contains("lienParams")){
+			UI.openMenus('params');
+			UI.closeModal();
+		}
+		else if (e.target.classList.contains("lienCreateCroupe")){
+			UI.openPanel('menu');
+			UI.closeModal();
+			document.getElementById("groupesContainer").style.animation = "getNoticed 0.7s ease";
+			setTimeout(() => {
+				UI.openModernForm("groupe");
+				document.getElementById("groupesContainer").style.animation = "";
+			}, 900);
+		}
 		else if (e.target.classList.contains("supprConf")) app.deleteUser()
 		else if (e.target.classList.contains("supprConfCourse") && document.getElementById("deleteCourse").getAttribute("idCourse")){
 			app.deleteCourse(document.getElementById("deleteCourse").getAttribute("idCourse"));
@@ -679,7 +735,6 @@ export default function initEvents(){
 		el.addEventListener('click', e => {
 			if(e.target.id == "recycle") app.recycle();
 			else if(e.target.classList.contains('noCourse')) UI.openPanel('menu')
-			else if(e.target.classList.contains('activate')) activate();
 			else if(e.target.parentNode.parentNode.classList.contains('article')
 				|| e.target.parentNode.classList.contains('article') 
 				|| e.target.classList.contains('article')
@@ -690,7 +745,7 @@ export default function initEvents(){
 				const element = e.target.tagName == "LI" ? e.target : (e.target.tagName == "DIV" ? e.target.parentNode : e.target.parentNode.parentNode);
 				
 				if(!app.course.old){
-					document.querySelector("item-options").open(element.content,{x: e.clientX, y: e.clientY});
+					document.querySelector("item-options").open(element,{x: e.clientX, y: e.clientY});
 				}
 				
 			}
@@ -728,15 +783,20 @@ export default function initEvents(){
 	document.getElementById('menu').addEventListener('click', event => {
 		if(event.target.id == "paramsOpener" || event.target.parentNode.id == "paramsOpener") UI.openMenus('params')
 		else if(event.target.id == "compteOpener") UI.openMenus('compte')
-		else if(event.target.classList.contains('course')) {
-			const id = event.target.getAttribute("dbIndex");
+		else if(event.target.parentNode.classList.contains('course')) {
+			const id = event.target.parentNode.getAttribute("dbIndex");
 			if(id){
 				app.queue.enqueue(() => app.pull("open", null, id))
 			}
 		}
-		else if(event.target.parentNode.classList.contains('course') && event.target.tagName == "I") {
-			const id = event.target.parentNode.getAttribute("dbIndex");
-			if(id) UI.modal('deleteCourse', id);
+		else if(event.target.parentNode.parentNode.classList.contains('course') && event.target.tagName == "I") {
+			const target = event.target;
+			if(target.classList.contains("cdelete")){
+				const id = event.target.parentNode.parentNode.getAttribute("dbIndex");
+				if(id) UI.modal('deleteCourse', id);
+			} else {
+				UI.openModernForm('courseEditor');
+			}
 		}
 		
 		else if (event.target.tagName == 'BUTTON' && event.target.parentNode.id == "groupesContainer") UI.openModernForm('groupe')
@@ -784,7 +844,7 @@ export default function initEvents(){
 	document.getElementById("menubar").addEventListener('click', event => {
 		if(event.target.tagName == "IMG" || event.target.getAttribute("linkTo") == "menu") {
 			if(window.innerWidth < 900) UI.openPanel('menu')
-			else UI.openPanel('menu', app)
+			else UI.openPanel('menu')
 		}
 		else if(event.target.getAttribute("linkTo") == "panier" || event.target.parentNode.getAttribute("linkTo") == "panier") UI.openPanel('panier')
 		else if(event.target.getAttribute("linkTo") == "liste" || event.target.parentNode.getAttribute("linkTo") == "liste") UI.openPanel('liste')
@@ -817,11 +877,13 @@ export default function initEvents(){
 	document.getElementById('modernForms').addEventListener('click', e => {
 		if(e.target.parentNode.classList.contains("modernFormTitle") ){
 			UI.closeModernForms();
+		} else if(e.target.id == "enfouir"){
+			enfouir();
 		}
 	});
 
 	document.getElementById('modernForms').addEventListener('submit', e => {
-		switch(e.target.parentNode.parentNode.id){
+		switch(e.target.parentNode.parentNode.parentNode.id){
 			case "modernArticleAdder": 
 				addArticle(e)
 				break;
@@ -832,7 +894,7 @@ export default function initEvents(){
 				addCourse(e)
 				break;
 			case "modernBuyer": 
-				buyForm(e)
+				buyPreview(e)
 				break;
 			case "modernGroupeAdder": 
 				addGroupe(e)
@@ -840,11 +902,14 @@ export default function initEvents(){
 			case "modernInviteur": 
 				submitInvitation(e)
 				break;
+			case "courseEditor":
+				editCourse(e);
+				break;
 		}
 	});
 
 	let inputsForms = new Array(
-		Array.from(document.querySelectorAll('#addArticle input')),
+		Array.from(document.querySelectorAll('#addArticle input')), 
 		Array.from(document.querySelectorAll('#addCourse input')),
 		Array.from(document.querySelectorAll('#modernBuyer input')),
 		Array.from(document.querySelectorAll('#modernArticleAdder input')),

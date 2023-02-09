@@ -83,7 +83,7 @@
 
 
 item-options{
-	--color-item: black;
+	--hue-item: black;
 
 	position: fixed;
 	top: 0;
@@ -142,7 +142,7 @@ item-options i#colorEtiquette{
 	padding: 0;
 	margin: 15px;
 	border-radius: 10px;
-	background-color: hsl(var(--color-item), var(--previewS), var(--previewL));
+	background-color: hsl(var(--hue-item), var(--previewS), var(--previewL));
 }
 
 item-options h3{
@@ -157,8 +157,45 @@ item-options p{
 	display: none;
 }
 
-item-options span{
+item-options #item-type{
+	padding: 10px 30px;
+	font-size: 2em;
+}
+
+#item-type{
+	display: flex;
+	justify-content: center;
+}
+
+#item-type select {
+	padding: 4px 8px;
+	background-color: hsl(var(--hue-item), 60%, 90%);
+	border-radius: 2px;
+	border: none;
+	box-shadow: none;
+	outline: none;
 	font-weight: 600;
+	margin-left: 10px;
+}
+
+#item-type option:nth-child(1){
+	background-color: hsl(0, 60%, 90%);
+}
+
+#item-type option:nth-child(2){
+	background-color: hsl(50, 60%, 90%);
+}
+
+#item-type option:nth-child(3){
+	background-color: hsl(100, 60%, 90%);
+}
+
+#item-type option:nth-child(4){
+	background-color: hsl(200, 60%, 90%);
+}
+
+#item-type option:focus{
+	border: 2px solid black;
 }
 
 item-options form{
@@ -200,13 +237,7 @@ item-options textarea{
 	box-sizing: border-box;
 }
 
-item-options button{
-	font-size: inherit;
-	margin: 0;
-	padding: 0;
-	border: none;
-	outline: none;
-	box-shadow: 0;
+#msg-action button{
 	display: none;
 }
 
@@ -299,57 +330,6 @@ item-options ul i.ms-Icon--Delete{
 .options h4{
 	font-size: 1.7rem;
 	margin: 0;
-}
-
-.promptActivation, .promptEmpty{
-	background-color: var(--color-theme-secondary);
-	color: var(--color-text-menu);
-	border-radius: 5px;
-	padding: 30px 10px;
-	text-align: center;
-}
-
-@supports (white-space: break-spaces){
-	.promptActivation, .promptEmpty{
-		white-space: break-spaces;
-	}
-}
-
-.promptEmpty{
-	background-color: var(--color-theme-complement);
-}
-
-.promptActivation i{
-	margin: 10px;
-}
-
-.promptActivation h4, .promptEmpty h4{
-	font-size: 2rem;
-	margin: 0 0 10px 0;
-}
-
-.promptActivation h5, .promptEmpty h5{
-	font-size: 1.5rem;
-	margin: 0 0 10px 0;
-}
-
-.promptActivation p, .promptEmpty p{
-	color: #ffffffd0;
-}
-
-.promptActivation button, .promptEmpty button{
-	background-color: white;
-	color: var(--color-theme-secondary);
-	margin: 10px auto 0 auto;
-	padding: 5px 15px;
-	font-size: 2rem;
-	border: none;
-	outline: none;
-	box-sizing: border-box;
-}
-
-.promptEmpty button{
-	color: var(--color-theme-complement);
 }
 
 #modal{
@@ -457,7 +437,7 @@ item-options ul i.ms-Icon--Delete{
 	outline: none;
 	background: rgb(243, 243, 243);
 	padding: 5px;
-	margin: 0 8%;
+	margin: 0 10px;
 }
 
 #modal .confirmLeaveGroupe, #noGroupe button, #deleteAll .supprConf, #deleteCourse .supprConfCourse{

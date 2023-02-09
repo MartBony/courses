@@ -3,13 +3,19 @@ import Animations from "./animations.js";
 export default class Generate{
 	static course(id, nom){
 		let button = document.createElement('button'),
-			i = document.createElement('i');
+			controls = document.createElement('div'),
+			idel = document.createElement('i'),
+			iparams = document.createElement('i');
 		button.classList.add("course");
 		button.setAttribute("dbIndex", id);
 		button.innerHTML = nom;
-		i.className = "ms-Icon ms-Icon--Delete";
-		i.setAttribute("aria-hidden","true");
-		button.appendChild(i);
+		iparams.className = "ms-Icon ms-Icon--EditNote cedit";
+		iparams.setAttribute("aria-hidden","true");
+		controls.appendChild(iparams);
+		idel.className = "ms-Icon ms-Icon--Delete cdelete";
+		idel.setAttribute("aria-hidden","true");
+		controls.appendChild(idel);
+		button.appendChild(controls);
 
 		return button;
 	}
@@ -87,49 +93,5 @@ export default class Generate{
 
 		return li;
 	
-	}
-	static activate(){
-		let div = document.createElement("div"),
-		i = document.createElement('i'),
-		h4 = document.createElement('h4'),
-		h5 = document.createElement('h5'),
-		p = document.createElement('p'),
-		button = document.createElement('button');
-
-		div.classList.add("promptActivation");
-		i.className = "ms-Icon ms-Icon--ShoppingCart";
-		i.setAttribute("aria-hidden","true");
-		h4.appendChild(i);
-		h4.innerHTML += "A vos marques ? Prêts ? Partez !";
-		h5.innerHTML = "Commencer les achats en activant la course.";
-		p.innerHTML = "La date d'activation sera associée à la course. Vous pouvez ensuite procéder à vos achats et calculer vos dépenses.";
-		button.className = "activate";
-		button.innerHTML = "Activer";
-
-		div.appendChild(h4);
-		div.appendChild(h5);
-		div.appendChild(p);
-		div.appendChild(button);
-
-		return div;
-
-	}
-	static noCourse(){
-		let div = document.createElement("div"),
-			h4 = document.createElement('h4'),
-			h5 = document.createElement('h5'),
-			button = document.createElement('button');
-
-		div.classList.add("promptEmpty");
-		h4.innerHTML += "Bienvenue sur votre groupe de courses";
-		h5.innerHTML = "Ce groupe est vide, rendez-vous au menu pour créer une nouvelle course ! Vous pouvez gérer vos groupes dans les paramêtres";
-		button.className = "noCourse";
-		button.innerHTML = "Menu";
-		
-		div.appendChild(h4);
-		div.appendChild(h5);
-		div.appendChild(button);
-
-		return div;
 	}
 }

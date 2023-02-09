@@ -2,7 +2,9 @@
 
 
 function getPostCourseId(){
-	if(isset($_POST['course']) && !empty($_POST['course'])){
+	if(isset($_POST['idCourse']) && !empty($_POST['idCourse'])){
+		return $_POST['idCourse'];
+	} elseif (isset($_POST['course']) && !empty($_POST['course'])){
 		return $_POST['course'];
 	} else {
 		return NULL;
@@ -11,8 +13,9 @@ function getPostCourseId(){
 
 function checkCourse(PDO $bdd, $user, $courseId, $callback) {
 	if($courseId){
+		$courseId = (int) $courseId;
 		$reqCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `id` = ?');
-		$reqCourse->execute(array($_POST['course']));
+		$reqCourse->execute(array($courseId));
 		if($reqCourse->rowCount() == 1){
 			$course = $reqCourse->fetch();
 
@@ -22,11 +25,11 @@ function checkCourse(PDO $bdd, $user, $courseId, $callback) {
 				"groupeId" => $course['groupe']
 			));
 			if($reqLink->rowCount() == 1){
-				call_user_func($callback, $user, $course);
+				return call_user_func($callback, $course);
 			} else {
 				echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'La course demandée est inacessible.')));
 				return true;
-			}
+			}	
 		} else {
 			echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'Nous ne trouvons pas votre course.')));
 			return true;

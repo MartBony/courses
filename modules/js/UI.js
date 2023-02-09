@@ -4,30 +4,40 @@ import Animations from "./animations.js";
 import Pull from './requests.js';
 import { IndexedDbStorage } from './storage.js';
 
-class CardTotal extends HTMLElement {
+class stateCard extends HTMLElement {
+	cardState;
 	constructor(){
 		super();
+		this.state = 0;
 	}
 	setValue(avancement){
-		this.style.display = "block";
-		this.children[0].children[0].innerHTML = `${parseInt(avancement*100)}%`;
+		this.querySelector("#avancementprc").innerHTML = `${parseInt(avancement*100)}%`;
 		avancement = Math.min(avancement, 1);
 		this.style.setProperty("--prc", `${parseInt(avancement*100)}%`);
 		if(avancement>0.9){
 			this.classList.add("alert");
 		} else this.classList.remove("alert");
 	}
+	get state(){
+		return this.cardState;
+	}
+	set state(state){
+		Array.from(this.children).forEach((span, index) => {
+			span.style.display = index == state ? "block" : "none";
+		});
+	}
 }
 
 class ItemOptions extends HTMLElement{
-	item;
+	itemNode;
 	opened = false;
 	msgButtonsState = ["", ""];
 	constructor(){
 		super();
 		this.generateEventListeners();
 	}
-	open(item, position){
+	open(itemNode, position){
+		this.itemContent = itemNode.content;
 		// Animate panel
 		if(!this.opened){
 			this.classList.add("opened");
@@ -56,19 +66,19 @@ class ItemOptions extends HTMLElement{
 		prixEl = this.querySelector('h3'),
 		buttons = this.querySelectorAll("ul li");
 
-		titreEl.innerHTML = `${item.titre}</div></div>`;
-		this.style.setProperty("--color-item", item.couleur);
-		if(item.type == 'article'){
+		titreEl.innerHTML = `${this.itemContent.titre}</div></div>`;
+		this.style.setProperty("--hue-item", this.itemContent.hue);
+		if(this.itemContent.type == 'article'){
 			const spansPrice = Array.from(prixEl.querySelectorAll('span'));
 			prixEl.style.display = "";
-			spansPrice.forEach(span => span.innerHTML = item.prix);
+			spansPrice.forEach(span => span.innerHTML = this.itemContent.prixSTR);
 			buttons[1].style.display = "none";
 		} else {
 			prixEl.style.display = "none";
 			buttons[1].style.display = "";
 		}
 
-		if(item.id < 0){
+		if(this.itemContent.id < 0){
 			this.querySelector("p").style.display = "block";
 			this.querySelector("form").style.display = "none";
 		} else {
@@ -76,22 +86,24 @@ class ItemOptions extends HTMLElement{
 			this.querySelector("form").style.display = "";
 		}
 
-		if(item.message){
+		if(this.itemContent.message){
 			this.setMessageButtons(0, "block");
 		}
 
+		if(this.itemContent.id_domaine) this.querySelector("select").selectedIndex = this.itemContent.id_domaine;
+
 		document.body.style.overflow = "hidden";
 
-		this.querySelector("textarea").value = item.message || null;
+		this.querySelector("textarea").value = this.itemContent.message || null;
 
-		this.item = item;
+		this.item = itemNode;
 		this.opened = true;
 	}
 	close(){
 
 		document.body.style.overflow = "";
 		
-		this.item = null;
+		this.itemNode = null;
 		this.opened = false;
 
 		Animations.createAnimation(this.children[0], [
@@ -116,20 +128,21 @@ class ItemOptions extends HTMLElement{
 	}
 	generateEventListeners(){
 		this.addEventListener('click', event => {
+			const itemContent = this.item.content;
 			if(event.target.classList.contains("ms-Icon--Cancel") || event.target == this) this.close();
 			else if(event.target.tagName == "I" && event.target.parentElement.parentElement.tagName == "UL"){
 				if(event.target.classList.contains('ms-Icon--Delete')){
-					if(this.item.type == 'article'){
-						document.querySelector("app-window").deleteArticle(this.item.id);
-					} else document.querySelector("app-window").deletePreview(this.item.id);
+					if(itemContent.type == 'article'){
+						document.querySelector("app-window").deleteArticle(itemContent.id);
+					} else document.querySelector("app-window").deletePreview(itemContent.id);
 					this.close();
 				} else {
-					if(this.item.type == 'preview') UI.openModernForm("buy", {item: this.item});
+					if(itemContent.type == 'preview') UI.openModernForm("buy", {item: itemContent});
 				}
 			} else if (event.target.tagName == "I" && event.target.parentElement.id == "msg-action"){
 				this.querySelector("textarea").value = "";
 				this.setMessageButtons(0, "");
-				if(this.item.message){
+				if(itemContent.message){
 					this.setMessageButtons(1, "block");
 				} else {
 					this.setMessageButtons(1, "");
@@ -154,20 +167,21 @@ class ItemOptions extends HTMLElement{
 
 		this.addEventListener("submit", async event => {
 			event.preventDefault();
-			const form = event.target;
+			const form = event.target,
+			itemContent = this.item.content;
 			try{
 				let res = await fetcher({
 					url: "serveur/push.php",
 					method: "POST",
-					body: { submitMessage: true, message: form.message.value, idItem: this.item.id }
+					body: { submitMessage: true, message: form.message.value, idItem: itemContent.id }
 				});
 
 				if(res.status == 200){
 					this.setMessageButtons(1, "");
-					this.item.message = res.payload.message;
+					itemContent.message = res.payload.message;
 					form.message.value = res.payload.message;
 					// document.querySelector("app-window").refresh();
-					IndexedDbStorage.put("items", this.item);
+					IndexedDbStorage.put("items", itemContent);
 					if(res.payload.message == "") this.setMessageButtons(0, "");
 					else this.setMessageButtons(0, "block");
 		
@@ -180,6 +194,24 @@ class ItemOptions extends HTMLElement{
 			}
 		
 		});
+
+		this.getElementsByTagName("select")[0].addEventListener("change", event => {
+			const itemContent = this.item.content;
+			fetcher({
+				method: "POST",
+				url: "serveur/push.php",
+				body: {action: "setItemType", itemId: itemContent.id, type: event.target.selectedIndex}
+			}).then(res => {
+				if(res.status = 200 && res.payload.hue && res.payload.id){
+					this.style.setProperty("--hue-item", res.payload.hue);
+					this.item.content = {hue: res.payload.hue, id_domaine: res.payload.id};
+					this.item.save(res.payload.id_course);
+				} else{
+					UI.erreur("L'opération n'a pas aboutie")
+				}
+			});
+		});
+
 	}
 	setMessageButtons(buttonIndex, value){
 		const messageButtons = this.querySelector("#msg-action").children;
@@ -194,7 +226,7 @@ class ItemOptions extends HTMLElement{
 
 customElements.define('item-options', ItemOptions);
 
-customElements.define('card-total', CardTotal);
+customElements.define('state-card', stateCard);
 
 export default class UI {
 	static message(titre, texte, buttons, timer = 7000){
@@ -253,7 +285,7 @@ export default class UI {
 	static msgIsOffline(){
 		UI.message("Vous êtes hors ligne", "Certaines fonctionnalités seront limités, vos modifications seront synchronisées ulterieurement", null, 3000);
 	}
-	static offlineMsg(app, msg){
+	static offlineMsg(msg){
 		msg = msg || "Cette requête n'a pas pu aboutir, connectez-vous et réessayez.";
 		UI.erreur("Le réseau est indisponible.", msg);
 	}
@@ -268,14 +300,14 @@ export default class UI {
 			}
 		]);
 	}
-	static openPanel(type, app = null){
+	static openPanel(type){
 		document.getElementById('depensesChart').style.opacity = "0";
 		document.getElementById('mainPanel').className = type;
 		document.getElementById('menubar').className = type;
 		document.getElementById('buttons').className = type;
-		if((type == 'calcul' || type == "menu") && app) UI.openChart(app);
+		if((type == 'calcul' || type == "menu")) UI.openChart();
 	}
-	static openMenus(type, data = null, app = null){
+	static openMenus(type, data = null){
 		document.getElementById('menus').className = `opened ${type}`;
 		if(type == 'params') Pull.invitations()
 		setTimeout(() => {document.body.style.overflowY = "hidden"}, 500);
@@ -285,7 +317,8 @@ export default class UI {
 		document.getElementById('depensesChart').style.opacity = "0";
 		setTimeout(() => {document.body.style.overflowY = ""}, 500);
 	}
-	static initChart(app){
+	static initChart(){
+		const app = document.querySelector("app-window");
 		const ctx = document.getElementById('depensesChart').getContext('2d');
 		app.chart = new Chart(ctx, {
 			type: 'bar',
@@ -310,7 +343,8 @@ export default class UI {
 			}
 		});
 	}
-	static openChart(app){
+	static openChart(){
+		const app = document.querySelector("app-window");
 		// Update chart
 		const graph = app.groupe.graphData;
 		document.getElementById('depensesChart').style.opacity = "1";
@@ -332,7 +366,7 @@ export default class UI {
 	static closeModal(){
 		document.querySelector('#modal').className = '';
 	}
-	static acc(app){
+	static acc(){
 		UI.closeModernForms();
 		UI.closeMenus();
 		document.querySelector("item-options").close();
@@ -363,6 +397,14 @@ export default class UI {
 
 
 				break;
+
+			case "courseEditor":
+				/* Le formulaire est déja rempli par les informations de course lors de l'ouverture de celle-ci */
+				document.getElementById("modernForms").classList.add("opened", "courseEditForm");
+
+
+				break;
+
 			case "buy":
 				if(data && data.item){
 					const item = data.item;
@@ -396,16 +438,6 @@ export default class UI {
 		document.body.classList.remove("formed");
 		document.querySelector('#modernForms').className = "";
 		Array.from(document.querySelectorAll(".adder, #addCourse")).forEach(el => {el.style.opacity = "";el.style.transition = ""});
-	}
-	static removeItem(index){
-		return new Promise((resolve, reject) => {
-			const el = document.querySelector(`li[idItem="${index}"]`);
-			Animations.removeItem(el).then(() => {
-				setTimeout(() => el.remove(), 100);
-				resolve();
-			});
-
-		})
 	}
 	static removeArticle(course, itemIndex, rank = 0){
 		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
@@ -472,47 +504,6 @@ export default class UI {
 				});
 			});
 		});
-	}
-	/* static promptAddFriend(app){
-		$('#invitation span').html(app.groupe.nom);
-
-		document.getElementById("forms").classList.add('opened','invite');
-
-		$('#invitation div, #invitation input, #invitation label, #invitation i').each(function(i){	
-			setTimeout(function(){
-				$('#invitation div, #invitation input, #invitation label, #invitation i').eq(i).addClass('opened');
-			},20*i+250);
-		});
-		setTimeout(function(){
-			$('#invitation input').eq(0).focus();
-		},200);
-	}
-	static closeInvite(){
-		$('#invitation').css({'display':'', 'opacity':'', 'transform':''});
-		$('#invitation label, #invitation input').removeClass('opened');
-	} */
-	static showOptions(app, el){
-		const optIndex = el.classList.contains('article') ? 0 : 1,
-		optionsElement = document.getElementsByClassName('options')[optIndex],
-		id = el.getAttribute('idItem'),
-		rect = el.getBoundingClientRect(),
-		padding = 5;
-
-		optionsElement.style.setProperty("--top", (el.offsetTop + padding) + "px");
-		optionsElement.style.setProperty("--left", (el.offsetLeft + padding) + "px");
-		optionsElement.style.setProperty("--width", (rect.width - 2*padding) +"px");
-		optionsElement.style.setProperty("--height", (rect.height - 2*padding) +"px");
-		optionsElement.setAttribute("key", id);
-		optionsElement.classList.add('opened');
-
-		if(el.classList.contains('article')){
-			const articleData = app.course.items.articles.filter(article => article.id == id)[0],
-			childrens = optionsElement.children;
-
-			childrens[0].innerHTML = articleData.prix + app.params.currency +" HT";
-			childrens[1].innerHTML = (articleData.prix * (1+app.course.taxes)).toFixed(2) + app.params.currency;
-		}
-
 	}
 	static hideOptions(){
 		Array.from(document.getElementsByClassName('options')).forEach(option => {

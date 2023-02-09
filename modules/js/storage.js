@@ -171,7 +171,7 @@ class IndexedDbStorage{
 						resolve(results);
 					}
 
-				}
+				};
 			})
 		});
 

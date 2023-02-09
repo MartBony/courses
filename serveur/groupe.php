@@ -23,26 +23,40 @@ login($bdd, function($user) use ($bdd){
 
 		// Pulling courses + Get additionnal data
 
-		$firstDate = time();
-
-		$coursesList = array();
+		// Actives, anciennes
+		$coursesList = array(array(), array());
+		// Id et timestamp de la liste la plus récente
+		$newestCourseId = -1;
 	
-		$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC');
+		$reqAllCourses = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `dateCreation` DESC');
 		$reqAllCourses->execute(array($groupe['id']));
+
+		$isFirst = true;
 		while($resCoursesGp = $reqAllCourses->fetch()){
 			
-		
-			if ($resCoursesGp['dateStart'] != 0) {
-				$firstDate = min($resCoursesGp['dateStart'], $firstDate);
+			if($isFirst && $resCoursesGp['dateCreation']){
+				$newestCourseId = $resCoursesGp["id"];
+				$isFirst = false;
 			}
-
-			array_push($coursesList, array(
+			if($resCoursesGp["isold"]){
+				array_push($coursesList[1], array(
 					'id' => (int) $resCoursesGp['id'],
 					'nom' => $resCoursesGp['nom'],
 					'total' => (float) $resCoursesGp['total'],
 					'maxPrice' => (float) $resCoursesGp['maxPrice'],
-					'dateStart' => (int) $resCoursesGp['dateStart']
+					'dateCreation' => (int) $resCoursesGp['dateCreation'],
+					'isold' => (bool) $resCoursesGp['isold']
 			));
+			} else {
+				array_push($coursesList[0], array(
+						'id' => (int) $resCoursesGp['id'],
+						'nom' => $resCoursesGp['nom'],
+						'total' => (float) $resCoursesGp['total'],
+						'maxPrice' => (float) $resCoursesGp['maxPrice'],
+						'dateCreation' => (int) $resCoursesGp['dateCreation'],
+						'isold' => (bool) $resCoursesGp['isold']
+				));
+			}
 		}
 		$reqAllCourses->closeCursor();
 
@@ -52,6 +66,7 @@ login($bdd, function($user) use ($bdd){
 				'id' => (int) $groupe['id'],
 				'nom' => $groupe['nom'],
 				'coursesList' => $coursesList,
+				'defaultId' => $newestCourseId,
 				'membres' => $membres
 			)
 		));

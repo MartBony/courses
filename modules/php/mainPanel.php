@@ -3,10 +3,24 @@
 		<header>
 			<h1 class="noselect">Panier</h1>
 		</header>
-		<card-total>
-			<h2>🛒 Votre avancement : <strong>0%</strong></h2>
-			<div></div>
-		</card-total>
+		<state-card>
+			<span>
+				<h2>Chargement</h2>
+				<p>Veuillez patienter</p>
+			</span>
+			<span>
+				<h2>🛒 Votre avancement : <strong id="avancementprc">0%</strong></h2>
+				<div></div>
+			</span>
+			<span>
+				<h2>Cette liste est achevée</h2>
+				<p>Ses éléments ont étés supprimés mais son prix total à été conservé</p>
+			</span>
+			<span>
+				<h2>Aucune liste séléctionnée.</h2>
+				<p>Rendez-vous dans le menu des listes pour créer une nuvelle liste !</p>
+			</span>
+		</state-card>
 		<ul></ul>
 		<article class="options">
 			<h4>4€ HT</h4>
@@ -19,7 +33,7 @@
 		<header>
 			<h1 class="noselect">Liste</h1>
 		</header>
-		<button id="recycle">Reprendre la liste</button>
+		<!-- <button id="recycle">Reprendre la liste</button> -->
 		<ul></ul> 
 		<article class="options">
 			<i class="ms-Icon ms-Icon--Shop" aria-hidden="true"></i>
@@ -83,8 +97,13 @@
 			<button><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i> Nouveau groupe</button>
 		</article>
 		<article id="coursesContainer">
-			<h2>Mes courses</h2>
-			<div></div>
+			<h2>Mes Listes</h2>
+			<h3>En cours</h3>
+			<span><h5>Rien pour l'instant</h5> <p>Ici, retouvez les courses actives, vous pouvez les modifier à tout moment.</p></span>
+			<div id="runninglists"></div>
+			<h3>Achevées</h3>
+			<span><h5>Rien pour l'instant</h5> <p>Ici, retouvez les courses terminées, plus anciennes</p></span>
+			<div id="oldlists"></div>
 		</article>
 	</section>
 </section>
