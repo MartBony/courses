@@ -3,7 +3,7 @@
 	<button class="adder" id="addArt" aria-label="Nouvel article"><i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i></button>
 	<button id="addCourse">
 		<i class="ms-Icon ms-Icon--Add" aria-hidden="true"></i>
-		Nouvelle Course
+		Nouvelle Liste
 	</button>
 </div>
 <div id="menubar">
@@ -52,10 +52,10 @@
 				<h4>Version premium</h4>
 				<p>En s'abonnant à la version premium, les fonctionnalités suivantes sont débloquées :</p>
 				<ul>
-					<li>Analyse de vos courses débloquée dans la section "calculs"</li>
-					<li>Utilisation simultanée jusqu'à 5 groupes d'achats</li>
-					<li>Possibilité d'inviter jusqu'a 10 participants par groupe d'achats</li>
-					<li>Meilleur fonctionnement hors ligne</li>
+					<li>Accédez à une analyse avancée de vos courses.</li>
+					<li>Rejoignez jusqu'à 5 groupes d'achats pour faire vos listes ensemble.</li>
+					<li>Invitez jusqu'a 10 participants dans n'importe lequel de vos groupes d'achats.</li>
+					<li>Créez jusqu'à 5 listes de courses consécutives.</li>
 				</ul>
 				<button id="getPremium">Obtenir les avantages</button>
 			</article>

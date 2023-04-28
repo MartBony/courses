@@ -31,21 +31,17 @@ login($bdd, function($user) use($bdd){
 				
 				array_push($previews, array(
 					'id' => $article['id'],
-					/* 'color' => $article['hueColor'], */
 					'titre' => $article['titre'],
 					'message' => $article['message'],
-					'id_domaine' => $article["id_domaine"],
-					'hue' => (int) $article["couleur_domaine"]
+					'id_domaine' => $article["id_domaine"]
 				));
 			} else {
 				array_push($articles, array(
 					'id' => $article['id'],
-					'prix' => $article['prix'],
-					/* 'color' => $article['hueColor'], */
+					'prix' => (float) $article['prix'],
 					'titre' => $article['titre'],
 					'message' => $article['message'],
-					'id_domaine' => $article["id_domaine"],
-					'hue' => (int) $article["couleur_domaine"]
+					'id_domaine' => $article["id_domaine"]
 				));
 				$total += (float) $article['prix'];
 			}

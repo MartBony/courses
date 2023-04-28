@@ -2,7 +2,7 @@
 require_once('checkers/checkGroupe.php');
 
 function getLatestCourse(PDO $bdd, $user, $callback) {
-	checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd, $callback){
+	checkGroupe($bdd, $user, getPostGroupeId(), function($groupe) use ($user, $bdd, $callback){
 		
 		$reqUsedCourse = $bdd->prepare('SELECT * FROM `courses` WHERE `groupe` = ? ORDER BY `id` DESC LIMIT 0,1');
 		$reqUsedCourse->execute(array($groupe['id']));

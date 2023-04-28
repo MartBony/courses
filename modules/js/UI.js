@@ -13,7 +13,7 @@ class stateCard extends HTMLElement {
 	setValue(avancement){
 		this.querySelector("#avancementprc").innerHTML = `${parseInt(avancement*100)}%`;
 		avancement = Math.min(avancement, 1);
-		this.style.setProperty("--prc", `${parseInt(avancement*100)}%`);
+		this.style.setProperty("--prc", avancement);
 		if(avancement>0.9){
 			this.classList.add("alert");
 		} else this.classList.remove("alert");
@@ -37,7 +37,7 @@ class ItemOptions extends HTMLElement{
 		this.generateEventListeners();
 	}
 	open(itemNode, position){
-		this.itemContent = itemNode.content;
+
 		// Animate panel
 		if(!this.opened){
 			this.classList.add("opened");
@@ -66,19 +66,19 @@ class ItemOptions extends HTMLElement{
 		prixEl = this.querySelector('h3'),
 		buttons = this.querySelectorAll("ul li");
 
-		titreEl.innerHTML = `${this.itemContent.titre}</div></div>`;
-		this.style.setProperty("--hue-item", this.itemContent.hue);
-		if(this.itemContent.type == 'article'){
+		titreEl.innerHTML = `${itemNode.content.titre}</div></div>`;
+		this.style.setProperty("--hue-item", document.querySelector("app-window").domainesHues[itemNode.content.id_domaine]);
+		if(itemNode.content.type == 'article'){
 			const spansPrice = Array.from(prixEl.querySelectorAll('span'));
 			prixEl.style.display = "";
-			spansPrice.forEach(span => span.innerHTML = this.itemContent.prixSTR);
+			spansPrice.forEach(span => span.innerHTML = itemNode.content.prixSTR);
 			buttons[1].style.display = "none";
 		} else {
 			prixEl.style.display = "none";
 			buttons[1].style.display = "";
 		}
 
-		if(this.itemContent.id < 0){
+		if(itemNode.content.id < 0){
 			this.querySelector("p").style.display = "block";
 			this.querySelector("form").style.display = "none";
 		} else {
@@ -86,17 +86,19 @@ class ItemOptions extends HTMLElement{
 			this.querySelector("form").style.display = "";
 		}
 
-		if(this.itemContent.message){
+		if(itemNode.content.message){
 			this.setMessageButtons(0, "block");
 		}
 
-		if(this.itemContent.id_domaine) this.querySelector("select").selectedIndex = this.itemContent.id_domaine;
+
+
+		this.querySelector("select").selectedIndex = itemNode.content.id_domaine || 0;
 
 		document.body.style.overflow = "hidden";
 
-		this.querySelector("textarea").value = this.itemContent.message || null;
+		this.querySelector("textarea").value = itemNode.content.message || null;
 
-		this.item = itemNode;
+		this.itemNode = itemNode;
 		this.opened = true;
 	}
 	close(){
@@ -128,21 +130,21 @@ class ItemOptions extends HTMLElement{
 	}
 	generateEventListeners(){
 		this.addEventListener('click', event => {
-			const itemContent = this.item.content;
+			const itemContent = this.itemNode.content;
 			if(event.target.classList.contains("ms-Icon--Cancel") || event.target == this) this.close();
 			else if(event.target.tagName == "I" && event.target.parentElement.parentElement.tagName == "UL"){
 				if(event.target.classList.contains('ms-Icon--Delete')){
-					if(itemContent.type == 'article'){
-						document.querySelector("app-window").deleteArticle(itemContent.id);
-					} else document.querySelector("app-window").deletePreview(itemContent.id);
+					if(this.itemNode.content.type == 'article'){
+						document.querySelector("app-window").deleteArticle(this.itemNode.content.id);
+					} else document.querySelector("app-window").deletePreview(this.itemNode.content.id);
 					this.close();
 				} else {
-					if(itemContent.type == 'preview') UI.openModernForm("buy", {item: itemContent});
+					if(this.itemNode.content.type == 'preview') UI.openModernForm("buy", {id: this.itemNode.content.id, titre:this.itemNode.content.titre});
 				}
 			} else if (event.target.tagName == "I" && event.target.parentElement.id == "msg-action"){
 				this.querySelector("textarea").value = "";
 				this.setMessageButtons(0, "");
-				if(itemContent.message){
+				if(this.itemNode.content.message){
 					this.setMessageButtons(1, "block");
 				} else {
 					this.setMessageButtons(1, "");
@@ -158,7 +160,7 @@ class ItemOptions extends HTMLElement{
 				this.setMessageButtons(0, "block");
 			}
 			
-			if(this.item.message == event.target.value){
+			if(this.itemNode.message == event.target.value){
 				this.setMessageButtons(1, "");
 			} else {
 				this.setMessageButtons(1, "block");
@@ -168,12 +170,16 @@ class ItemOptions extends HTMLElement{
 		this.addEventListener("submit", async event => {
 			event.preventDefault();
 			const form = event.target,
-			itemContent = this.item.content;
+			itemContent = this.itemNode.content;
 			try{
 				let res = await fetcher({
-					url: "serveur/push.php",
+					url: "serveur/pushAnywhere.php",
 					method: "POST",
-					body: { submitMessage: true, message: form.message.value, idItem: itemContent.id }
+					body: {
+						action: "submitMessage",
+						message: form.message.value,
+						idItem: itemContent.id
+					}
 				});
 
 				if(res.status == 200){
@@ -185,30 +191,31 @@ class ItemOptions extends HTMLElement{
 					if(res.payload.message == "") this.setMessageButtons(0, "");
 					else this.setMessageButtons(0, "block");
 		
-				} else if(res.status == "offline") UI.offlineMsg();
-				else if(res.payload) UI.erreur(res.payload.message);
-				else throw res;
+				} else throw res;
 			} catch(err) {
-				console.error(err);
-				UI.erreur();
+				UI.parseErrors(err);
 			}
 		
 		});
 
 		this.getElementsByTagName("select")[0].addEventListener("change", event => {
-			const itemContent = this.item.content;
+			const itemContent = this.itemNode.content;
 			fetcher({
 				method: "POST",
-				url: "serveur/push.php",
-				body: {action: "setItemType", itemId: itemContent.id, type: event.target.selectedIndex}
+				url: "serveur/pushAnywhere.php",
+				body: {
+					action: "setItemType",
+					itemId: itemContent.id,
+					type: event.target.selectedIndex
+				}
 			}).then(res => {
 				if(res.status = 200 && res.payload.hue && res.payload.id){
 					this.style.setProperty("--hue-item", res.payload.hue);
-					this.item.content = {hue: res.payload.hue, id_domaine: res.payload.id};
-					this.item.save(res.payload.id_course);
-				} else{
-					UI.erreur("L'opération n'a pas aboutie")
-				}
+					this.itemNode.content = {hue: res.payload.hue, id_domaine: res.payload.id};
+					this.itemNode.save(res.payload.id_course);
+				} else throw res
+			}).catch(err => {
+				UI.parseErrors(err);
 			});
 		});
 
@@ -257,6 +264,38 @@ export default class UI {
 	}
 	static closeMessage(){
 		document.querySelectorAll('.notification').forEach(el => el.classList.remove('opened'));
+	}
+	static parseErrors(err){
+		if(err && err.error){
+			switch(err.error){
+				case "badReq":
+					UI.erreur("Un problème est survenu.", "Requête incomplête.");
+					break;
+				case "badValues":
+					UI.erreur("Un problème est survenu.", "Valeurs incorrectes.");
+					break;
+				case "forbidden":
+					UI.erreur("Un problème est survenu.", "Vous n'êtes pas pas autorisé à accéder à cette requête.");
+					break;
+				case "notFound":
+					UI.erreur("Nous ne trouvons pas ce que vous cherchez.", "Un autre membre du groupe a peut-être modifié cet élément.");
+					break;
+				case "unknown":
+					UI.erreur("Un problème est survenu.", "Un erreur inattendue est survenue. Veuillez réessayer.");
+					break;
+				case "tooManyActiveListes":
+					UI.erreur("Nombre maximum de listes de courses atteint.", "Le nombre de listes de courses actives est trop important. Veuillez en recycler.");
+					break;
+				case "tooManyGroups":
+					UI.erreur("Nombre maximum de groupes atteint.", "Il faut quitter un autre groupe pour en rejoindre un nouveau.");
+					break;
+				case "isold":
+					UI.erreur("La liste n'est plas active.", "Veuillez ouvrir une liste active dans le menu de l'application.");
+					break;	
+			}
+		} else {
+			console.error(err);
+		}
 	}
 	static erreur(titre = "Un problème est survenu.", texte, buttons){
 		document.querySelector('#erreur').classList.add('opened');
@@ -325,37 +364,59 @@ export default class UI {
 			data: {
 				labels: new Array(6).fill(""),
 				datasets: [{
-					label: 'Coût',
+					label: 'Quelconque',
 					data: new Array(6).fill(0),
-					backgroundColor: 'rgba(54, 162, 235, 0.2)',
+					backgroundColor: 'rgb(245, 214, 214)',
+					borderColor: 'rgba(54, 162, 235, 1)',
+					borderWidth: 1
+				},{
+					label: 'Alimentaire',
+					data: new Array(6).fill(0),
+					backgroundColor: 'rgb(245, 240, 214)',
+					borderColor: 'rgba(54, 162, 235, 1)',
+					borderWidth: 1
+				},{
+					label: 'Ménager',
+					data: new Array(6).fill(0),
+					backgroundColor: 'rgb(224, 245, 214)',
+					borderColor: 'rgba(54, 162, 235, 1)',
+					borderWidth: 1
+				},{
+					label: 'Divertissement',
+					data: new Array(6).fill(0),
+					backgroundColor: 'rgb(214, 235, 245)',
 					borderColor: 'rgba(54, 162, 235, 1)',
 					borderWidth: 1
 				}]
 			},
+			responsive: true,
 			options: {
 				scales: {
-					yAxes: [{
-						ticks: {
-							beginAtZero: true
-						}
-					}]
+					x: {
+						stacked: true,
+					},
+					y: {
+						stacked: true
+					}
 				}
 			}
 		});
 	}
 	static openChart(){
 		const app = document.querySelector("app-window");
-		// Update chart
-		const graph = app.groupe.graphData;
-		document.getElementById('depensesChart').style.opacity = "1";
-		const labels = Array(graph.length).fill("");
-		labels[labels.length-1] = "Mois Actuel";
-		app.chart.data.labels = labels;
-		app.chart.data.datasets.forEach(dataset => dataset.data = graph);
-		app.chart.update();
+		if(app.groupe){
+			// Update chart
+			const graph = app.groupe.graphData;
+			document.getElementById('depensesChart').style.opacity = "1";
+			const labels = Array(6).fill("");
+			labels[labels.length-1] = "Mois Actuel";
+			app.chart.data.labels = labels;
+			app.chart.data.datasets.forEach((dataset,index) => dataset.data = graph[index]);
+			app.chart.update();
 
-		// Update Calculs
-		document.getElementById("averagecourses").innerHTML = app.groupe.averageCoursesCost;
+			// Update Calculs
+			document.getElementById("averagecourses").innerHTML = app.groupe.averageCoursesCost;
+		}
 	}
 	static modal(action, data){
 		document.querySelector('#modal').classList.add('opened', action || '');
@@ -406,11 +467,10 @@ export default class UI {
 				break;
 
 			case "buy":
-				if(data && data.item){
-					const item = data.item;
-
-					document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${item.titre}`;
-					document.getElementById('modernBuyer').setAttribute("key", item.id);
+				if(data && data.id && data.titre){
+					
+					document.querySelector('#modernBuyer h2').innerHTML = `Acheter ${data.titre}`;
+					document.getElementById('modernBuyer').setAttribute("key", data.id);
 
 					document.getElementById("modernForms").classList.add("opened", "buyForm");
 					setTimeout(() => document.querySelector(`#modernBuyer input`).focus(), 300);

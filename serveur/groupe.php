@@ -6,7 +6,7 @@ require_once('checkers/checkGroupe.php');
 header("Content-Type: application/json");
 
 login($bdd, function($user) use ($bdd){
-	checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
+	checkGroupe($bdd, $user, getPostGroupeId(), function($groupe) use ($user, $bdd){
 
 		// Pulling membres for specified group
 		$reqMembres = $bdd->prepare('SELECT u.nom 
@@ -33,8 +33,16 @@ login($bdd, function($user) use ($bdd){
 
 		$isFirst = true;
 		while($resCoursesGp = $reqAllCourses->fetch()){
+			$totalCategories = array();
+						
+			for ($i=0; $i <= 3; $i++) { 
+				$reqCategories = $bdd->prepare('SELECT SUM(prix) FROM `articles` WHERE `course` = ? AND `domaine` = ?');
+				$reqCategories->execute(array($resCoursesGp['id'], $i));
+				array_push($totalCategories, (float) ($reqCategories->fetch())[0]);
+			}
 			
-			if($isFirst && $resCoursesGp['dateCreation']){
+
+			if($isFirst && $resCoursesGp['dateCreation'] && !$resCoursesGp['isold']){
 				$newestCourseId = $resCoursesGp["id"];
 				$isFirst = false;
 			}
@@ -45,7 +53,8 @@ login($bdd, function($user) use ($bdd){
 					'total' => (float) $resCoursesGp['total'],
 					'maxPrice' => (float) $resCoursesGp['maxPrice'],
 					'dateCreation' => (int) $resCoursesGp['dateCreation'],
-					'isold' => (bool) $resCoursesGp['isold']
+					'isold' => (bool) $resCoursesGp['isold'],
+					'totalCategories' => $totalCategories
 			));
 			} else {
 				array_push($coursesList[0], array(
@@ -54,7 +63,8 @@ login($bdd, function($user) use ($bdd){
 						'total' => (float) $resCoursesGp['total'],
 						'maxPrice' => (float) $resCoursesGp['maxPrice'],
 						'dateCreation' => (int) $resCoursesGp['dateCreation'],
-						'isold' => (bool) $resCoursesGp['isold']
+						'isold' => (bool) $resCoursesGp['isold'],
+						'totalCategories' => $totalCategories
 				));
 			}
 		}

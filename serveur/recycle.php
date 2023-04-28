@@ -12,7 +12,7 @@
 				if($_POST["action"] == "enfouir" && !$course['isold']){
 					/* Get domain names */
 					$reqDomaines = $bdd->prepare('SELECT nom FROM `domaines`');
-					$reqDomaines->execute(array($course['id']));
+					$reqDomaines->execute();
 
 					$costsnames = array();
 					$costs = array();

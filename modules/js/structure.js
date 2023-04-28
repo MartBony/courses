@@ -8,6 +8,7 @@ export default class Structure { // Structure means the the User
 		this.nom;
 		this.mail;
 		this.color;
+		this.premium;
 		this.groupes = new Array();
 	}
 	update(data, save = true){
@@ -15,6 +16,7 @@ export default class Structure { // Structure means the the User
 		this.mail = data.mail;
 		this.nom = data.nom;
 		this.color = data.color;
+		this.premium = data.premium;
 
 		this.updateGroupes(data.groupes);
 		
@@ -65,6 +67,14 @@ export default class Structure { // Structure means the the User
 			&& groupeNode.children[0].innerHTML == groupe.nom
 			&& Array.from(groupeNode.children[1].children).every((li, index) => li.innerHTML == groupe.membres[index]))
 		);
+	}
+	get nbrCoursesMax(){
+		// 3 courses en cours max pour un premium, 1 sinon
+		return 2*this.premium+1;
+	}
+	get nbrGroupesMax(){
+		// 4 groupes max pour un premium, 1 sinon
+		return 3*this.premium+1;
 	}
 	get groupesNodeList(){
 		return Array.from(document.getElementsByClassName("groupe"));

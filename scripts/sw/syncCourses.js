@@ -36,33 +36,37 @@ const syncCourses = () => {
 					return fetcher({
 						url: "./serveur/push.php",
 						method: "POST",
-						data: { // Send article
-							submitArticle: true,
+						data: {
+							action: "submitArticle",
 							titre: request.data.titre,
 							prix: request.data.prix,
-							groupe: request.data.groupe
+							courseId: request.data.id
 						}
 					})
 					.then(res => {
-						if(res.type == 200){
+						if(res.status == 200){
 							itemData = res.payload;
+
 							return IndexedDbStorage.put("items", {
-								type: "article",
-								course: itemData.course,
-								color: itemData.color,
 								id: itemData.id,
 								prix: itemData.prix,
-								titre: itemData.titre
-							})
-						} else if(res.type == 201 && res.error && res.error == "NegVal") postMessageToCLients("Error", { stage: "SubmitArticle", err: "NegVal" })
-						else postMessageToCLients("Error", { stage: "SubmitArticle", err: "Unknown" })
+								titre: itemData.titre,
+								message: null,
+								id_domaine: itemData.id_domaine,
+								type: "article",
+								course: itemData.course
+							});
+						} else postMessageToCLients("Error", res);
+						// else postMessageToCLients("Error", { stage: "SubmitArticle", err: "Unknown" })
 						
 					})// Delete Request; // Update course
 					.then(() => IndexedDbStorage.delete("requests", request.reqId))
 					.then(() => {
-						postMessageToCLients("updArticle", {id: request.reqId, item: itemData});
+						postMessageToCLients("updArticle", {
+							id: request.reqId,
+							item: itemData
+						});
 					});
-					break;
 				case "delPreview":
 					return fetcher({
 						url: "./serveur/push.php",

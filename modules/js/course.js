@@ -1,12 +1,9 @@
-import Generate from './generate.js';
-import { IndexedDbStorage, LocalStorage } from './storage.js';
+import { IndexedDbStorage } from './storage.js';
 import Animations from "./animations.js";
-import { $_GET } from './tools.js';
 
 const app = document.querySelector("app-window");
 
 class CourseItem extends HTMLLIElement{
-	totalCost = 0;
 	itemContent = {
 		type: 'article',
 		id: null,
@@ -76,8 +73,10 @@ class CourseItem extends HTMLLIElement{
 				prixSTR = app.parseUnit(app.course.applyTaxes(prix));
 				this.firstChild.lastChild.innerHTML = prixSTR;
 			}
-			if(hue) this.style.background = `hsl(${hue}, var(--previewS), var(--previewL))`;
-			else this.style.background = "hsl(10, var(--previewS), var(--previewL))";
+			if(id_domaine >= 0) {
+				const hue = document.querySelector("app-window").domainesHues[id_domaine];
+				this.style.background = `hsl(${hue}, var(--previewS), var(--previewL))`;
+			} else this.style.background = "white";
 			if(animation) Animations[animation](this)
 
 			this.itemContent = { type: this.itemContent.type, id, titre, prix, prixSTR, hue, message, id_domaine };
@@ -92,6 +91,7 @@ export default class Course{
 	nom;
 	maxPrice;
 	totalCost;
+	splittedCost = [0,0,0,0];
 	dateCreation;
 	groupe;
 	taxes = 0;
@@ -125,8 +125,8 @@ export default class Course{
 		this.updateEditForm();
 
 	}
-	updateItemsModern(app, articles, previews, options = {save: false, forceUpdate: false}){
-		// Force update 
+	updateItemsModern(articles, previews, options = {save: false, forceUpdate: false}){
+		this.splittedCost.fill(0);
 
 		// Articles
 		articles.forEach((article, index) => {
@@ -140,6 +140,9 @@ export default class Course{
 				if(articleNode) articleNode.remove();
 				this.insertArticle(index, article, false);
 			}
+
+
+			this.splittedCost[article.id_domaine] += this.applyTaxes(article.prix);
 		});
 
 		this.articlesNodeList.slice(articles.length).forEach(articleNode => {
@@ -194,27 +197,30 @@ export default class Course{
 		}
 
 
+
 	}
 	pushArticle(item, animate){ // Appens an article in the logic
-		if(item && item.id && item.titre && item.color && item.prix){
+		if(item){
 			this.insertArticle(0, item, animate)
-			this.items.articles.unshift({id: item.id, titre: item.titre, color: item.color, prix: item.prix, message: item.message});
+
+			// Necessaire ?
+			this.items.articles.unshift(item);
+			// Necessaire ?
+
 			this.total += item.prix;
-		} else console.log("Article requirements not fullfilled", item);
+			this.ajouterPrix(item.prix, item.id_domaine);
+		} else console.log("No item provided")
 	}
 	insertArticle(index, item, animate = true){ // Inserts an article in the UI
-		if(item && item.id && item.titre && item.prix){
+		if(item){
 
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
-			/* article = item.id < 0 ? 
-				Generate.article(app, item.id, item.titre, item.color, item.prix, animation, 'sync'):
-				Generate.article(app, item.id, item.titre, item.color, item.prix, animation); */
 			article = new CourseItem({
 				type: 'article',
 				id: item.id,
 				titre: item.titre,
 				prix: item.prix,
-				hue: item.hue,
+				id_domaine: parseInt(item.id_domaine),
 				animation: animation,
 				message: item.message
 			});
@@ -224,18 +230,16 @@ export default class Course{
 			
 			this.updateCalculs();
 
-			// setTimeout(() => article.classList.remove(animation) , 300);
-
-		} else console.log("Article requirements not fullfilled", item);
+		} else console.log("No item provided")
 	}
 	pushPreview(item, animate){
-		if(item && item.id && item.titre && item.color){
+		if(item){
 			this.insertPreview(0, item, animate)
-			this.items.previews.unshift({id: item.id, titre: item.titre, color: item.color, message: item.message});
-		} else console.log("Preview requirements not fullfilled", item);
+			this.items.previews.unshift({id: item.id, titre: item.titre, message: item.message});
+		} else console.log("No item provided")
 	}
 	insertPreview(index, item, animate = true){ // Inserts a preview in the UI
-		if(item && item.id && item.titre){
+		if(item){
 			
 			const animation = animate ? 'animateSlideIn' : 'animateScaleIn',
 			/* preview = item.id < 0 ? 
@@ -245,17 +249,16 @@ export default class Course{
 				type: 'preview',
 				id: item.id,
 				titre: item.titre,
-				hue: item.hue,
 				animation: animation,
+				id_domaine: parseInt(item.id_domaine),
 				message: item.message
 			});
 		
 			if(index) document.querySelector('#liste ul').insertBefore(preview, this.previewsNodeList[index]);
 			else document.querySelector('#liste ul').prepend(preview);
-			
-			setTimeout(() => preview.classList.remove(animation) , 300);
 
-		} else console.log("Preview requirements not fullfilled", item);
+
+		} else console.log("No item provided")
 	}
 	updateCalculs(){
 		document.getElementById("nbrarticles").innerHTML = this.articlesNodeList.length;
@@ -269,12 +272,13 @@ export default class Course{
 		form.date.value = this.dateCreation.toISOString().substring(0,10);
 		form.taxes.value = this.taxes;
 	}
-	deleteArticle(item, itemIndex, rank = 0){
+	deleteArticle(item, rank = 0){
 		this.updateCalculs();
 		this.items.articles = this.items.articles.filter(el => el.id != item.id);
 		this.total -= item.prix;
+		this.ajouterPrix(-item.prix, item.id_domaine);
 
-		const selectedElement = document.querySelector(`li[idItem="${itemIndex}"]`),
+		const selectedElement = document.querySelector(`li[idItem="${item.id}"]`),
 		positions = this.articlesNodeList.map(el => [el, el.getBoundingClientRect()]),
 		anim = Animations.removeItem(selectedElement).then(() => {
 			selectedElement.remove();
@@ -371,7 +375,11 @@ export default class Course{
 		});
 	}
 	applyTaxes(prix){
-		return (Number(prix)*(1+this.taxes)).toFixed(2);
+		return Number((Number(prix)*(1+this.taxes)).toFixed(2));
+	}
+	ajouterPrix(prix, domaine){
+		this.splittedCost[domaine] += this.applyTaxes(prix);
+		document.querySelector("app-window").groupe.editCourseCosts(this.id, this.splittedCost);
 	}
 	get articlesNodeList(){
 		return Array.from(document.getElementsByClassName("article"));

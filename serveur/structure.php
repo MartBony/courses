@@ -8,7 +8,7 @@ function groupes($user, PDO $bdd) {
 	// USING GULINKS
 
 	// Request Groupes of User
-	$reqGroupesOfUser = $bdd->prepare('SELECT g.id, g.nom 
+	$reqGroupesOfUser = $bdd->prepare('SELECT g.id, g.nom
 		FROM `groupes` g 
 		INNER JOIN `gulinks` l
 		ON g.id = l.groupeId
@@ -44,6 +44,7 @@ function groupes($user, PDO $bdd) {
 		'payload' => array(
 			'id' => $user['userId'],
 			'nom' => $user['nom'],
+			'premium' => (int) $user['premium'],
 			'color' => $user['hueColor'],
 			'groupes' => $groupesOfUser
 		)

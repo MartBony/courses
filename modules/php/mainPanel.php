@@ -10,7 +10,7 @@
 			</span>
 			<span>
 				<h2>🛒 Votre avancement : <strong id="avancementprc">0%</strong></h2>
-				<div></div>
+				<div><span></span></div>
 			</span>
 			<span>
 				<h2>Cette liste est achevée</h2>

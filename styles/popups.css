@@ -165,6 +165,11 @@ item-options #item-type{
 #item-type{
 	display: flex;
 	justify-content: center;
+
+	--hue1: 0;
+	--hue2: 50;
+	--hue3: 100;
+	--hue4: 200;
 }
 
 #item-type select {
@@ -179,19 +184,19 @@ item-options #item-type{
 }
 
 #item-type option:nth-child(1){
-	background-color: hsl(0, 60%, 90%);
+	background-color: hsl(var(--hue1), 60%, 90%);
 }
 
 #item-type option:nth-child(2){
-	background-color: hsl(50, 60%, 90%);
+	background-color: hsl(var(--hue2), 60%, 90%);
 }
 
 #item-type option:nth-child(3){
-	background-color: hsl(100, 60%, 90%);
+	background-color: hsl(var(--hue3), 60%, 90%);
 }
 
 #item-type option:nth-child(4){
-	background-color: hsl(200, 60%, 90%);
+	background-color: hsl(var(--hue4), 60%, 90%);
 }
 
 #item-type option:focus{

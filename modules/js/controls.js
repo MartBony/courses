@@ -76,14 +76,14 @@ export default function initEvents(){
 				inputTitre = document.querySelector('#modernArticleAdder #titreA'),
 				inputQuantity = document.getElementById("quantA");
 			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value && inputQuantity) {
-				/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+					console.log(true);
 					IndexedDbStorage.put("requests", {
 						type: "article",
 						data: {
 							titre: inputTitre.value,
 							prix: inputPrice.value.replace(',','.') * inputQuantity.value,
-							groupe: app.groupe.id,
-							color: app.user.color
+							courseId: app.course.id
 						}
 					})
 					.then(res => IndexedDbStorage.get("requests", res))
@@ -95,12 +95,12 @@ export default function initEvents(){
 						app.course.pushArticle({
 							id: -res.reqId,
 							titre: data.titre,
-							color: data.color,
-							prix: data.prix
+							prix: data.prix.Animations,
+							id_domaine: app.defaultDomaine
 						});
 
 						[inputPrice, inputTitre].forEach(el => el.value = '');
-						inputQuantity.value = 1;
+						inputQuantity.value = 1;				
 
 						return navigator.serviceWorker.ready
 					})
@@ -111,7 +111,7 @@ export default function initEvents(){
 					});;
 					
 					
-				} else { */
+				} else {
 					document.getElementsByClassName('loader')[0].classList.add('opened');
 					fetcher({
 						method: "POST",
@@ -123,43 +123,40 @@ export default function initEvents(){
 							courseId: app.course.id
 						}
 					}).then(res => {
-						const item = res.payload;
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
-					
-						UI.acc();
+						if(res.status == 200){
+							const item = res.payload;
+						
+							UI.acc();
 
-						window.scrollTo({ top: 0, behavior: 'smooth' });
-						app.course.pushArticle({
-							id: item.id,
-							titre: item.titre,
-							color: item.color,
-							prix: item.prix
-						});
+							window.scrollTo({ top: 0, behavior: 'smooth' });
+							app.course.pushArticle({
+								id: item.id,
+								titre: item.titre,
+								prix: item.prix,
+								id_domaine: item.id_domaine
+							});
 
-						[inputPrice, inputTitre].forEach(el => el.value = '');
-						inputQuantity.value = 1;
+							[inputPrice, inputTitre].forEach(el => el.value = '');
+							inputQuantity.value = 1;
 
-						IndexedDbStorage.put("items", {
-							type: "preview",
-							course: app.course.id,
-							color: item.color,
-							id: item.id,
-							prix: item.prix,
-							titre: item.titre,
-						})
+							IndexedDbStorage.put("items", {
+								id: item.id,
+								prix: item.prix,
+								titre: item.titre,
+								message: null,
+								id_domaine: item.id_domaine,
+								type: "article",
+								course: item.course
+							});
+						} else throw res
 
 					})
-					.catch(res => {
+					.catch(err => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
-						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.requireAuth();
-						} else if(res.status == 400 && res.responseJSON && res.responseJSON.indexOf("Negative value") > -1){
-							UI.erreur("Le prix doit être positif")
-						} else {
-							UI.offlineMsg(res);
-						}
+						UI.parseErrors(err);
 					});
-				/*}*/
+				}
 			}
 			else{
 				alert('Prix de l\'article non conforme');
@@ -213,34 +210,33 @@ export default function initEvents(){
 						}
 					}).then(res => {
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
-						const item = res.payload;
-						UI.acc();
+						if(res.status == 200){
+							const item = res.payload;
+							UI.acc();
+							
+							window.scrollTo({ top: 0, behavior: 'smooth' });
+							app.course.pushPreview({
+								id: item.id,
+								titre: item.titre,
+								color: item.color,
+								id_domaine: item.id_domaine
+							});
 						
-						window.scrollTo({ top: 0, behavior: 'smooth' });
-						app.course.pushPreview({
-							id: item.id,
-							titre: item.titre,
-							color: item.color
-						});
-					
-						input.value = '';
+							input.value = '';
 
-						IndexedDbStorage.put("items", {
-							type: "article",
-							course: app.course.id,
-							color: item.color,
-							id: item.id,
-							prix: item.prix,
-							titre: item.titre
-						})
+							IndexedDbStorage.put("items", {
+								type: "preview",
+								course: app.course.id,
+								color: item.color,
+								id: item.id,
+								prix: item.prix,
+								titre: item.titre
+							});
+						} else throw res
 						
-					}).catch(res => {
-						if (res.responseJSON && res.responseJSON.notAuthed){
-							UI.requireAuth();
-						} else {
-							document.getElementsByClassName('loader')[0].classList.remove('opened');
-							UI.offlineMsg(err);
-						}
+					}).catch(err => {
+						document.getElementsByClassName('loader')[0].classList.remove('opened');
+						UI.parseErrors(err);
 					});
 				/* } */
 			}
@@ -271,48 +267,43 @@ export default function initEvents(){
 					}
 				}).then(res => {
 					document.querySelector(".loader").classList.remove("opened");
-					document.querySelector('#modernBuyer #newPrice').value = "";
-					document.querySelector('#modernBuyer #quantP').value = "1";
-					
-					let timer = 600;
-					const articleData = res.payload;
-					console.log(articleData);
-					window.scrollTo({ top: 0, behavior: 'smooth' });
-					
-					// Delete old preview				
-					UI.acc();
-					
-					app.course.deletePreview(idPreview);
+					if(res.status == 200){
+						document.querySelector('#modernBuyer #newPrice').value = "";
+						document.querySelector('#modernBuyer #quantP').value = "1";
+						
+						let timer = window.innerWidth < 900 ? 600: 100;
+						const articleData = res.payload;
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+						
+						// Delete old preview				
+						UI.acc();
+						
+						app.course.deletePreview(idPreview);
 
 
-					// Add new article
-					setTimeout(() => {
-
-						UI.openPanel("panier");
+						// Add new article
 						setTimeout(() => {
-							app.course.pushArticle({
-								id: articleData.id,
-								titre: articleData.titre,
-								color: articleData.color,
-								prix: articleData.prix
-							});
-						}, 100);
-						setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
 
-					}, timer);
+							UI.openPanel("panier");
+							setTimeout(() => {
+								app.course.pushArticle({
+									id: articleData.id,
+									titre: articleData.titre,
+									prix: articleData.prix,
+									id_domaine: articleData.id_domaine
+								});
+							}, 100);
+							setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
 
-					IndexedDbStorage.put("items", {...item, type: "article"});
+						}, timer);
+
+						IndexedDbStorage.put("items", {...item, type: "article"});
+					} else throw res
 				})
 				.catch(err => {
 					document.querySelector(".loader").classList.remove("opened");
-					if (err.responseJSON && res.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else if(err.type == 400 && err.error && err.error == "NegVal"){
-						UI.erreur("Le prix doit être positif")
-					}
-					else {
-						UI.offlineMsg(err);
-					}
+
+					UI.parseErrors(err);
 				});
 
 
@@ -326,9 +317,9 @@ export default function initEvents(){
 				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
+					url: "serveur/pushAnywhere.php",
 					data: {
-						submitCourse: true,
+						action: "createListeCourses",
 						titre: form.titre.value,
 						maxPrice: form.prixMax.value.replace(',','.'),
 						taxes: form.taxes.value.replace(',','.') | "0",
@@ -363,11 +354,8 @@ export default function initEvents(){
 					} else throw res
 					
 				}).catch(err => {
-					console.log(err);
-					if (err.status == "Offline") UI.offlineMsg(app);
-					else UI.erreur(err.payload? err.payload.title: null)
-
-					if(err.action && err.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
+					document.querySelector('.loader').classList.remove('opened');
+					UI.parseErrors(err);
 				});
 
 			} else {
@@ -381,20 +369,22 @@ export default function initEvents(){
 				document.querySelector('.loader').classList.remove('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
-					data: { newGroupe: true, titre: form.titre.value }
+					url: "serveur/pushAnywhere.php",
+					data: {
+						action: "newGroupe",
+						titre: form.titre.value
+					}
 				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
 					if(res.status == 200){
 						form.titre.value = "";
 						UI.closeModernForms();
 						refreshAsync(res.payload ? res.payload.id: null);
-					} else if(res.payload) {
-						UI.erreur(res.payload.message);
-					}  else throw "La réponse du serveur n'est pas correcte. Redemmarez l'application et réessayez.";
+					} else throw res;
 					
 				}).catch(err => {
-					UI.erreur(err);
+					document.querySelector('.loader').classList.remove('opened');
+					UI.parseErrors(err);
 				});
 			}
 			else
@@ -441,19 +431,29 @@ export default function initEvents(){
 				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
-					body: { leaveGroup: 'true', groupe: app.groupe.id }
+					url: "serveur/pushAnywhere.php",
+					body: {
+						action: 'leaveGroup',
+						groupe: groupeId
+					}
 				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
 					if(res.status == 200){
 						UI.closeModal();
+						let deletedCoursesIds = [];
 						Promise.all([
 							IndexedDbStorage.filterCursorwise("courses", null, null, (course) => {
-								if(course.groupe == groupeId) return false;
-								return true;
+								if(course.groupe == groupeId) deletedCoursesIds.push(course.id);
+								return course.groupe != groupeId;
 							}),
 							IndexedDbStorage.delete("groupes", groupeId)
-						]).then(openAsync);
+						])
+						.then(() => {
+							return IndexedDbStorage.filterCursorwise("items", null, null, (item) => {
+								return deletedCoursesIds.findIndex(id => item.course == id) == -1;
+							});
+						})
+						.then(openAsync);
 					}
 				}).catch(err => {
 					console.log(err);
@@ -472,12 +472,12 @@ export default function initEvents(){
 				prix = form.prixMax.value.replace(',','.'),
 				date = new Date(form.date.value);
 			if (!isNaN(parseFloat(prix)) && form.titre.value) {
-				/* TODO : add loader animation, create server-side */
+				document.querySelector('.loader').classList.add('opened');
 				fetcher({
 					method: "POST",
-					url: "serveur/push.php",
+					url: "serveur/pushAnywhere.php",
 					data: {
-						editCourse: true,
+						action: "editCourse",
 						idCourse: app.course.id,
 						titre: form.titre.value,
 						maxPrice: prix,
@@ -508,9 +508,12 @@ export default function initEvents(){
 					} else throw res
 					
 				}).catch(err => {
-					console.log(err);
+					document.querySelector('.loader').classList.remove('opened');
+					UI.parseErrors(err);
+
+					// A intégrer dans parseerrors
 					if (err.status == "Offline") UI.offlineMsg(app);
-					else UI.erreur(err.payload? err.payload.title: null)
+					// else UI.erreur(err.payload? err.payload.title: null)
 
 					if(err.action && err.action == "authenticate")  document.getElementById('authContainer').classList.add('opened');
 				});
@@ -534,7 +537,7 @@ export default function initEvents(){
 					/* Todo : fermer le menu,  */
 					UI.message("C'est bon", "La liste à été archivée avec succès")
 					UI.closeModernForms();
-					refresh();
+					refreshAsync();
 				} else {
 					UI.erreur("Il y a eu une erreur", res.msg);
 				}
@@ -749,31 +752,6 @@ export default function initEvents(){
 				}
 				
 			}
-			/*  else if (e.target.parentNode.classList.contains('options')){
-				if(e.target.classList.contains('ms-Icon--Cancel')){
-					UI.hideOptions();
-				} else if(e.target.classList.contains('ms-Icon--Pinned')) {
-					let key = e.target.parentNode.getAttribute('key');
-					UI.hideOptions();
-					app.pin(key);
-				} else if(e.target.parentNode.parentNode.id == "panier") {
-					if(e.target.classList.contains('ms-Icon--Delete')){
-						let key = e.target.parentNode.getAttribute('key');
-						UI.hideOptions();
-						app.deleteArticle(key);
-					}
-				} else if(e.target.parentNode.parentNode.id == "liste") {
-					if(e.target.classList.contains('ms-Icon--Delete')){
-						let key = e.target.parentNode.getAttribute('key');
-						UI.hideOptions();
-						app.deletePreview(key);
-					} else if (e.target.classList.contains('ms-Icon--Shop')){
-						const key = e.target.parentNode.getAttribute('key');
-						UI.hideOptions();
-						UI.openModernForm("buy", {app: app, id: key});
-					}
-				} 
-			} */
 		});
 	});
 
@@ -799,7 +777,20 @@ export default function initEvents(){
 			}
 		}
 		
-		else if (event.target.tagName == 'BUTTON' && event.target.parentNode.id == "groupesContainer") UI.openModernForm('groupe')
+		else if (event.target.tagName == 'BUTTON' && event.target.parentNode.id == "groupesContainer") {
+			if(app.user.groupes.length < app.user.nbrGroupesMax){
+				UI.openModernForm('groupe');
+			} else {
+				let response = "";
+				if(app.user.premium){
+					response = `L'application supporte un maximum de ${app.user.nbrGroupesMax} groupes. Il faut quitter un de vos groupes pour en rejoindre un nouveau.`;
+				} else {
+					response = `L'application supporte un maximum de ${app.user.nbrGroupesMax} groupes. Il faut quitter un de vos groupes pour en rejoindre un nouveau. Passez en premium pour augmenter cette limite.`;
+				}
+				UI.erreur("Limite de groupes atteinte.", response);
+				
+			}
+		}
 		
 		else if(event.target.classList.contains('groupe')
 			|| event.target.parentNode.classList.contains('groupe')
@@ -836,7 +827,20 @@ export default function initEvents(){
 		if(event.target.tagName == "BUTTON" || event.target.parentNode.tagName == "BUTTON") {
 			if(event.target.id == "addArt" || event.target.parentNode.id == "addArt") UI.openModernForm("article")
 			else if(event.target.id == "addPrev" || event.target.parentNode.id == "addPrev") UI.openModernForm("preview")
-			else if(event.target.id == "addCourse" || event.target.parentNode.id == "addCourse") UI.openModernForm("course")
+			else if(event.target.id == "addCourse" || event.target.parentNode.id == "addCourse") {
+				if(app.groupe.courses[0].length < app.user.nbrCoursesMax){
+					UI.openModernForm("course");
+				} else {
+					let response = "";
+					if(app.user.premium){
+						response = `L'application supporte un maximum de ${app.user.nbrCoursesMax} courses actives. Pour recycler une liste de courses il suffit de la séléctionner et de taper sur l'icône "modifier".`;
+					} else {
+						response = `L'application supporte un maximum de ${app.user.nbrCoursesMax} courses actives. Pour recycler une liste de courses il suffit de la séléctionner et de taper sur l'icône "modifier". Passez en premium pour augmenter cette limite.`;
+					}
+						UI.erreur("Veuillez recycler une des courses actives pour continuer", response);
+					
+				}
+			}
 		}
 	});
 
@@ -896,8 +900,8 @@ export default function initEvents(){
 			case "modernBuyer": 
 				buyPreview(e)
 				break;
-			case "modernGroupeAdder": 
-				addGroupe(e)
+			case "modernGroupeAdder":
+				addGroupe(e);
 				break;
 			case "modernInviteur": 
 				submitInvitation(e)

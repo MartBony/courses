@@ -145,7 +145,7 @@ function pushGroupeDependent(PDO $bdd, $user, $groupe){
 
 login($bdd, function($user) use($bdd){
 	if(!pushCousesIndependent($bdd, $user)){
-		checkGroupe($bdd, $user, getPostGroupeId(), function($user, $groupe) use ($bdd){
+		checkGroupe($bdd, $user, getPostGroupeId(), function($groupe) use ($user, $bdd){
 			if(!pushGroupeDependent($bdd, $user, $groupe)){
 				http_response_code(404);
 				echo json_encode(array("status" => 404));

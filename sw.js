@@ -10,15 +10,15 @@ const assets = [
 	'./sw.js',
 	// CSS
 	"./styles/preload.css",
-	/* "./styles/parametres.css",
+	"./styles/parametres.css",
 	"./styles/popups.css",
 	"./styles/modernForms.css",
 	"./styles/style.css",
 	"./styles/menus.css",
 	"./styles/switches.css",
 	"./styles/auth.css",
-	"./styles/mainPanel.css", */
-	"./styles/production.css",
+	"./styles/mainPanel.css",
+	//"./styles/production.css",
 	// MODULES
 	"./modules/js/app.js",
 	"./modules/js/controls.js",
@@ -50,13 +50,12 @@ const assets = [
 	"./images/logos/logo_tp.png",
 	"./images/logos/android/androidicon144.png",
 	// SCRIPTS
-	"./scripts/chart.js",
+	"./scripts/chart.umd.min.js",
 	"./scripts/load/loadHandler.js",
 	"./scripts/load/loadCss.js",
 	"./scripts/load/onLoadCss.js",
 
 	// ONLINE CDN
-	'https://code.jquery.com/jquery-3.5.1.min.js',
 	'https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css',
 	'https://static2.sharepointonline.com/files/fabric/assets/icons/fabricmdl2icons-3.54.woff'
 ];

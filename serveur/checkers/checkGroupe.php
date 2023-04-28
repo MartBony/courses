@@ -19,20 +19,17 @@ function checkGroupe(PDO $bdd, $user, $groupeId, $callback) {
 			$reqUsedGroupe->execute(array($groupeId));
 			if($reqUsedGroupe->rowCount() == 1){
 				$groupe = $reqUsedGroupe->fetch();
-				return call_user_func($callback, $user, $groupe);
+				return call_user_func($callback, $groupe);
 			} else {
-				echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'Nous ne trouvons pas votre groupe.')));
-				return true;
+				echo json_encode(array('status' => 404, "error" => "notFound"));
 			}
 			$reqUsedGroupe->closeCursor();
 			
 		} else {
-			echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'Le groupe demandé est inacessible.')));
-			return true;
+			echo json_encode(array('status' => 404, "error" => "forbidden"));
 		}
 	} else {
-		echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Votre requête est invalide. Rechargez la page et réessayez.')));
-		return true;
+		echo json_encode(array('status' => 400, "error" => "badReq"));
 	}
 }
 

@@ -14,9 +14,11 @@ class AppWindow extends HTMLElement{
 	queue = new QueueHandler();
 	user;
 	groupe;
-	chartContent;
 	course;
+	chart;
 	pullState;
+	domainesHues = [0,50,100,200];
+	defaultDomaine = 1;
 
 	constructor(){
 		super();
@@ -34,6 +36,12 @@ class AppWindow extends HTMLElement{
 		this.user = new Structure(userId);
 		this.setParameters();
 		this.queue.enqueue(() => this.pull("open"));
+
+		// Set the colors of the select option when choosing an item type (domaine)
+		const containerStyle = document.getElementById("item-type").style;
+		this.domainesHues.forEach((hue, i) => {
+			containerStyle.setProperty('--hue'+(i+1), hue);
+		});
 
 	}
 	setParameters(){
@@ -68,7 +76,7 @@ class AppWindow extends HTMLElement{
 
 		// Load from network
 	
-		let pull = Pull.structure(this)
+		return Pull.structure(this)
 		.then(data => {
 			this.pullState.structure = true;
 			console.log('Network structure fetched:', data);
@@ -77,7 +85,7 @@ class AppWindow extends HTMLElement{
 
 
 			idGroupe = idGroupe || LocalStorage.getItem('usedGroupe') || data.groupes[0].id;
-		
+
 			return Pull.groupe(this, idGroupe);
 		})
 		.then(data => {
@@ -86,9 +94,14 @@ class AppWindow extends HTMLElement{
 			this.pullState.groupe = true;
 			console.log('Network groupe fetched:', data);
 			
+			if(!this.groupe || this.groupe.id != data.id){ // Si on change de groupe
+				idCourse = data.defaultId;
+			}
+				
+			idCourse = idCourse || LocalStorage.getItem('currentListeId') || data.defaultId;
+
 			this.updateGroupe(data, true); // Throws if no lists inside
 
-			idCourse = idCourse || LocalStorage.getItem('currentListeId') || data.defaultId;
 			return Pull.course(idCourse);
 		})
 		.then(data => {
@@ -98,18 +111,17 @@ class AppWindow extends HTMLElement{
 			return Offline.filterPendingRequests(this, networkItems);
 		})
 		.then(items => {
-			this.course.updateItemsModern(this, items.articles, items.previews, {save: true, forceUpdate: true})
+			this.course.updateItemsModern(items.articles, items.previews, {save: true, forceUpdate: true})
 		})
 		.catch(err => {
 			console.log(err.payload ? err.payload : err);
 		})
 		.then(() => {
-			this.pending = false
-			return navigator.serviceWorker.ready
-		})
-		.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')});
-
-		return pull;
+			this.pending = false;
+			if ('serviceWorker' in navigator && 'SyncManager' in window){
+				return navigator.serviceWorker.ready.then(reg => {if(reg && reg.sync) reg.sync.register('syncCourses')});
+			}
+		});
 
 	}
 	notificationHandler(callback){
@@ -129,29 +141,29 @@ class AppWindow extends HTMLElement{
 			});
 		}
 	}
-	deleteCourse(id){
+	deleteCourse(idCourse){
 		document.querySelector('.loader').classList.add('opened');
 		fetcher({
 			method: "POST",
-			url: "serveur/push.php",
-			data: { deleteCourse: true, id: id, groupe: this.groupe.id}
+			url: "serveur/pushAnywhere.php",
+			data: {
+				action: "deleteCourse",
+				id: idCourse
+			}
 		}).then(res => {
 			document.querySelector('.loader').classList.remove('opened');
 			if(res.status == 200){
 
 				LocalStorage.removeItem("currentListeId");
-				this.groupe.removeCourse(res.payload.id);
+				this.groupe.removeCourse(idCourse);
 
-				IndexedDbStorage.delete("courses", res.payload.id)
+				IndexedDbStorage.delete("courses", idCourse)
 				.then(() => this.queue.enqueue(() => this.pull("open")));
 
-			} else if (status == "Offline") throw "Offline"
-			else throw res
+			} else throw res
 
 		}).catch(err => {
-			if (err == "Offline") UI.offlineMsg(err);
-			else if(err == 404) UI.erreur("La course demandée est introuvable", "Rechargez la page et réessayez");
-			else UI.erreur("Il y a eu un problème", "Rechargez la page et réessayez")
+			UI.parseErrors(err);
 		});
 	}
 	deleteArticle(index){
@@ -160,8 +172,7 @@ class AppWindow extends HTMLElement{
 			IndexedDbStorage.delete("requests", -index)
 			.then(() => {
 				let rank = this.course.items.articles.indexOf(item);
-
-				this.course.deleteArticle({id: index, prix: item.prix}, item.id, rank);
+				this.course.deleteArticle(item, rank);
 
 			});
 		} else {
@@ -192,20 +203,17 @@ class AppWindow extends HTMLElement{
 						action: "deleteArticle", 
 						id: index
 					}
-				}).then(data => {
+				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
-					let displayedIndex = this.course.items.articles.indexOf(item);
+					if(res.status == 200){
+						let displayedIndex = this.course.items.articles.indexOf(item);
 
-					this.course.deleteArticle({id: index, prix: item.prix}, item.id, displayedIndex);
+						this.course.deleteArticle(item, displayedIndex);
+					} else throw res
 
-
-				}).catch(res => {
-					if (res.responseJSON && res.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else {
-						document.querySelector('.loader').classList.remove('opened');
-						UI.offlineMsg(res);
-					}
+				}).catch(err => {
+					document.querySelector('.loader').classList.remove('opened');
+					UI.parseErrors(err);
 				});
 
 			/* } */
@@ -248,138 +256,21 @@ class AppWindow extends HTMLElement{
 					method: "POST",
 					url: "serveur/pushAnywhere.php",
 					data: { action: "deletePreview", id: index}
-				}).then(data => {
+				}).then(res => {
 					document.querySelector('.loader').classList.remove('opened');
-					let displayedIndex = this.course.items.previews.indexOf(item);
-
-					this.course.deletePreview(index, displayedIndex);
-
-					this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
+					if(res.status == 200){
+						let displayedIndex = this.course.items.previews.indexOf(item);
+						this.course.deletePreview(index, displayedIndex);
+						this.course.items.previews = this.course.items.previews.filter(el => el.id != index);
+					} else throw res
 				}).catch(err => {
-					if (err.responseJSON && err.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else {
-						document.querySelector('.loader').classList.remove('opened');
-						UI.offlineMsg(err);
-					}
+					document.querySelector('.loader').classList.remove('opened');
+					UI.parseErrors(err);
 				});
 				
 			/* } */
 		}
 	}
-	/* buy(idPreview, prix){
-		const item = this.course.items.previews.filter(item => item.id == idPreview)[0],
-		handleBuy = (res) => {
-			return new Promise((resolve, reject) => {
-
-				const displayedIndex = this.course.items.previews.indexOf(item);
-				let timer = 600;
-				window.scrollTo({ top: 0, behavior: 'smooth' });
-				
-				document.querySelector('#modernBuyer #newPrice').value = "";
-				document.querySelector('#modernBuyer #quantP').value = "1";
-				
-				// Delete old preview				
-				UI.acc();
-				
-				this.course.deletePreview(idPreview);
-
-
-				// Add new article
-				setTimeout(() => {
-
-					UI.openPanel("panier");
-					setTimeout(() => {
-						this.course.pushArticle({
-							id: -res.reqId,
-							titre: res.data.titre,
-							color: res.color,
-							prix: res.data.prix
-						});
-						resolve();
-					}, 100);
-					setTimeout(() => document.getElementsByClassName('article')[0].classList.remove('animateSlideIn'), 300);
-
-				}, timer);
-
-			});
-		}
-
-		if(idPreview < 0){
-			
-			/* return Promise.all([
-				IndexedDbStorage.delete("requests", -item.id), 
-				IndexedDbStorage.put("requests", {
-					type: "article",
-					data: {
-						titre: item.titre,
-						prix: prix,
-						groupe: this.groupe.id,
-						color: this.user.color
-					}
-				})
-			])
-			.then(res => IndexedDbStorage.get("requests", res[1]))
-			.then(handleBuy)
-			.catch(err => {
-				console.log(err);
-				UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
-			});
-
-		} else {
-
-			/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
-
-				return IndexedDbStorage.put("requests", {
-					type: "buy",
-					data: {
-						id: item.id,
-						prix: prix,
-						groupe: this.groupe.id
-					}
-				})
-				.then(res => IndexedDbStorage.get("requests", res))
-				.then(req => {return {reqId: req.reqId, type: req.type, data: {...req.data, titre: item.titre}}})
-				.then(handleBuy)
-				.then(() => navigator.serviceWorker.ready )
-				.then(reg => reg.sync.register('syncCourses'))
-				.catch(err => {
-					console.log(err);
-					UI.erreur("Un problème est survenu sur votre appareil", "Réessayez");
-				});
-
-			} else {
-			
-				document.querySelector('.loader').classList.add('opened');
-				fetcher({
-					method: "POST",
-					url: "serveur/pushAnywhere.php",
-					data: {
-						action: "buyItem",
-						itemId: item.id,
-						prix: prix
-					}
-				}).then(res => {
-					document.querySelector(".loader").classList.remove("opened");
-					
-					handleBuy(res);
-
-				})
-				.catch(err => {
-					document.querySelector(".loader").classList.remove("opened");
-					if (err.responseJSON && res.responseJSON.notAuthed){
-						UI.requireAuth();
-					} else if(err.status == 400 && err.responseJSON && err.responseJSON.indexOf("Negative value") > -1){
-						UI.erreur("Le prix doit être positif")
-					}
-					else {
-						UI.offlineMsg(err);
-					}
-				});
-			/* } 
-
-		}
-	} */
 	updateApp(data, save){
 		if(data && data.id){
 			if(!this.user || !jsonEqual(this.user, data)){
@@ -391,6 +282,7 @@ class AppWindow extends HTMLElement{
 			this.user.update(data, save);
 
 			if(this.user.groupes.length == 0){
+				this.groupe = new Groupe();
 				UI.modal('noGroupe');
 				throw {action : "noPrompt", msg:"Le compte n'est rattaché à aucun groupe"};
 			}
@@ -420,6 +312,7 @@ class AppWindow extends HTMLElement{
 
 			this.groupe.update(groupe, save);
 			this.groupe.updateCourses(groupe.coursesList, save, preselect);
+			UI.openChart();
 
 			if(groupe.defaultId == -1){
 				document.querySelector("state-card").state = 3;

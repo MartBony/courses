@@ -1,6 +1,5 @@
 import Generate from './generate.js';
 import { IndexedDbStorage, LocalStorage } from './storage.js';
-import UI from './UI.js';
 
 export default class Groupe{
 	id;
@@ -10,10 +9,7 @@ export default class Groupe{
 	allLists;
 	defaultListId = -1;
 	constructor(){
-		this.courses = {
-			"active": new Array(),
-			"old": new Array()
-		};
+		this.courses = [new Array(), new Array()];
 		this.allLists = new Array();
 	}
 	update(groupe, save){
@@ -29,7 +25,7 @@ export default class Groupe{
 			node.classList.remove("opened");
 			if(node.getAttribute('idGroupe') == groupe.id) {
 				node.classList.add('opened');
-				setTimeout(() => {node.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})}, 200);
+				// setTimeout(() => {node.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})}, 200);
 			}
 		});
 
@@ -40,7 +36,7 @@ export default class Groupe{
 
 		document.getElementById("endmonth").innerHTML = dayLeft ? dayLeft +" Jours" : "Ajourd'hui";
 
-		if(save) IndexedDbStorage.put("groupes", {...groupe});
+		if(save) IndexedDbStorage.put("groupes", groupe);
 
 	}
 	updateCourses(courses, save = false, preselect = -1){
@@ -77,7 +73,7 @@ export default class Groupe{
 		this.courses = courses;
 
 		if(save){
-			IndexedDbStorage.filterCursorwise("courses", null, null, (listIter) => listIter.groupe != this.groupe);
+			IndexedDbStorage.filterCursorwise("courses", null, null, listIter => listIter.groupe != this.id);
 
 			allLists.forEach(liste => {
 				if(liste.id >= 0) IndexedDbStorage.put("courses", {...liste, groupe: this.id})
@@ -93,14 +89,20 @@ export default class Groupe{
 	}
 	editCourse(data){ // REDO
 		// Update data of lists array
-		this.courses.filter(course => course.id != data.id);
-		this.courses.push(data)
+		this.courses.forEach(array =>{
+			array.splice(array.findIndex(course => course.id === data.id), 1);
+		});
+		this.courses[data.isold].push(data);
 
 		// Update UI in lists menu
 		const courseUi = Array.from(document.querySelectorAll("#coursesContainer button")).filter(uiItem => uiItem.getAttribute("dbindex") == data.id)[0];
 		if(courseUi){
 			courseUi.firstChild.textContent = data.nom;
 		}
+	}
+	editCourseCosts(id, costs){
+		const innerIndex = this.courses[0].findIndex(course => course.id == id);
+		if(innerIndex > -1) this.courses[0][innerIndex].totalCategories = costs;
 	}
 	removeCourse(id){
 		this.courses = this.courses.filter(course => course.id != id);
@@ -117,25 +119,34 @@ export default class Groupe{
 	}
 	get graphData(){
 		// Update Chart
+		// On définit un mois comme 30 jours
 		const monthStamp = 60*60*24*30,
-		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
+		// On définit un marqueur temporel dans le futur qui correspond à un changement de mois
+		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp,
+		length = 6;
 
-		let result = new Array(6).fill(0);
+		let result = new Array(4);
+		for (let index = 0; index < result.length; index++) {
+			result[index] = new Array(length).fill(0);
+		}
 
-		this.courses.forEach((course) => {
-			if(course.date) console.error("Inproper course", course);
-			for (let i = 0; i < result.length; i++) {
-				if(course.dateCreation > timeMarker-(monthStamp*(i+1)) && course.dateCreation < timeMarker-(monthStamp*i))  result[result.length-i-1] += parseFloat(course.total)
+		this.courses[0].concat(this.courses[1]).forEach((course) => {
+			// Calculer le mois auquel la course appartient
+			const index = Math.floor((timeMarker-course.dateCreation)/monthStamp);
+			if(index < result.length){
+				for (let rank = 0; rank < 4; rank++) {
+					result[rank][length-index-1] += course.totalCategories[rank];
+				}
 			}
-			// document.querySelector('#menu article').appendChild(Generate.course(this, el.id, el.nom));
-		})
-		return result.map(valeur => parseFloat(valeur.toFixed(2)));
+		});
+
+		return result;
 	}
 	get averageCoursesCost(){
 		const monthStamp = 60*60*24*30,
 		timeMarker = (Date.now()/1000) - (Date.now()/1000)%(monthStamp) + monthStamp;
 		var sum = 0, len = 0;
-		this.courses.forEach((course) => {
+		this.courses[0].concat(this.courses[1]).forEach((course) => {
 			if(course.dateCreation > timeMarker-(monthStamp*(6))) {
 				sum += course.total;
 				len++;

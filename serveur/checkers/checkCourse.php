@@ -27,15 +27,15 @@ function checkCourse(PDO $bdd, $user, $courseId, $callback) {
 			if($reqLink->rowCount() == 1){
 				return call_user_func($callback, $course);
 			} else {
-				echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'La course demandée est inacessible.')));
+				echo json_encode(array('status' => 404, "error" => "forbidden"));
 				return true;
 			}	
 		} else {
-			echo json_encode(array('status' => 404, 'payload' => array('type' => 'ERROR', 'message' => 'Nous ne trouvons pas votre course.')));
+			echo json_encode(array('status' => 404, "error" => "notFound"));
 			return true;
 		}
 	} else {
-		echo json_encode(array('status' => 400, 'payload' => array('type' => 'ERROR', 'message' => 'Votre requête est invalide. Rechargez la page et réessayez.')));
+		echo json_encode(array('status' => 400, "error" => "badReq"));
 		return true;
 	}
 }

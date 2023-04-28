@@ -20,7 +20,7 @@ class Offline{
 			} else throw new Error('HaltGroupesFetch');
 		})
 		.then(groupes => {
-			groupes = groupes.sort((i1,i2) => i1.id - i2.id);
+			groupes = groupes.filter(groupe => groupe).sort((i1,i2) => i1.id - i2.id); // Filter in case 
 			if(!app.pullState.structure){
 				structure.groupes = groupes;
 				app.updateApp(structure);
@@ -35,7 +35,9 @@ class Offline{
 			} else throw new Error('HaltStructure');
 		})
 		.then(res => {
-			if(!app.pullState.groupe){
+			if(!app.pullState.groupe && res){
+				groupe = res;
+
 				return IndexedDbStorage.getCursorwise("courses", "groupe", res.id, "prev");
 			} else throw new Error('HaltCoursesFetch');
 		})
@@ -47,8 +49,16 @@ class Offline{
 			
 				console.log('Local groupe fetched:', groupe);
 				app.pullState.groupe = "idb";
-				app.updateGroupe(groupe);
+
+
+				if(!app.groupe || app.groupe.id != groupe.id){
+					idCourse = groupe.defaultId;
+				}
 				idCourse = idCourse || LocalStorage.getItem('currentListeId') || groupe.defaultId;
+
+				app.updateGroupe(groupe);
+
+
 				// if(!idCourse) idCourse = app.groupe.coursesList.length != 0 ? app.groupe.coursesList[0].id : null;
 				return IndexedDbStorage.get("courses", parseInt(idCourse));
 		
@@ -78,7 +88,7 @@ class Offline{
 			} else throw new Error('HaltItems');
 		})
 		.then(items => {
-			app.course.updateItemsModern(app, items.articles, items.previews, {save: false});
+			app.course.updateItemsModern(items.articles, items.previews, {save: false});
 		})
 		.catch(err => {
 			if(err.action != "noPrompt"){
