@@ -76,7 +76,7 @@ export default function initEvents(){
 				inputTitre = document.querySelector('#modernArticleAdder #titreA'),
 				inputQuantity = document.getElementById("quantA");
 			if (!isNaN(parseFloat(inputPrice.value.replace(',','.'))) && inputTitre.value && inputQuantity) {
-				if ('serviceWorker' in navigator && 'SyncManager' in window) {
+				/* if ('serviceWorker' in navigator && 'SyncManager' in window) {
 					console.log(true);
 					IndexedDbStorage.put("requests", {
 						type: "article",
@@ -111,7 +111,7 @@ export default function initEvents(){
 					});;
 					
 					
-				} else {
+				} else { */
 					document.getElementsByClassName('loader')[0].classList.add('opened');
 					fetcher({
 						method: "POST",
@@ -156,7 +156,7 @@ export default function initEvents(){
 						document.getElementsByClassName('loader')[0].classList.remove('opened');
 						UI.parseErrors(err);
 					});
-				}
+				/* } */
 			}
 			else{
 				alert('Prix de l\'article non conforme');
